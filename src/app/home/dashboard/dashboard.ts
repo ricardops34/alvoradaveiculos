@@ -1,64 +1,71 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { Router } from '@angular/router';
-import { AuthService, User } from '../../services/auth';
+import { 
+  PoModule, 
+  PoChartSerie, 
+  PoChartType, 
+  PoWidgetModule 
+} from '@po-ui/ng-components';
+import { DatabaseService } from '../../services/database';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, PoModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class DashboardComponent implements OnInit {
-  user: User | null = null;
-  banksCount = 3;
-  peopleCount = 4;
-  centersCount = 4;
-  movementsCount = 4;
+  
+  public today: Date = new Date();
+  totalStockValue: number = 0;
+  totalBankBalance: number = 0;
+  vehiclesCount: number = 0;
+  soldVehiclesCount: number = 0;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  revenueVsExpenses: Array<PoChartSerie> = [];
+  vehiclesByStatus: Array<PoChartSerie> = [];
 
-  ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
-      this.user = user;
+  constructor(private db: DatabaseService) {}
+
+  async ngOnInit() {
+    await this.db.init();
+    this.calculateMetrics();
+  }
+
+  calculateMetrics() {
+    const vehicles = this.db.getAll('veiculos');
+    const movements = this.db.getAll('movimentos');
+
+    // 1. Total Stock Value (Vehicles in 'Estoque' or 'Preparação' or 'Manutenção')
+    this.totalStockValue = vehicles
+      .filter(v => v.status !== 'Vendido')
+      .reduce((sum, v) => sum + (v.valor_compra || 0), 0);
+    
+    this.vehiclesCount = vehicles.filter(v => v.status !== 'Vendido').length;
+    this.soldVehiclesCount = vehicles.filter(v => v.status === 'Vendido').length;
+
+    // 2. Total Bank Balance
+    this.totalBankBalance = movements.reduce((sum, m) => sum + m.valor, 0);
+
+    // 3. Revenue vs Expenses Chart
+    const revenue = movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + m.valor, 0);
+    const expenses = movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(m.valor), 0);
+
+    this.revenueVsExpenses = [
+      { label: 'Receitas', data: revenue, color: 'color-10' },
+      { label: 'Despesas', data: expenses, color: 'color-07' }
+    ];
+
+    // 4. Vehicles by Status Chart
+    const statusCounts: { [key: string]: number } = {};
+    vehicles.forEach(v => {
+      statusCounts[v.status] = (statusCounts[v.status] || 0) + 1;
     });
-  }
 
-  get userName(): string {
-    return this.user?.name || 'Usuário';
-  }
-
-  get userRole(): string {
-    return this.user?.role || 'user';
-  }
-
-  get userInitial(): string {
-    return this.userName.charAt(0).toUpperCase();
-  }
-
-  get currentDate(): string {
-    return new Date().toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  canAccess(role: string): boolean {
-    if (role === 'admin') {
-      return this.userRole === 'admin';
-    }
-    return this.user?.role === 'admin' || this.user?.role === 'user';
-  }
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/auth']);
+    this.vehiclesByStatus = Object.keys(statusCounts).map(status => ({
+      label: status,
+      data: statusCounts[status]
+    }));
   }
 }

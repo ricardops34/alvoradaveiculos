@@ -1,107 +1,48 @@
-<div class="dashboard-container">
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <img src="/icone.png" alt="Alvorada" class="logo-img">
-      <span class="company-name">Alvorada Veículos</span>
-    </div>
+<po-page-default p-title="Dashboard Financeiro">
 
-    <nav class="sidebar-nav">
-      <a routerLink="/home/dashboard" class="nav-item">
-        <span class="icon">🏠</span>
-        <span>Início</span>
-      </a>
-      <a routerLink="/home/bancos" class="nav-item">
-        <span class="icon">🏦</span>
-        <span>Bancos</span>
-      </a>
-      <a routerLink="/home/pessoas" class="nav-item">
-        <span class="icon">👥</span>
-        <span>Pessoas</span>
-      </a>
-      <a routerLink="/home/centros-custo" class="nav-item">
-        <span class="icon">📊</span>
-        <span>Centro de Custo</span>
-      </a>
-      <a routerLink="/home/movimentos" class="nav-item">
-        <span class="icon">💸</span>
-        <span>Movimentos</span>
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="user-info">
-        <div class="user-avatar">{{ userInitial }}</div>
-        <div class="user-details">
-          <span class="user-name">{{ userName }}</span>
-          <span class="user-role">{{ userRole === 'admin' ? 'Administrador' : 'Usuário' }}</span>
-        </div>
+  <div class="po-row">
+    <po-widget class="po-md-3" p-title="Total em Estoque">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 24px;">
+        {{ totalStockValue | currency:'BRL' }}
       </div>
-      <button class="logout-btn" (click)="logout()">
-        <span>🚪</span>
-        <span>Sair</span>
-      </button>
-    </div>
-  </aside>
+      <div class="po-text-center po-text-color-08">{{ vehiclesCount }} veículos</div>
+    </po-widget>
 
-  <main class="main-content">
-    <header class="topbar">
-      <h1>Dashboard</h1>
-      <div class="topbar-actions">
-        <span class="date">{{ currentDate }}</span>
+    <po-widget class="po-md-3" p-title="Saldo em Bancos">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 24px;" 
+        [style.color]="totalBankBalance >= 0 ? 'green' : 'red'">
+        {{ totalBankBalance | currency:'BRL' }}
       </div>
-    </header>
+      <div class="po-text-center po-text-color-08">Soma de todas as contas</div>
+    </po-widget>
 
-    <div class="content">
-      <div class="welcome-card">
-        <h2>Bem-vindo, {{ userName }}!</h2>
-        <p>Acompanhe o controle financeiro da Alvorada Veículos</p>
+    <po-widget class="po-md-3" p-title="Vendas Realizadas">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 24px; color: #00b0ff;">
+        {{ soldVehiclesCount }}
       </div>
+      <div class="po-text-center po-text-color-08">Veículos entregues</div>
+    </po-widget>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">🏦</div>
-          <div class="stat-info">
-            <span class="stat-value">{{ banksCount }}</span>
-            <span class="stat-label">Bancos</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <span class="stat-value">{{ peopleCount }}</span>
-            <span class="stat-label">Pessoas</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-info">
-            <span class="stat-value">{{ centersCount }}</span>
-            <span class="stat-label">Centros de Custo</span>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">💸</div>
-          <div class="stat-info">
-            <span class="stat-value">{{ movementsCount }}</span>
-            <span class="stat-label">Movimentos</span>
-          </div>
-        </div>
+    <po-widget class="po-md-3" p-title="Data Atual">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 18px;">
+        {{ today | date:'dd/MM/yyyy' }}
       </div>
+      <div class="po-text-center po-text-color-08">Status do sistema: OK</div>
+    </po-widget>
+  </div>
 
-      <div class="dashboard-grid">
-        <div class="card">
-          <h3>Últimos Movimentos</h3>
-          <div class="card-content">
-            <p class="empty-state">Nenhum movimento registrado.</p>
-          </div>
-        </div>
-        <div class="card">
-          <h3>Próximos Pagamentos</h3>
-          <div class="card-content">
-            <p class="empty-state">Nenhum pagamento agendado.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
+  <div class="po-row po-mt-2">
+    <po-chart class="po-md-6" 
+      p-title="Receitas vs Despesas (Mês Atual)" 
+      [p-series]="revenueVsExpenses"
+      p-type="bar">
+    </po-chart>
+
+    <po-chart class="po-md-6" 
+      p-title="Distribuição de Estoque" 
+      [p-series]="vehiclesByStatus"
+      p-type="donut">
+    </po-chart>
+  </div>
+
+</po-page-default>

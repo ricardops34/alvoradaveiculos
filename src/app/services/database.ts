@@ -129,8 +129,10 @@ export class DatabaseService {
 
     // Pessoas
     const people = [
-      { nome: 'João Silva', documento: '123.456.789-00', tipo_pessoa: 'Física', tipo_cadastro: 'Cliente', telefone: '(11) 99999-9999', email: 'joao@email.com', cidade: 'São Paulo', estado: 'SP' },
-      { nome: 'Auto Peças Silva LTDA', documento: '12.345.678/0001-90', tipo_pessoa: 'Jurídica', tipo_cadastro: 'Fornecedor', telefone: '(11) 4444-4444', email: 'contato@silva.com', cidade: 'São Bernardo', estado: 'SP' }
+      { nome: 'Ricardo Alvorada', documento: '123.456.789-00', tipo_pessoa: 'Física', tipo_cadastro: 'Sócio', telefone: '(11) 98888-8888', email: 'ricardo@alvorada.com', cidade: 'São Paulo', estado: 'SP' },
+      { nome: 'Carlos Vendedor', documento: '456.789.123-00', tipo_pessoa: 'Física', tipo_cadastro: 'Vendedor', telefone: '(11) 97777-7777', email: 'carlos@vendas.com', cidade: 'São Paulo', estado: 'SP' },
+      { nome: 'Master Leilões S.A', documento: '12.345.678/0001-90', tipo_pessoa: 'Jurídica', tipo_cadastro: 'Fornecedor', telefone: '(11) 4444-4444', email: 'vendas@masterleiloes.com', cidade: 'São Bernardo', estado: 'SP' },
+      { nome: 'José Cliente Silva', documento: '789.123.456-00', tipo_pessoa: 'Física', tipo_cadastro: 'Cliente', telefone: '(11) 96666-6666', email: 'jose@gmail.com', cidade: 'Santo André', estado: 'SP' }
     ];
     people.forEach(p => {
       this.db!.run(
@@ -143,7 +145,8 @@ export class DatabaseService {
     const centers = [
       { codigo: '100', nome: 'Venda de Veículos', tipo: 'Receita' },
       { codigo: '200', nome: 'Manutenção de Estoque', tipo: 'Despesa' },
-      { codigo: '300', nome: 'Comissões', tipo: 'Despesa' }
+      { codigo: '300', nome: 'Comissões', tipo: 'Despesa' },
+      { codigo: '400', nome: 'Custos Operacionais', tipo: 'Despesa' }
     ];
     centers.forEach(c => {
       this.db!.run('INSERT INTO centros_custo (codigo, nome, tipo) VALUES (?, ?, ?)', [c.codigo, c.nome, c.tipo]);
@@ -151,13 +154,29 @@ export class DatabaseService {
 
     // Veículos
     const vehicles = [
-      { placa: 'ABC1D23', marca: 'Toyota', modelo: 'Corolla', ano_fabricacao: 2022, ano_modelo: 2023, cor: 'Prata', quilometragem: 15000, valor_compra: 110000, status: 'Estoque' },
-      { placa: 'XYZ9A88', marca: 'Honda', modelo: 'Civic', ano_fabricacao: 2021, ano_modelo: 2021, cor: 'Preto', quilometragem: 30000, valor_compra: 95000, status: 'Vendido' }
+      { placa: 'ALV0R22', marca: 'Toyota', modelo: 'Corolla', versao: 'Altis Hybrid', ano_fabricacao: 2022, ano_modelo: 2023, cor: 'Branco', quilometragem: 15000, valor_compra: 145000, data_compra: '2026-04-01', status: 'Estoque', fornecedor_id: 3 },
+      { placa: 'CIV1C21', marca: 'Honda', modelo: 'Civic', versao: 'Touring', ano_fabricacao: 2021, ano_modelo: 2021, cor: 'Cinza', quilometragem: 28000, valor_compra: 130000, data_compra: '2026-04-05', valor_venda: 158000, status: 'Vendido', fornecedor_id: 3, cliente_id: 4 },
+      { placa: 'JEE9P10', marca: 'Jeep', modelo: 'Compass', versao: 'Limited Diesel', ano_fabricacao: 2023, ano_modelo: 2023, cor: 'Azul', quilometragem: 5000, valor_compra: 185000, data_compra: '2026-04-10', status: 'Preparação', fornecedor_id: 3 }
     ];
     vehicles.forEach(v => {
       this.db!.run(
-        'INSERT INTO veiculos (placa, marca, modelo, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [v.placa, v.marca, v.modelo, v.ano_fabricacao, v.ano_modelo, v.cor, v.quilometragem, v.valor_compra, v.status]
+        'INSERT INTO veiculos (placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, data_compra, valor_venda, status, fornecedor_id, cliente_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [v.placa, v.marca, v.modelo, v.versao, v.ano_fabricacao, v.ano_modelo, v.cor, v.quilometragem, v.valor_compra, v.data_compra, v.valor_venda, v.status, v.fornecedor_id, v.cliente_id]
+      );
+    });
+
+    // Movimentações
+    const movements = [
+      { data: '2026-04-01', banco_id: 1, tipo: 'Débito', historico: 'Compra Toyota Corolla ALV0R22', valor: -145000, centro_custo_id: 1, veiculo_id: 1, pessoa_id: 3 },
+      { data: '2026-04-02', banco_id: 1, tipo: 'Débito', historico: 'Polimento e Lavagem Corolla', valor: -350, centro_custo_id: 2, veiculo_id: 1 },
+      { data: '2026-04-05', banco_id: 1, tipo: 'Débito', historico: 'Compra Honda Civic CIV1C21', valor: -130000, centro_custo_id: 1, veiculo_id: 2, pessoa_id: 3 },
+      { data: '2026-04-15', banco_id: 1, tipo: 'Crédito', historico: 'Venda Honda Civic CIV1C21', valor: 158000, centro_custo_id: 1, veiculo_id: 2, pessoa_id: 4 },
+      { data: '2026-04-16', banco_id: 1, tipo: 'Débito', historico: 'Comissão Venda Civic - Carlos', valor: -1580, centro_custo_id: 3, veiculo_id: 2, pessoa_id: 2 }
+    ];
+    movements.forEach(m => {
+      this.db!.run(
+        'INSERT INTO movimentos (data, banco_id, tipo, historico, valor, centro_custo_id, veiculo_id, pessoa_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [m.data, m.banco_id, m.tipo, m.historico, m.valor, m.centro_custo_id, m.veiculo_id, m.pessoa_id]
       );
     });
 
