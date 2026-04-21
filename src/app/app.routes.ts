@@ -45,6 +45,23 @@ export const routes: Routes = [
       { 
         path: 'movimentos', 
         loadComponent: () => import('./pages/movimentos/movimentos').then(m => m.MovimentosComponent)
+      },
+      {
+        path: 'relatorios',
+        children: [
+          { 
+            path: 'extrato-bancario', 
+            loadComponent: () => import('./pages/relatorios/extrato-bancario/extrato-bancario').then(m => m.ExtratoBancarioComponent)
+          },
+          { 
+            path: 'extrato-veiculo', 
+            loadComponent: () => import('./pages/relatorios/extrato-veiculo/extrato-veiculo').then(m => m.ExtratoVeiculoComponent)
+          },
+          { 
+            path: 'relatorio-despesas', 
+            loadComponent: () => import('./pages/relatorios/relatorio-despesas/relatorio-despesas').then(m => m.RelatorioDespesasComponent)
+          }
+        ]
       }
     ]
   },

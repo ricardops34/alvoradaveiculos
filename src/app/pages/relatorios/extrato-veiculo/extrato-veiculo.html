@@ -1,0 +1,46 @@
+<po-page-default p-title="Extrato por Veículo">
+
+  <po-container>
+    <div class="po-row">
+      <po-select class="po-md-6" name="veiculo" [(ngModel)]="veiculo_id" p-label="Selecione o Veículo" [p-options]="vehicles" (p-change)="onChangeVehicle()"></po-select>
+    </div>
+  </po-container>
+
+  <div *ngIf="vehicleData" class="po-mt-2">
+    <div class="po-row">
+      <po-widget class="po-md-4" p-title="Resultado Financeiro">
+        <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 24px;" 
+          [style.color]="summary.profit >= 0 ? 'green' : 'red'">
+          {{ summary.profit | currency:'BRL' }}
+        </div>
+        <div class="po-text-center po-text-color-08">Lucro/Prejuízo Estimado</div>
+      </po-widget>
+
+      <po-widget class="po-md-8" p-title="Informações do Veículo">
+        <div class="po-row">
+          <po-info class="po-md-3" p-label="Placa" [p-value]="vehicleData.placa"></po-info>
+          <po-info class="po-md-3" p-label="Compra" [p-value]="vehicleData.valor_compra | currency:'BRL'"></po-info>
+          <po-info class="po-md-3" p-label="Venda" [p-value]="(vehicleData.valor_venda || 0) | currency:'BRL'"></po-info>
+          <po-info class="po-md-3" p-label="Status" [p-value]="vehicleData.status"></po-info>
+        </div>
+      </po-widget>
+    </div>
+
+    <po-divider p-label="Detalhamento de Custos e Receitas Vinculadas"></po-divider>
+
+    <po-table 
+      [p-columns]="columns" 
+      [p-items]="movements">
+    </po-table>
+
+    <div class="po-row po-mt-2">
+      <po-info class="po-md-6" p-label="Total de Despesas Adicionais" [p-value]="summary.expenses | currency:'BRL'"></po-info>
+      <po-info class="po-md-6" p-label="Total de Receitas Adicionais" [p-value]="summary.revenue | currency:'BRL'"></po-info>
+    </div>
+  </div>
+
+  <div *ngIf="!vehicleData" class="po-text-center po-mt-5">
+    <po-info p-label="" p-value="Selecione um veículo para visualizar o extrato."></po-info>
+  </div>
+
+</po-page-default>

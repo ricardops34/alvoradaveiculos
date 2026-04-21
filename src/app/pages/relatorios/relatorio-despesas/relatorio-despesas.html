@@ -1,0 +1,37 @@
+<po-page-default p-title="Relatório de Despesas">
+
+  <po-container>
+    <div class="po-row">
+      <po-datepicker class="po-md-4" name="inicio" [(ngModel)]="filter.data_inicio" p-label="Data Início" (p-change)="search()"></po-datepicker>
+      <po-datepicker class="po-md-4" name="fim" [(ngModel)]="filter.data_fim" p-label="Data Fim" (p-change)="search()"></po-datepicker>
+      <div class="po-md-4 po-mt-4">
+        <po-button p-label="Atualizar Relatório" p-type="primary" (p-click)="search()"></po-button>
+      </div>
+    </div>
+  </po-container>
+
+  <div class="po-row po-mt-2">
+    <po-widget class="po-md-4" p-title="Total de Despesas">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 28px; color: #f44336;">
+        {{ totalExpenses | currency:'BRL' }}
+      </div>
+      <div class="po-text-center po-text-color-08">No período selecionado</div>
+    </po-widget>
+
+    <div class="po-md-8">
+      <po-chart 
+        p-title="Distribuição por Centro de Custo" 
+        [p-series]="chartSeries"
+        p-type="pie">
+      </po-chart>
+    </div>
+  </div>
+
+  <po-divider p-label="Detalhamento por Centro de Custo"></po-divider>
+
+  <po-table 
+    [p-columns]="columns" 
+    [p-items]="expensesData">
+  </po-table>
+
+</po-page-default>

@@ -35,6 +35,11 @@ export class LayoutComponent implements OnInit {
     { label: 'Pessoas', link: '/home/pessoas', icon: 'po-icon-user', shortLabel: 'Pessoas' },
     { label: 'Centro de Custo', link: '/home/centros-custo', icon: 'po-icon-Target', shortLabel: 'C. Custo' },
     { label: 'Movimentos', link: '/home/movimentos', icon: 'po-icon-finance-secure', shortLabel: 'Movimentos' },
+    { label: 'Relatórios', icon: 'po-icon-document-filled', shortLabel: 'Relatórios', subItems: [
+      { label: 'Extrato Bancário', link: '/home/relatorios/extrato-bancario' },
+      { label: 'Extrato por Veículo', link: '/home/relatorios/extrato-veiculo' },
+      { label: 'Relatório de Despesas', link: '/home/relatorios/relatorio-despesas' }
+    ]}
   ];
 
   constructor(private authService: AuthService, private router: Router) {}
