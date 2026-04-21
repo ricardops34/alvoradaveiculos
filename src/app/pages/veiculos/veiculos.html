@@ -10,34 +10,69 @@
 
 </po-page-list>
 
+<!-- Modal de Cadastro/Edição -->
 <po-modal #vehicleModal 
   [p-title]="isEditing ? 'Editar Veículo' : 'Novo Veículo'"
+  p-size="xl"
   [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
   [p-secondary-action]="{ label: 'Cancelar', action: vehicleModal.close.bind(vehicleModal) }">
 
   <form #vehicleForm="ngForm">
     <div class="po-row">
-      <po-input class="po-md-3" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-mask="AAA-9A99"></po-input>
-      <po-input class="po-md-3" name="renavam" [(ngModel)]="vehicle.renavam" p-label="Renavam"></po-input>
-      <po-input class="po-md-6" name="chassi" [(ngModel)]="vehicle.chassi" p-label="Chassi"></po-input>
-    </div>
-
-    <div class="po-row">
-      <po-input class="po-md-4" name="marca" [(ngModel)]="vehicle.marca" p-label="Marca" p-required></po-input>
+      <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-mask="AAA-9A99"></po-input>
+      <po-input class="po-md-3" name="marca" [(ngModel)]="vehicle.marca" p-label="Marca" p-required></po-input>
       <po-input class="po-md-4" name="modelo" [(ngModel)]="vehicle.modelo" p-label="Modelo" p-required></po-input>
-      <po-input class="po-md-4" name="versao" [(ngModel)]="vehicle.versao" p-label="Versão"></po-input>
-    </div>
-
-    <div class="po-row">
-      <po-number class="po-md-3" name="ano_fabricacao" [(ngModel)]="vehicle.ano_fabricacao" p-label="Ano Fab."></po-number>
-      <po-number class="po-md-3" name="ano_modelo" [(ngModel)]="vehicle.ano_modelo" p-label="Ano Mod."></po-number>
       <po-input class="po-md-3" name="cor" [(ngModel)]="vehicle.cor" p-label="Cor"></po-input>
-      <po-number class="po-md-3" name="km" [(ngModel)]="vehicle.quilometragem" p-label="KM"></po-number>
     </div>
 
     <div class="po-row">
-      <po-decimal class="po-md-6" name="valor_compra" [(ngModel)]="vehicle.valor_compra" p-label="Valor de Compra" p-decimals="2"></po-decimal>
-      <po-select class="po-md-6" name="status" [(ngModel)]="vehicle.status" p-label="Status" [p-options]="statusOptions"></po-select>
+      <po-input class="po-md-3" name="renavam" [(ngModel)]="vehicle.renavam" p-label="Renavam"></po-input>
+      <po-input class="po-md-5" name="chassi" [(ngModel)]="vehicle.chassi" p-label="Chassi"></po-input>
+      <po-number class="po-md-2" name="ano_fabricacao" [(ngModel)]="vehicle.ano_fabricacao" p-label="Ano Fab."></po-number>
+      <po-number class="po-md-2" name="ano_modelo" [(ngModel)]="vehicle.ano_modelo" p-label="Ano Mod."></po-number>
+    </div>
+
+    <po-divider p-label="Vínculos e Financeiro"></po-divider>
+
+    <div class="po-row">
+      <po-select class="po-md-6" name="fornecedor" [(ngModel)]="vehicle.fornecedor_id" p-label="Fornecedor (Origem)" [p-options]="supplierOptions" p-required></po-select>
+      <po-datepicker class="po-md-3" name="data_compra" [(ngModel)]="vehicle.data_compra" p-label="Data Compra"></po-datepicker>
+      <po-decimal class="po-md-3" name="valor_compra" [(ngModel)]="vehicle.valor_compra" p-label="Valor de Compra" p-decimals="2" p-required></po-decimal>
+    </div>
+
+    <div class="po-row">
+      <po-select class="po-md-6" name="cliente" [(ngModel)]="vehicle.cliente_id" p-label="Cliente (Destino)" [p-options]="clientOptions"></po-select>
+      <po-decimal class="po-md-3" name="valor_venda" [(ngModel)]="vehicle.valor_venda" p-label="Valor de Venda" p-decimals="2"></po-decimal>
+      <po-select class="po-md-3" name="status" [(ngModel)]="vehicle.status" p-label="Status" [p-options]="statusOptions"></po-select>
     </div>
   </form>
+</po-modal>
+
+<!-- Modal de Extrato do Veículo -->
+<po-modal #statementModal 
+  p-title="Extrato e Custos do Veículo" 
+  p-size="xl"
+  [p-primary-action]="{ label: 'Fechar', action: statementModal.close.bind(statementModal) }">
+
+  <div class="po-row">
+    <po-info class="po-md-3" p-label="Veículo" [p-value]="vehicle.marca + ' ' + vehicle.modelo"></po-info>
+    <po-info class="po-md-2" p-label="Placa" [p-value]="vehicle.placa"></po-info>
+    <po-info class="po-md-2" p-label="Compra" [p-value]="vehicle.valor_compra | currency:'BRL'"></po-info>
+    <po-info class="po-md-2" p-label="Venda" [p-value]="(vehicle.valor_venda || 0) | currency:'BRL'"></po-info>
+    <po-info class="po-md-3" p-label="Lucro/Prejuízo Estimado" [p-value]="vehicleSummary.profit | currency:'BRL'" 
+      [style.color]="vehicleSummary.profit >= 0 ? 'green' : 'red'">
+    </po-info>
+  </div>
+
+  <po-divider p-label="Movimentações Vinculadas (Manutenções, Comissões, etc.)"></po-divider>
+
+  <po-table 
+    [p-columns]="statementColumns" 
+    [p-items]="selectedVehicleStatement">
+  </po-table>
+
+  <div class="po-row po-mt-2">
+    <po-info class="po-md-6" p-label="Total de Despesas Adicionais" [p-value]="vehicleSummary.totalExpenses | currency:'BRL'"></po-info>
+    <po-info class="po-md-6" p-label="Total de Receitas Adicionais" [p-value]="vehicleSummary.totalRevenue | currency:'BRL'"></po-info>
+  </div>
 </po-modal>

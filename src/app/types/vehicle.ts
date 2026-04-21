@@ -11,5 +11,9 @@ export interface Vehicle {
   cor?: string;
   quilometragem: number;
   valor_compra: number;
+  data_compra?: string;
+  valor_venda?: number;
+  fornecedor_id?: number;
+  cliente_id?: number;
   status: 'Estoque' | 'Vendido' | 'Manutenção' | 'Preparação';
 }

@@ -84,7 +84,13 @@ export class DatabaseService {
         cor TEXT,
         quilometragem INTEGER,
         valor_compra REAL,
-        status TEXT NOT NULL
+        data_compra TEXT,
+        valor_venda REAL,
+        fornecedor_id INTEGER,
+        cliente_id INTEGER,
+        status TEXT NOT NULL,
+        FOREIGN KEY(fornecedor_id) REFERENCES pessoas(id),
+        FOREIGN KEY(cliente_id) REFERENCES pessoas(id)
       )
     `);
 
