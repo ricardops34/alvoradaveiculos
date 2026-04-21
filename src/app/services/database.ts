@@ -123,6 +123,16 @@ export class DatabaseService {
         FOREIGN KEY(veiculo_id) REFERENCES veiculos(id)
       )
     `);
+    
+    this.db.run(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        senha TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user'
+      )
+    `);
 
     this.insertSampleData();
   }
@@ -183,7 +193,12 @@ export class DatabaseService {
       { data: '2026-04-02', banco_id: 1, tipo: 'Débito', historico: 'Polimento e Lavagem Corolla', valor: -350, centro_custo_id: 2, veiculo_id: 1 },
       { data: '2026-04-05', banco_id: 1, tipo: 'Débito', historico: 'Compra Honda Civic CIV1C21', valor: -130000, centro_custo_id: 1, veiculo_id: 2, pessoa_id: 3 },
       { data: '2026-04-15', banco_id: 1, tipo: 'Crédito', historico: 'Venda Honda Civic CIV1C21', valor: 158000, centro_custo_id: 1, veiculo_id: 2, pessoa_id: 4 },
-      { data: '2026-04-16', banco_id: 1, tipo: 'Débito', historico: 'Comissão Venda Civic - Carlos', valor: -1580, centro_custo_id: 3, veiculo_id: 2, pessoa_id: 2 }
+      { data: '2026-04-16', banco_id: 1, tipo: 'Débito', historico: 'Comissão Venda Civic - Carlos', valor: -1580, centro_custo_id: 3, veiculo_id: 2, pessoa_id: 2 },
+      { data: '2026-04-18', banco_id: 2, tipo: 'Débito', historico: 'Troca de Óleo e Filtros Jeep Compass', valor: -850, centro_custo_id: 2, veiculo_id: 3 },
+      { data: '2026-04-20', banco_id: 1, tipo: 'Débito', historico: 'Conta de Energia Loja', valor: -1200, centro_custo_id: 4 },
+      { data: '2026-04-21', banco_id: 1, tipo: 'Débito', historico: 'Aluguel Salão', valor: -5000, centro_custo_id: 4 },
+      { data: '2026-03-25', banco_id: 1, tipo: 'Crédito', historico: 'Venda veículo consignado anterior', valor: 45000, centro_custo_id: 1 },
+      { data: '2026-04-22', banco_id: 1, tipo: 'Débito', historico: 'Reparo Freios Corolla', valor: -1200, centro_custo_id: 2, veiculo_id: 1 }
     ];
     movements.forEach(m => {
       this.db!.run(
@@ -191,6 +206,12 @@ export class DatabaseService {
         [m.data, m.banco_id, m.tipo, m.historico, m.valor, m.centro_custo_id, m.veiculo_id, m.pessoa_id]
       );
     });
+
+    // Usuário Administrador Padrão
+    this.db!.run(
+      "INSERT OR IGNORE INTO usuarios (nome, email, senha, role) VALUES (?, ?, ?, ?)",
+      ['Administrador', 'admin@alvorada.com', 'admin123', 'admin']
+    );
 
     this.save();
   }

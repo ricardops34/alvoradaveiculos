@@ -1,0 +1,32 @@
+<po-page-list 
+  p-title="Controle de Usuários e Permissões" 
+  [p-actions]="actions">
+
+  <po-table 
+    [p-columns]="columns" 
+    [p-items]="users" 
+    [p-actions]="tableActions">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #userModal 
+  [p-title]="isEditing ? 'Editar Usuário' : 'Novo Usuário'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: userModal.close.bind(userModal) }">
+
+  <form #userForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-12" name="nome" [(ngModel)]="user.nome" p-label="Nome Completo" p-required></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-input class="po-md-12" name="email" [(ngModel)]="user.email" p-label="E-mail / Login" p-required p-icon="po-icon-user"></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-password class="po-md-6" name="senha" [(ngModel)]="user.senha" p-label="Senha" p-required></po-password>
+      <po-select class="po-md-6" name="role" [(ngModel)]="user.role" p-label="Perfil de Acesso" [p-options]="roleOptions" p-required></po-select>
+    </div>
+  </form>
+</po-modal>
