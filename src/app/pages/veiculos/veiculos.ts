@@ -90,8 +90,8 @@ export class VeiculosComponent implements OnInit {
   loadPeopleOptions() {
     const people = this.db.getAll('pessoas');
     this.peopleOptions = people.map(p => ({ label: p.nome, value: p.id }));
-    this.supplierOptions = people.filter(p => p.tipo_cadastro === 'Fornecedor').map(p => ({ label: p.nome, value: p.id }));
-    this.clientOptions = people.filter(p => p.tipo_cadastro === 'Cliente').map(p => ({ label: p.nome, value: p.id }));
+    this.supplierOptions = people.filter(p => p.is_fornecedor).map(p => ({ label: p.nome, value: p.id }));
+    this.clientOptions = people.filter(p => p.is_cliente).map(p => ({ label: p.nome, value: p.id }));
   }
 
   loadVehicles() {

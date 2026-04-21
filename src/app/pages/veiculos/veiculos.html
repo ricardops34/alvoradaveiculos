@@ -57,9 +57,9 @@
   <div class="po-row">
     <po-info class="po-md-3" p-label="Veículo" [p-value]="vehicle.marca + ' ' + vehicle.modelo"></po-info>
     <po-info class="po-md-2" p-label="Placa" [p-value]="vehicle.placa"></po-info>
-    <po-info class="po-md-2" p-label="Compra" [p-value]="vehicle.valor_compra | currency:'BRL'"></po-info>
-    <po-info class="po-md-2" p-label="Venda" [p-value]="(vehicle.valor_venda || 0) | currency:'BRL'"></po-info>
-    <po-info class="po-md-3" p-label="Lucro/Prejuízo Estimado" [p-value]="vehicleSummary.profit | currency:'BRL'" 
+    <po-info class="po-md-2" p-label="Compra" [p-value]="(vehicle.valor_compra | currency:'BRL') ?? ''"></po-info>
+    <po-info class="po-md-2" p-label="Venda" [p-value]="((vehicle.valor_venda || 0) | currency:'BRL') ?? ''"></po-info>
+    <po-info class="po-md-3" p-label="Lucro/Prejuízo Estimado" [p-value]="(vehicleSummary.profit | currency:'BRL') ?? ''" 
       [style.color]="vehicleSummary.profit >= 0 ? 'green' : 'red'">
     </po-info>
   </div>
@@ -72,7 +72,7 @@
   </po-table>
 
   <div class="po-row po-mt-2">
-    <po-info class="po-md-6" p-label="Total de Despesas Adicionais" [p-value]="vehicleSummary.totalExpenses | currency:'BRL'"></po-info>
-    <po-info class="po-md-6" p-label="Total de Receitas Adicionais" [p-value]="vehicleSummary.totalRevenue | currency:'BRL'"></po-info>
+    <po-info class="po-md-6" p-label="Total de Despesas Adicionais" [p-value]="(vehicleSummary.totalExpenses | currency:'BRL') ?? ''"></po-info>
+    <po-info class="po-md-6" p-label="Total de Receitas Adicionais" [p-value]="(vehicleSummary.totalRevenue | currency:'BRL') ?? ''"></po-info>
   </div>
 </po-modal>

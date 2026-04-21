@@ -19,6 +19,15 @@ export class DatabaseService {
     if (savedData) {
       const uint8Array = new Uint8Array(JSON.parse(savedData));
       this.db = new SQL.Database(uint8Array);
+      // Migração para novos campos
+      try {
+        this.db!.run('ALTER TABLE pessoas ADD COLUMN is_cliente INTEGER DEFAULT 0');
+        this.db!.run('ALTER TABLE pessoas ADD COLUMN is_fornecedor INTEGER DEFAULT 0');
+        this.db!.run('ALTER TABLE pessoas ADD COLUMN is_vendedor INTEGER DEFAULT 0');
+        this.db!.run('ALTER TABLE pessoas ADD COLUMN is_socio INTEGER DEFAULT 0');
+      } catch (e) {
+        // Colunas já existem
+      }
     } else {
       this.db = new SQL.Database();
       this.createTables();
@@ -47,7 +56,10 @@ export class DatabaseService {
         nome TEXT NOT NULL,
         documento TEXT NOT NULL,
         tipo_pessoa TEXT NOT NULL,
-        tipo_cadastro TEXT NOT NULL,
+        is_cliente INTEGER DEFAULT 0,
+        is_fornecedor INTEGER DEFAULT 0,
+        is_vendedor INTEGER DEFAULT 0,
+        is_socio INTEGER DEFAULT 0,
         rg_ie TEXT,
         telefone TEXT,
         email TEXT,
@@ -129,15 +141,15 @@ export class DatabaseService {
 
     // Pessoas
     const people = [
-      { nome: 'Ricardo Alvorada', documento: '123.456.789-00', tipo_pessoa: 'Física', tipo_cadastro: 'Sócio', telefone: '(11) 98888-8888', email: 'ricardo@alvorada.com', cidade: 'São Paulo', estado: 'SP' },
-      { nome: 'Carlos Vendedor', documento: '456.789.123-00', tipo_pessoa: 'Física', tipo_cadastro: 'Vendedor', telefone: '(11) 97777-7777', email: 'carlos@vendas.com', cidade: 'São Paulo', estado: 'SP' },
-      { nome: 'Master Leilões S.A', documento: '12.345.678/0001-90', tipo_pessoa: 'Jurídica', tipo_cadastro: 'Fornecedor', telefone: '(11) 4444-4444', email: 'vendas@masterleiloes.com', cidade: 'São Bernardo', estado: 'SP' },
-      { nome: 'José Cliente Silva', documento: '789.123.456-00', tipo_pessoa: 'Física', tipo_cadastro: 'Cliente', telefone: '(11) 96666-6666', email: 'jose@gmail.com', cidade: 'Santo André', estado: 'SP' }
+      { nome: 'Ricardo Alvorada', documento: '123.456.789-00', tipo_pessoa: 'Física', is_cliente: 0, is_fornecedor: 0, is_vendedor: 0, is_socio: 1, telefone: '(11) 98888-8888', email: 'ricardo@alvorada.com', cidade: 'São Paulo', estado: 'SP' },
+      { nome: 'Carlos Vendedor', documento: '456.789.123-00', tipo_pessoa: 'Física', is_cliente: 0, is_fornecedor: 0, is_vendedor: 1, is_socio: 0, telefone: '(11) 97777-7777', email: 'carlos@vendas.com', cidade: 'São Paulo', estado: 'SP' },
+      { nome: 'Master Leilões S.A', documento: '12.345.678/0001-90', tipo_pessoa: 'Jurídica', is_cliente: 0, is_fornecedor: 1, is_vendedor: 0, is_socio: 0, telefone: '(11) 4444-4444', email: 'vendas@masterleiloes.com', cidade: 'São Bernardo', estado: 'SP' },
+      { nome: 'José Cliente Silva', documento: '789.123.456-00', tipo_pessoa: 'Física', is_cliente: 1, is_fornecedor: 0, is_vendedor: 0, is_socio: 0, telefone: '(11) 96666-6666', email: 'jose@gmail.com', cidade: 'Santo André', estado: 'SP' }
     ];
     people.forEach(p => {
       this.db!.run(
-        'INSERT INTO pessoas (nome, documento, tipo_pessoa, tipo_cadastro, telefone, email, cidade, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [p.nome, p.documento, p.tipo_pessoa, p.tipo_cadastro, p.telefone, p.email, p.cidade, p.estado]
+        'INSERT INTO pessoas (nome, documento, tipo_pessoa, is_cliente, is_fornecedor, is_vendedor, is_socio, telefone, email, cidade, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [p.nome, p.documento, p.tipo_pessoa, p.is_cliente, p.is_fornecedor, p.is_vendedor, p.is_socio, p.telefone, p.email, p.cidade, p.estado]
       );
     });
 

@@ -18,31 +18,33 @@
 
   <form #personForm="ngForm">
     <div class="po-row">
-      <po-input class="po-md-6" name="nome" [(ngModel)]="person.nome" p-label="Nome / Razão Social" p-required></po-input>
-      <po-select class="po-md-3" name="tipo_pessoa" [(ngModel)]="person.tipo_pessoa" p-label="Tipo" [p-options]="typeOptions"></po-select>
+      <po-input class="po-md-6" name="nome" [(ngModel)]="person.nome" p-label="Nome Completo / Razão Social" p-required></po-input>
+      <po-select class="po-md-3" name="tipo_pessoa" [(ngModel)]="person.tipo_pessoa" p-label="Tipo" [p-options]="typeOptions" p-required></po-select>
       <po-input class="po-md-3" name="documento" [(ngModel)]="person.documento" p-label="CPF / CNPJ" [p-mask]="documentMask" p-required></po-input>
     </div>
 
     <div class="po-row">
-      <po-select class="po-md-3" name="tipo_cadastro" [(ngModel)]="person.tipo_cadastro" p-label="Categoria" [p-options]="categoryOptions" p-required></po-select>
-      <po-input class="po-md-3" name="rg_ie" [(ngModel)]="person.rg_ie" p-label="RG / IE"></po-input>
-      <po-input class="po-md-3" name="telefone" [(ngModel)]="person.telefone" p-label="Telefone" p-mask="(99) 99999-9999"></po-input>
-      <po-input class="po-md-3" name="email" [(ngModel)]="person.email" p-label="E-mail"></po-input>
+      <po-checkbox-group 
+        class="po-md-12" 
+        name="roles" 
+        [(ngModel)]="roles" 
+        p-label="Papéis da Pessoa (Selecione todos que se aplicam)" 
+        [p-options]="roleOptions">
+      </po-checkbox-group>
     </div>
 
-    <po-divider p-label="Endereço"></po-divider>
+    <po-divider p-label="Contato e Endereço"></po-divider>
 
     <div class="po-row">
-      <po-input class="po-md-2" name="cep" [(ngModel)]="person.cep" p-label="CEP" p-mask="99999-999"></po-input>
-      <po-input class="po-md-6" name="endereco" [(ngModel)]="person.endereco" p-label="Logradouro"></po-input>
-      <po-input class="po-md-2" name="numero" [(ngModel)]="person.numero" p-label="Nº"></po-input>
-      <po-input class="po-md-2" name="complemento" [(ngModel)]="person.complemento" p-label="Compl."></po-input>
+      <po-input class="po-md-4" name="email" [(ngModel)]="person.email" p-label="E-mail" p-icon="po-icon-mail"></po-input>
+      <po-input class="po-md-4" name="telefone" [(ngModel)]="person.telefone" p-label="Telefone" p-mask="(99) 99999-9999"></po-input>
+      <po-input class="po-md-4" name="cep" [(ngModel)]="person.cep" p-label="CEP" p-mask="99999-999"></po-input>
     </div>
 
     <div class="po-row">
-      <po-input class="po-md-5" name="bairro" [(ngModel)]="person.bairro" p-label="Bairro"></po-input>
-      <po-input class="po-md-5" name="cidade" [(ngModel)]="person.cidade" p-label="Cidade"></po-input>
-      <po-input class="po-md-2" name="estado" [(ngModel)]="person.estado" p-label="UF" p-mask="AA"></po-input>
+      <po-input class="po-md-6" name="endereco" [(ngModel)]="person.endereco" p-label="Endereço"></po-input>
+      <po-input class="po-md-2" name="numero" [(ngModel)]="person.numero" p-label="Número"></po-input>
+      <po-input class="po-md-4" name="cidade" [(ngModel)]="person.cidade" p-label="Cidade"></po-input>
     </div>
   </form>
 </po-modal>

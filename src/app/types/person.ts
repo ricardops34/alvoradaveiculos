@@ -2,8 +2,11 @@ export interface Person {
   id?: number;
   nome: string;
   documento: string; // CPF or CNPJ
-  tipo_pessoa: 'Física' | 'Jurídica';
-  tipo_cadastro: 'Cliente' | 'Fornecedor' | 'Vendedor' | 'Sócio';
+  tipo_pessoa: string;
+  is_cliente: boolean;
+  is_fornecedor: boolean;
+  is_vendedor: boolean;
+  is_socio: boolean;
   rg_ie?: string;
   telefone?: string;
   email?: string;

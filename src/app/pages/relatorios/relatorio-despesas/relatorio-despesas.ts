@@ -30,9 +30,9 @@ export class RelatorioDespesasComponent implements OnInit {
     { property: 'quantidade', label: 'Lançamentos', type: 'number' },
     { property: 'valor_total', label: 'Valor Total', type: 'currency', format: 'BRL' },
     { property: 'percentual', label: '%', type: 'subtitle', subtitles: [
-      { value: 'alto', color: 'color-07', label: 'Alto' },
-      { value: 'medio', color: 'color-08', label: 'Médio' },
-      { value: 'baixo', color: 'color-10', label: 'Baixo' }
+      { value: 'alto', color: 'color-07', label: 'Alto', content: '!!' },
+      { value: 'medio', color: 'color-08', label: 'Médio', content: '!' },
+      { value: 'baixo', color: 'color-10', label: 'Baixo', content: '-' }
     ]}
   ];
 

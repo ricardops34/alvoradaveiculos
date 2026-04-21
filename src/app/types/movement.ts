@@ -2,7 +2,7 @@ export interface Movement {
   id?: number;
   data: string;
   banco_id: number;
-  tipo: 'Crédito' | 'Débito';
+  tipo: string;
   historico: string;
   valor: number;
   centro_custo_id: number;

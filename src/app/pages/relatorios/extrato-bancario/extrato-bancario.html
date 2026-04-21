@@ -14,10 +14,10 @@
   <div class="po-row po-mt-2">
     <po-widget class="po-md-12" p-title="Resumo do Período">
       <div class="po-row">
-        <po-info class="po-md-6" p-label="Saldo Acumulado no Período" [p-value]="totalBalance | currency:'BRL'"
+        <po-info class="po-md-6" p-label="Saldo Acumulado no Período" [p-value]="(totalBalance | currency:'BRL') ?? ''"
           [style.color]="totalBalance >= 0 ? 'green' : 'red'">
         </po-info>
-        <po-info class="po-md-6" p-label="Movimentações" [p-value]="movements.length"></po-info>
+        <po-info class="po-md-6" p-label="Movimentações" [p-value]="movements.length.toString()"></po-info>
       </div>
     </po-widget>
   </div>

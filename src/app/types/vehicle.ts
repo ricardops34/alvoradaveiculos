@@ -15,5 +15,5 @@ export interface Vehicle {
   valor_venda?: number;
   fornecedor_id?: number;
   cliente_id?: number;
-  status: 'Estoque' | 'Vendido' | 'Manutenção' | 'Preparação';
+  status: string;
 }

@@ -8,7 +8,8 @@ import {
   PoTableAction, 
   PoModalComponent, 
   PoNotificationService, 
-  PoSelectOption 
+  PoSelectOption,
+  PoCheckboxGroupOption
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Person } from '../../types/person';
@@ -26,6 +27,15 @@ export class PessoasComponent implements OnInit {
   person: Person = this.getEmptyPerson();
   isEditing: boolean = false;
 
+  // For checkbox group
+  roles: string[] = [];
+  public readonly roleOptions: PoCheckboxGroupOption[] = [
+    { label: 'Cliente', value: 'cliente' },
+    { label: 'Fornecedor', value: 'fornecedor' },
+    { label: 'Vendedor', value: 'vendedor' },
+    { label: 'Sócio', value: 'socio' }
+  ];
+
   public readonly actions: PoPageAction[] = [
     { label: 'Nova Pessoa', action: this.openNew.bind(this), icon: 'po-icon-plus' }
   ];
@@ -38,31 +48,15 @@ export class PessoasComponent implements OnInit {
   public readonly columns: PoTableColumn[] = [
     { property: 'nome', label: 'Nome' },
     { property: 'documento', label: 'CPF/CNPJ' },
-    { property: 'tipo_pessoa', label: 'Tipo', type: 'label', labels: [
-      { value: 'Física', color: 'color-01', label: 'Física' },
-      { value: 'Jurídica', color: 'color-02', label: 'Jurídica' }
-    ]},
-    { property: 'tipo_cadastro', label: 'Categoria', type: 'subtitle', subtitles: [
-      { value: 'Cliente', color: 'color-10', label: 'Cliente', content: 'CL' },
-      { value: 'Fornecedor', color: 'color-11', label: 'Fornecedor', content: 'FO' },
-      { value: 'Vendedor', color: 'color-07', label: 'Vendedor', content: 'VE' },
-      { value: 'Sócio', color: 'color-08', label: 'Sócio', content: 'SO' }
-    ]},
+    { property: 'tipo_pessoa', label: 'Tipo' },
+    { property: 'papeis', label: 'Papéis' },
     { property: 'telefone', label: 'Telefone' },
-    { property: 'cidade', label: 'Cidade' },
-    { property: 'estado', label: 'UF' }
+    { property: 'cidade', label: 'Cidade' }
   ];
 
   public readonly typeOptions: PoSelectOption[] = [
     { label: 'Física', value: 'Física' },
     { label: 'Jurídica', value: 'Jurídica' }
-  ];
-
-  public readonly categoryOptions: PoSelectOption[] = [
-    { label: 'Cliente', value: 'Cliente' },
-    { label: 'Fornecedor', value: 'Fornecedor' },
-    { label: 'Vendedor', value: 'Vendedor' },
-    { label: 'Sócio', value: 'Sócio' }
   ];
 
   constructor(
@@ -76,7 +70,15 @@ export class PessoasComponent implements OnInit {
   }
 
   loadPeople() {
-    this.people = this.db.getAll('pessoas');
+    const rawPeople = this.db.getAll('pessoas');
+    this.people = rawPeople.map(p => {
+      const papeis = [];
+      if (p.is_cliente) papeis.push('Cliente');
+      if (p.is_fornecedor) papeis.push('Fornecedor');
+      if (p.is_vendedor) papeis.push('Vendedor');
+      if (p.is_socio) papeis.push('Sócio');
+      return { ...p, papeis: papeis.join(', ') };
+    });
   }
 
   getEmptyPerson(): Person {
@@ -84,7 +86,10 @@ export class PessoasComponent implements OnInit {
       nome: '',
       documento: '',
       tipo_pessoa: 'Física',
-      tipo_cadastro: 'Cliente',
+      is_cliente: false,
+      is_fornecedor: false,
+      is_vendedor: false,
+      is_socio: false,
       estado: ''
     };
   }
@@ -92,22 +97,44 @@ export class PessoasComponent implements OnInit {
   openNew() {
     this.isEditing = false;
     this.person = this.getEmptyPerson();
+    this.roles = [];
     this.personModal.open();
   }
 
   openEdit(person: Person) {
     this.isEditing = true;
     this.person = { ...person };
+    this.roles = [];
+    if (person.is_cliente) this.roles.push('cliente');
+    if (person.is_fornecedor) this.roles.push('fornecedor');
+    if (person.is_vendedor) this.roles.push('vendedor');
+    if (person.is_socio) this.roles.push('socio');
     this.personModal.open();
   }
 
   save() {
+    // Sync roles to person object
+    this.person.is_cliente = this.roles.includes('cliente');
+    this.person.is_fornecedor = this.roles.includes('fornecedor');
+    this.person.is_vendedor = this.roles.includes('vendedor');
+    this.person.is_socio = this.roles.includes('socio');
+
+    // Convert boolean to number for SQLite
+    const dataToSave = {
+      ...this.person,
+      is_cliente: this.person.is_cliente ? 1 : 0,
+      is_fornecedor: this.person.is_fornecedor ? 1 : 0,
+      is_vendedor: this.person.is_vendedor ? 1 : 0,
+      is_socio: this.person.is_socio ? 1 : 0
+    };
+    delete (dataToSave as any).papeis;
+
     if (this.isEditing) {
-      this.db.update('pessoas', this.person.id!, this.person);
-      this.poNotification.success('Pessoa atualizada com sucesso!');
+      this.db.update('pessoas', this.person.id!, dataToSave);
+      this.poNotification.success('Pessoa atualizada!');
     } else {
-      this.db.insert('pessoas', this.person);
-      this.poNotification.success('Pessoa cadastrada com sucesso!');
+      this.db.insert('pessoas', dataToSave);
+      this.poNotification.success('Pessoa cadastrada!');
     }
     this.loadPeople();
     this.personModal.close();

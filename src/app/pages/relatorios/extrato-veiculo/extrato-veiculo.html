@@ -19,8 +19,8 @@
       <po-widget class="po-md-8" p-title="Informações do Veículo">
         <div class="po-row">
           <po-info class="po-md-3" p-label="Placa" [p-value]="vehicleData.placa"></po-info>
-          <po-info class="po-md-3" p-label="Compra" [p-value]="vehicleData.valor_compra | currency:'BRL'"></po-info>
-          <po-info class="po-md-3" p-label="Venda" [p-value]="(vehicleData.valor_venda || 0) | currency:'BRL'"></po-info>
+          <po-info class="po-md-3" p-label="Compra" [p-value]="(vehicleData.valor_compra | currency:'BRL') ?? ''"></po-info>
+          <po-info class="po-md-3" p-label="Venda" [p-value]="((vehicleData.valor_venda || 0) | currency:'BRL') ?? ''"></po-info>
           <po-info class="po-md-3" p-label="Status" [p-value]="vehicleData.status"></po-info>
         </div>
       </po-widget>
@@ -34,8 +34,8 @@
     </po-table>
 
     <div class="po-row po-mt-2">
-      <po-info class="po-md-6" p-label="Total de Despesas Adicionais" [p-value]="summary.expenses | currency:'BRL'"></po-info>
-      <po-info class="po-md-6" p-label="Total de Receitas Adicionais" [p-value]="summary.revenue | currency:'BRL'"></po-info>
+      <po-info class="po-md-6" p-label="Total de Despesas Adicionais" [p-value]="(summary.expenses | currency:'BRL') ?? ''"></po-info>
+      <po-info class="po-md-6" p-label="Total de Receitas Adicionais" [p-value]="(summary.revenue | currency:'BRL') ?? ''"></po-info>
     </div>
   </div>
 
