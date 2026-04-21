@@ -1,0 +1,48 @@
+<po-page-list 
+  p-title="Cadastro de Pessoas" 
+  [p-actions]="actions">
+
+  <po-table 
+    [p-columns]="columns" 
+    [p-items]="people" 
+    [p-actions]="tableActions">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #personModal 
+  [p-title]="isEditing ? 'Editar Pessoa' : 'Nova Pessoa'"
+  p-size="xl"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: personModal.close.bind(personModal) }">
+
+  <form #personForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-6" name="nome" [(ngModel)]="person.nome" p-label="Nome / Razão Social" p-required></po-input>
+      <po-select class="po-md-3" name="tipo_pessoa" [(ngModel)]="person.tipo_pessoa" p-label="Tipo" [p-options]="typeOptions"></po-select>
+      <po-input class="po-md-3" name="documento" [(ngModel)]="person.documento" p-label="CPF / CNPJ" [p-mask]="documentMask" p-required></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-select class="po-md-3" name="tipo_cadastro" [(ngModel)]="person.tipo_cadastro" p-label="Categoria" [p-options]="categoryOptions" p-required></po-select>
+      <po-input class="po-md-3" name="rg_ie" [(ngModel)]="person.rg_ie" p-label="RG / IE"></po-input>
+      <po-input class="po-md-3" name="telefone" [(ngModel)]="person.telefone" p-label="Telefone" p-mask="(99) 99999-9999"></po-input>
+      <po-input class="po-md-3" name="email" [(ngModel)]="person.email" p-label="E-mail"></po-input>
+    </div>
+
+    <po-divider p-label="Endereço"></po-divider>
+
+    <div class="po-row">
+      <po-input class="po-md-2" name="cep" [(ngModel)]="person.cep" p-label="CEP" p-mask="99999-999"></po-input>
+      <po-input class="po-md-6" name="endereco" [(ngModel)]="person.endereco" p-label="Logradouro"></po-input>
+      <po-input class="po-md-2" name="numero" [(ngModel)]="person.numero" p-label="Nº"></po-input>
+      <po-input class="po-md-2" name="complemento" [(ngModel)]="person.complemento" p-label="Compl."></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-input class="po-md-5" name="bairro" [(ngModel)]="person.bairro" p-label="Bairro"></po-input>
+      <po-input class="po-md-5" name="cidade" [(ngModel)]="person.cidade" p-label="Cidade"></po-input>
+      <po-input class="po-md-2" name="estado" [(ngModel)]="person.estado" p-label="UF" p-mask="AA"></po-input>
+    </div>
+  </form>
+</po-modal>

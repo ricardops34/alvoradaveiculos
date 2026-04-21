@@ -1,0 +1,30 @@
+<po-page-list 
+  p-title="Cadastro de Bancos" 
+  [p-actions]="actions">
+
+  <po-table 
+    [p-columns]="columns" 
+    [p-items]="banks" 
+    [p-actions]="tableActions">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #bankModal 
+  [p-title]="isEditing ? 'Editar Banco' : 'Novo Banco'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: bankModal.close.bind(bankModal) }">
+
+  <form #bankForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-3" name="codigo" [(ngModel)]="bank.codigo" p-label="Código" p-required></po-input>
+      <po-input class="po-md-9" name="nome" [(ngModel)]="bank.nome" p-label="Nome do Banco" p-required></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-input class="po-md-4" name="agencia" [(ngModel)]="bank.agencia" p-label="Agência" p-required></po-input>
+      <po-input class="po-md-4" name="conta" [(ngModel)]="bank.conta" p-label="Conta" p-required></po-input>
+      <po-select class="po-md-4" name="tipo" [(ngModel)]="bank.tipo" p-label="Tipo" [p-options]="typeOptions" p-required></po-select>
+    </div>
+  </form>
+</po-modal>

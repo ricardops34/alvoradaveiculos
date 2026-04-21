@@ -1,0 +1,121 @@
+.welcome-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  padding: 20px;
+}
+
+.welcome-content {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.brand-section {
+  margin-bottom: 48px;
+
+  .logo {
+    margin-bottom: 16px;
+    
+    svg {
+      width: 100px;
+      height: 100px;
+    }
+  }
+
+  .company-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.5px;
+  }
+
+  .tagline {
+    font-size: 16px;
+    color: #FF6B00;
+    margin: 0;
+    font-weight: 500;
+  }
+}
+
+.action-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 40px 32px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+
+  h2 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 12px 0;
+  }
+
+  .welcome-text {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 32px 0;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: inherit;
+
+    .icon {
+      font-size: 20px;
+    }
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #FF6B00 0%, #e55a00 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 20px rgba(255, 107, 0, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255, 107, 0, 0.4);
+    }
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+
+    &:hover {
+      border-color: #FF6B00;
+      color: #FF6B00;
+    }
+  }
+}
+
+.footer {
+  margin-top: 32px;
+
+  p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 4px 0;
+  }
+}

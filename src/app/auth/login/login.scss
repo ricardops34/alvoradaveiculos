@@ -1,0 +1,114 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: 
+    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+    url('/fundologin.png') center/cover no-repeat;
+  padding: 20px;
+}
+
+.login-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.logo-section {
+  text-align: center;
+  margin-bottom: 32px;
+
+  .logo-img {
+    max-height: 80px;
+    width: auto;
+    margin: 0 auto 16px;
+    display: block;
+  }
+
+  .title {
+    display: block;
+    width: 100%;
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+  }
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.remember-field {
+  margin-top: -8px;
+}
+
+.forgot-section {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.forgot-link {
+  color: #0f3460;
+  font-size: 14px;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.register-section {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: #666;
+
+  a {
+    color: #FF6B00;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+:host ::ng-deep {
+  .po-input {
+    width: 100% !important;
+  }
+
+  po-input {
+    width: 100%;
+  display: block;
+  }
+
+  .po-button {
+    width: 100% !important;
+    display: block;
+  }
+
+  po-button {
+    width: 100%;
+    display: block;
+  }
+}

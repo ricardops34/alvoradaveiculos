@@ -1,0 +1,28 @@
+<po-page-list 
+  p-title="Centros de Custo" 
+  [p-actions]="actions">
+
+  <po-table 
+    [p-columns]="columns" 
+    [p-items]="costCenters" 
+    [p-actions]="tableActions">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #ccModal 
+  [p-title]="isEditing ? 'Editar Centro de Custo' : 'Novo Centro de Custo'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: ccModal.close.bind(ccModal) }">
+
+  <form #ccForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-4" name="codigo" [(ngModel)]="cc.codigo" p-label="Código" p-required></po-input>
+      <po-input class="po-md-8" name="nome" [(ngModel)]="cc.nome" p-label="Descrição" p-required></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-select class="po-md-6" name="tipo" [(ngModel)]="cc.tipo" p-label="Tipo" [p-options]="typeOptions" p-required></po-select>
+    </div>
+  </form>
+</po-modal>

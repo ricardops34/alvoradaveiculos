@@ -1,0 +1,92 @@
+<div class="register-container">
+  <div class="register-content">
+    <div class="brand-section">
+      <div class="logo">
+        <svg width="60" height="60" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="38" stroke="#FF6B00" stroke-width="4"/>
+          <path d="M20 45C20 45 25 30 40 30C55 30 60 45 60 45" stroke="#FF6B00" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="28" cy="48" r="6" stroke="#FF6B00" stroke-width="3"/>
+          <circle cx="52" cy="48" r="6" stroke="#FF6B00" stroke-width="3"/>
+          <path d="M25 52L20 60" stroke="#FF6B00" stroke-width="3" stroke-linecap="round"/>
+          <path d="M55 52L60 60" stroke="#FF6B00" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="company-name">Alvorada Veículos</h1>
+    </div>
+
+    <form class="register-form" (ngSubmit)="onSubmit()">
+      <h2>Crie sua conta</h2>
+      <p class="subtitle">Preencha seus dados para se cadastrar</p>
+
+      <div class="form-group">
+        <label for="name">Nome Completo</label>
+        <input 
+          type="text" 
+          id="name" 
+          [(ngModel)]="name" 
+          name="name"
+          placeholder="Seu nome completo"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input 
+          type="email" 
+          id="email" 
+          [(ngModel)]="email" 
+          name="email"
+          placeholder="seu@email.com"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Senha</label>
+        <input 
+          type="password" 
+          id="password" 
+          [(ngModel)]="password" 
+          name="password"
+          placeholder="••••••••"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar Senha</label>
+        <input 
+          type="password" 
+          id="confirmPassword" 
+          [(ngModel)]="confirmPassword" 
+          name="confirmPassword"
+          placeholder="••••••••"
+          required
+        >
+      </div>
+
+      <div class="form-options">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="acceptTerms" name="acceptTerms">
+          <span>Eu aceito os <a href="#">Termos de Uso</a> e <a href="#">Política de Privacidade</a></span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn-register" [disabled]="loading || !acceptTerms">
+        <span *ngIf="!loading">Cadastrar</span>
+        <span *ngIf="loading" class="loading">Cadastrando...</span>
+      </button>
+
+      <div *ngIf="error" class="error-message">
+        {{ error }}
+      </div>
+    </form>
+
+    <div class="login-section">
+      <p>Já tem conta? <a routerLink="/auth/login">Entre</a></p>
+    </div>
+
+    <a routerLink="/auth" class="back-link">← Voltar</a>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+<po-page-list 
+  p-title="Cadastro de Veículos" 
+  [p-actions]="actions">
+
+  <po-table 
+    [p-columns]="columns" 
+    [p-items]="vehicles" 
+    [p-actions]="tableActions">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #vehicleModal 
+  [p-title]="isEditing ? 'Editar Veículo' : 'Novo Veículo'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: vehicleModal.close.bind(vehicleModal) }">
+
+  <form #vehicleForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-3" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-mask="AAA-9A99"></po-input>
+      <po-input class="po-md-3" name="renavam" [(ngModel)]="vehicle.renavam" p-label="Renavam"></po-input>
+      <po-input class="po-md-6" name="chassi" [(ngModel)]="vehicle.chassi" p-label="Chassi"></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-input class="po-md-4" name="marca" [(ngModel)]="vehicle.marca" p-label="Marca" p-required></po-input>
+      <po-input class="po-md-4" name="modelo" [(ngModel)]="vehicle.modelo" p-label="Modelo" p-required></po-input>
+      <po-input class="po-md-4" name="versao" [(ngModel)]="vehicle.versao" p-label="Versão"></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-number class="po-md-3" name="ano_fabricacao" [(ngModel)]="vehicle.ano_fabricacao" p-label="Ano Fab."></po-number>
+      <po-number class="po-md-3" name="ano_modelo" [(ngModel)]="vehicle.ano_modelo" p-label="Ano Mod."></po-number>
+      <po-input class="po-md-3" name="cor" [(ngModel)]="vehicle.cor" p-label="Cor"></po-input>
+      <po-number class="po-md-3" name="km" [(ngModel)]="vehicle.quilometragem" p-label="KM"></po-number>
+    </div>
+
+    <div class="po-row">
+      <po-decimal class="po-md-6" name="valor_compra" [(ngModel)]="vehicle.valor_compra" p-label="Valor de Compra" p-decimals="2"></po-decimal>
+      <po-select class="po-md-6" name="status" [(ngModel)]="vehicle.status" p-label="Status" [p-options]="statusOptions"></po-select>
+    </div>
+  </form>
+</po-modal>
