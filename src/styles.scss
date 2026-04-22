@@ -42,11 +42,12 @@ body.po-theme-dark {
   color: #e8e8e8;
 
   /* Brand colors mais claras para legibilidade no dark */
-  --color-brand-01-base: #a366cc;
-  --color-brand-01-dark: #c490e0;
-  --color-brand-02-base: #e06090;
-  --color-action-default: #a366cc;
-  --color-action-hover: #c490e0;
+  --color-brand-01-base: #c490e0;
+  --color-brand-01-dark: #d9b3f0;
+  --color-brand-01-darker: #a366cc;
+  --color-brand-02-base: #f0a0c0;
+  --color-action-default: #c490e0;
+  --color-action-hover: #d9b3f0;
 
   /* Correções pontuais - elementos com background hardcoded */
   .po-toolbar {
@@ -85,6 +86,15 @@ body.po-theme-dark {
   /* Texto dos itens do combo/select */
   .po-combo-item-title,
   .po-select-item-title {
+    color: var(--color-neutral-dark-90) !important;
+  }
+
+  /* Labels de checkbox, radio e links - forçar texto legível */
+  .po-checkbox-group-label,
+  .po-checkbox-label,
+  .po-radio-group-label,
+  po-checkbox label,
+  po-radio label {
     color: var(--color-neutral-dark-90) !important;
   }
 
