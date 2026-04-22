@@ -21,8 +21,11 @@
     "@po-ui/ng-components": "^21.10.0",
     "@po-ui/ng-templates": "^21.10.0",
     "@totvs/po-theme": "^21.10.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@angular/build": "^21.2.3",

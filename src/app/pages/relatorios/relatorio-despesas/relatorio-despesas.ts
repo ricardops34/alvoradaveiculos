@@ -7,6 +7,9 @@ import {
   PoChartSerie 
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../../services/database';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-relatorio-despesas',
@@ -56,15 +59,20 @@ export class RelatorioDespesasComponent implements OnInit {
         const d = m.data;
         return (!this.filter.data_inicio || d >= this.filter.data_inicio) &&
                (!this.filter.data_fim || d <= this.filter.data_fim);
-      });
+      })
+      .map(m => ({
+        ...m,
+        centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome || 'Outros',
+        veiculo_placa: vehicles.find(v => v.id === m.veiculo_id)?.placa || 'N/A'
+      }));
 
-    this.totalExpenses = expenses.reduce((sum, m) => sum + Math.abs(m.valor), 0);
+    this.totalExpenses = this.movements.reduce((sum, m) => sum + Math.abs(m.valor), 0);
 
     const grouped: { [key: number]: any } = {};
-    expenses.forEach(m => {
+    this.movements.forEach(m => {
       if (!grouped[m.centro_custo_id]) {
         grouped[m.centro_custo_id] = {
-          centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome || 'Outros',
+          centro_custo_nome: m.centro_custo_nome,
           valor_total: 0,
           quantidade: 0
         };

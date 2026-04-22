@@ -8,6 +8,9 @@ import {
   PoNotificationService 
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../../services/database';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-extrato-bancario',
@@ -90,5 +93,49 @@ export class ExtratoBancarioComponent implements OnInit {
     const totalMovementsUntilNow = allMovements.filter(m => m.banco_id === this.filter.banco_id);
     this.totalBalance = totalMovementsUntilNow.reduce((sum, m) => sum + m.valor, 0);
     this.availableBalance = this.totalBalance + this.creditLimit;
+  }
+
+  exportXLS() {
+    const data = this.movements.map(m => ({
+      Data: m.data,
+      Histórico: m.historico,
+      'Centro de Custo': m.centro_custo_nome,
+      Tipo: m.tipo,
+      Valor: m.valor
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Extrato');
+    XLSX.writeFile(wb, `Extrato_Bancario_${this.filter.data_inicio}_${this.filter.data_fim}.xlsx`);
+  }
+
+  exportPDF() {
+    const doc = new jsPDF();
+    const bankName = this.banks.find(b => b.value === this.filter.banco_id)?.label || '';
+    
+    doc.text('Extrato Bancário - Alvorada Veículos', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Banco: ${bankName}`, 14, 22);
+    doc.text(`Período: ${this.filter.data_inicio} até ${this.filter.data_fim}`, 14, 28);
+
+    const body = this.movements.map(m => [
+      m.data,
+      m.historico,
+      m.centro_custo_nome,
+      m.tipo,
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.valor)
+    ]);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [['Data', 'Histórico', 'Centro de Custo', 'Tipo', 'Valor']],
+      body: body,
+    });
+
+    const finalY = (doc as any).lastAutoTable.cursor.y || 40;
+    doc.text(`Saldo Total: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.totalBalance)}`, 14, finalY + 10);
+    
+    doc.save(`Extrato_Bancario_${this.filter.data_inicio}_${this.filter.data_fim}.pdf`);
   }
 }

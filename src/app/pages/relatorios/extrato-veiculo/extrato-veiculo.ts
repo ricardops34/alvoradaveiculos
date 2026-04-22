@@ -7,6 +7,9 @@ import {
   PoSelectOption 
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../../services/database';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 @Component({
   selector: 'app-extrato-veiculo',
@@ -71,5 +74,44 @@ export class ExtratoVeiculoComponent implements OnInit {
       revenue: rev,
       profit: (this.vehicleData.valor_venda || 0) - this.vehicleData.valor_compra - exp + rev
     };
+  exportXLS() {
+    const data = this.movements.map(m => ({
+      Data: m.data,
+      Histórico: m.historico,
+      'Centro de Custo': m.centro_custo_nome,
+      Tipo: m.tipo,
+      Valor: m.valor
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Extrato_Veiculo');
+    XLSX.writeFile(wb, `Extrato_Veiculo_${this.selectedVehicle?.placa}.xlsx`);
+  }
+
+  exportPDF() {
+    const doc = new jsPDF();
+    doc.text('Extrato por Veículo - Alvorada Veículos', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Veículo: ${this.selectedVehicle?.marca} ${this.selectedVehicle?.modelo} (${this.selectedVehicle?.placa})`, 14, 22);
+
+    const body = this.movements.map(m => [
+      m.data,
+      m.historico,
+      m.centro_custo_nome,
+      m.tipo,
+      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.valor)
+    ]);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [['Data', 'Histórico', 'Centro de Custo', 'Tipo', 'Valor']],
+      body: body,
+    });
+
+    const finalY = (doc as any).lastAutoTable.cursor.y || 40;
+    doc.text(`Lucro/Prejuízo: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.vehicleSummary.profit)}`, 14, finalY + 10);
+    
+    doc.save(`Extrato_Veiculo_${this.selectedVehicle?.placa}.pdf`);
   }
 }

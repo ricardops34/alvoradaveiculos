@@ -3,8 +3,10 @@
     <po-select class="po-md-4" name="banco" [(ngModel)]="filter.banco_id" p-label="Banco" [p-options]="banks" (p-change)="search()"></po-select>
     <po-datepicker class="po-md-3" name="inicio" [(ngModel)]="filter.data_inicio" p-label="Data Início"></po-datepicker>
     <po-datepicker class="po-md-3" name="fim" [(ngModel)]="filter.data_fim" p-label="Data Fim"></po-datepicker>
-    <po-button class="po-md-2 po-mt-4" p-label="Filtrar" (p-click)="search()" p-icon="an an-funnel"></po-button>
-  </div>
+      <po-button class="po-md-2 po-mt-4" p-label="Filtrar" p-type="primary" (p-click)="search()"></po-button>
+      <po-button class="po-md-1 po-mt-4" p-icon="an an-file-xls" (p-click)="exportXLS()" p-tooltip="Exportar Excel"></po-button>
+      <po-button class="po-md-1 po-mt-4" p-icon="an an-file-pdf" (p-click)="exportPDF()" p-tooltip="Exportar PDF"></po-button>
+    </div>
 
   <div class="po-row po-mt-2">
     <po-widget class="po-md-4" p-title="Saldo Atual">
