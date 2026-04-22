@@ -196,14 +196,18 @@ export class VeiculosComponent implements OnInit {
       centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome
     }));
 
-    // Calculate Summary
-    const expenses = movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
-    const revenue = movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + parseFloat(m.valor), 0);
+    // Separar movimentos que são a própria compra/venda para não somar em duplicidade
+    const isPurchase = (m: any) => m.historico.startsWith('Compra Veículo');
+    const isSale = (m: any) => m.historico.startsWith('Venda Veículo');
+
+    // Despesas e receitas ADICIONAIS (ex: manutenção, comissão) - exclui a compra e venda
+    const additionalExpenses = movements.filter(m => m.tipo === 'Débito' && !isPurchase(m)).reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
+    const additionalRevenue = movements.filter(m => m.tipo === 'Crédito' && !isSale(m)).reduce((sum, m) => sum + parseFloat(m.valor), 0);
     
     this.vehicleSummary = {
-      totalExpenses: expenses,
-      totalRevenue: revenue,
-      profit: (vehicle.valor_venda || 0) - vehicle.valor_compra - expenses + revenue
+      totalExpenses: additionalExpenses,
+      totalRevenue: additionalRevenue,
+      profit: (vehicle.valor_venda || 0) - vehicle.valor_compra - additionalExpenses + additionalRevenue
     };
 
     this.statementModal.open();
