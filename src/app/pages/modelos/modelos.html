@@ -1,0 +1,24 @@
+<po-page-default p-title="Modelos" [p-actions]="actions">
+  <po-table
+    [p-items]="modelos"
+    [p-columns]="columns"
+    [p-actions]="tableActions"
+    p-striped="true"
+    [p-hide-columns-manager]="true"
+  >
+  </po-table>
+</po-page-default>
+
+<po-modal
+  #modeloModal
+  [p-title]="isEditing ? 'Editar Modelo' : 'Novo Modelo'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: modeloModal.close.bind(modeloModal) }">
+
+  <form #modeloForm="ngForm">
+    <div class="po-row">
+      <po-select class="po-md-6" name="marca" [(ngModel)]="modelo.marca_id" p-label="Marca" [p-options]="marcasOptions" p-required></po-select>
+      <po-input class="po-md-6" name="nome" [(ngModel)]="modelo.nome" p-label="Nome do Modelo" p-required></po-input>
+    </div>
+  </form>
+</po-modal>

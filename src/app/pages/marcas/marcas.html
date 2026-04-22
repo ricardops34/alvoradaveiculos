@@ -1,0 +1,23 @@
+<po-page-default p-title="Marcas" [p-actions]="actions">
+  <po-table
+    [p-items]="marcas"
+    [p-columns]="columns"
+    [p-actions]="tableActions"
+    p-striped="true"
+    [p-hide-columns-manager]="true"
+  >
+  </po-table>
+</po-page-default>
+
+<po-modal
+  #marcaModal
+  [p-title]="isEditing ? 'Editar Marca' : 'Nova Marca'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: marcaModal.close.bind(marcaModal) }">
+
+  <form #marcaForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-12" name="nome" [(ngModel)]="marca.nome" p-label="Nome da Marca" p-required></po-input>
+    </div>
+  </form>
+</po-modal>

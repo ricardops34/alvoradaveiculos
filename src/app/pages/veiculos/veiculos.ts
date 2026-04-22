@@ -9,15 +9,19 @@ import {
   PoModalComponent, 
   PoNotificationService, 
   PoSelectOption,
+  PoCheckboxGroupOption,
   PoUploadFile 
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Vehicle } from '../../types/vehicle';
+import { QuickAddComponent } from '../../components/quick-add/quick-add.component';
+import { PessoasLookupService, BancosLookupService, CentrosCustoLookupService } from '../../services/lookups';
 
 @Component({
   selector: 'app-veiculos',
   standalone: true,
-  imports: [CommonModule, FormsModule, PoModule],
+  imports: [CommonModule, FormsModule, PoModule, QuickAddComponent],
+  providers: [PessoasLookupService, BancosLookupService, CentrosCustoLookupService],
   templateUrl: './veiculos.html',
 })
 export class VeiculosComponent implements OnInit {
@@ -26,18 +30,32 @@ export class VeiculosComponent implements OnInit {
   @ViewChild('sellModal', { static: true }) sellModal!: PoModalComponent;
   @ViewChild('vehicleForm', { static: false }) vehicleForm!: any;
   @ViewChild('sellForm', { static: false }) sellForm!: any;
+  @ViewChild('quickAdd') quickAdd!: QuickAddComponent;
 
   vehicles: any[] = [];
   vehicle: Vehicle = this.getEmptyVehicle();
   isEditing: boolean = false;
+  currentQuickAddField: string = '';
 
   peopleOptions: PoSelectOption[] = [];
   supplierOptions: PoSelectOption[] = [];
   clientOptions: PoSelectOption[] = [];
   bankOptions: PoSelectOption[] = [];
   costCenterOptions: PoSelectOption[] = [];
+  
+  marcasOptions: PoSelectOption[] = [];
+  modelosOptions: PoSelectOption[] = [];
+  allModelos: any[] = []; // armazena todos os modelos para filtrar localmente
 
-  public readonly formaCompraOptions: PoSelectOption[] = [
+  public tipoVeiculoOptions: PoSelectOption[] = [
+    { label: 'Carro', value: 'Carro' },
+    { label: 'Moto', value: 'Moto' },
+    { label: 'Caminhão', value: 'Caminhão' },
+    { label: 'Ônibus', value: 'Ônibus' },
+    { label: 'Vans', value: 'Vans' }
+  ];
+
+  public formaCompraOptions: PoCheckboxGroupOption[] = [
     { label: 'Troca', value: 'Troca' },
     { label: 'Banco', value: 'Banco' }
   ];
@@ -68,8 +86,9 @@ export class VeiculosComponent implements OnInit {
 
   public readonly columns: PoTableColumn[] = [
     { property: 'placa', label: 'Placa' },
-    { property: 'marca', label: 'Marca' },
-    { property: 'modelo', label: 'Modelo' },
+    { property: 'tipo_veiculo', label: 'Tipo' },
+    { property: 'marca_nome', label: 'Marca' },
+    { property: 'modelo_nome', label: 'Modelo' },
     { property: 'ano_modelo', label: 'Ano/Mod', type: 'number' },
     { property: 'fornecedor_nome', label: 'Fornecedor' },
     { property: 'cliente_nome', label: 'Cliente' },
@@ -100,7 +119,10 @@ export class VeiculosComponent implements OnInit {
 
   constructor(
     private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    public pessoasLookup: PessoasLookupService,
+    public bancosLookup: BancosLookupService,
+    public centrosCustoLookup: CentrosCustoLookupService
   ) {}
 
   async ngOnInit() {
@@ -120,6 +142,18 @@ export class VeiculosComponent implements OnInit {
 
     const centers = await this.db.getAll('centros_custo');
     this.costCenterOptions = centers.map(c => ({ label: c.nome, value: c.id }));
+
+    const marcas = await this.db.getAll('marcas');
+    this.marcasOptions = marcas.map(m => ({ label: m.nome, value: m.id }));
+
+    this.allModelos = await this.db.getAll('modelos');
+  }
+
+  onMarcaChange(marcaId: number) {
+    this.vehicle.modelo_id = undefined;
+    this.modelosOptions = this.allModelos
+      .filter(m => m.marca_id === marcaId)
+      .map(m => ({ label: m.nome, value: m.id }));
   }
 
   async loadVehicles() {
@@ -135,9 +169,10 @@ export class VeiculosComponent implements OnInit {
 
   getEmptyVehicle(): Vehicle {
     return {
+      tipo_veiculo: 'Carro',
       placa: '',
-      marca: '',
-      modelo: '',
+      marca_id: undefined,
+      modelo_id: undefined,
       ano_fabricacao: new Date().getFullYear(),
       ano_modelo: new Date().getFullYear(),
       quilometragem: 0,
@@ -182,6 +217,9 @@ export class VeiculosComponent implements OnInit {
   openEdit(vehicle: Vehicle) {
     this.isEditing = true;
     this.vehicle = { ...vehicle };
+    if (this.vehicle.marca_id) {
+      this.onMarcaChange(this.vehicle.marca_id);
+    }
     this.vehicleModal.open();
   }
 
@@ -305,6 +343,27 @@ export class VeiculosComponent implements OnInit {
     } catch (e) {
       console.error(e);
       this.poNotification.error('Erro ao processar a venda.');
+    }
+  }
+
+  handleQuickAdd(event: any, field: string) {
+    if (field === 'fornecedor_id') this.vehicle.fornecedor_id = event.id;
+    if (field === 'banco_id') this.vehicle.banco_id = event.id;
+    if (field === 'centro_custo_id') this.vehicle.centro_custo_id = event.id;
+    if (field === 'venda_cliente_id') this.sellData.cliente_id = event.id;
+    if (field === 'venda_banco_id') this.sellData.banco_id = event.id;
+    if (field === 'venda_centro_custo_id') this.sellData.centro_custo_id = event.id;
+    if (field === 'marca_id') {
+      this.loadOptions().then(() => {
+        this.vehicle.marca_id = event.id;
+        this.onMarcaChange(event.id);
+      });
+    }
+    if (field === 'modelo_id') {
+      this.loadOptions().then(() => {
+        if (this.vehicle.marca_id) this.onMarcaChange(this.vehicle.marca_id);
+        this.vehicle.modelo_id = event.id;
+      });
     }
   }
 }

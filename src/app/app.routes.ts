@@ -40,6 +40,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/veiculos/veiculos').then(m => m.VeiculosComponent)
       },
       {
+        path: 'marcas',
+        loadComponent: () => import('./pages/marcas/marcas').then(m => m.MarcasComponent)
+      },
+      {
+        path: 'modelos',
+        loadComponent: () => import('./pages/modelos/modelos').then(m => m.ModelosComponent)
+      },
+      {
         path: 'bancos',
         loadComponent: () => import('./pages/bancos/bancos').then(m => m.BancosComponent)
       },

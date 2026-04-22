@@ -1,0 +1,45 @@
+<po-modal #quickAddModal 
+  [p-title]="title"
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: quickAddModal.close.bind(quickAddModal) }">
+
+  <form #quickAddForm="ngForm">
+    <!-- PESSOA -->
+    <ng-container *ngIf="type === 'pessoa'">
+      <div class="po-row">
+        <po-input class="po-md-8" name="nome" [(ngModel)]="data.nome" p-label="Nome / Razão Social" p-required></po-input>
+        <po-input class="po-md-4" name="cpf_cnpj" [(ngModel)]="data.cpf_cnpj" p-label="CPF / CNPJ"></po-input>
+      </div>
+    </ng-container>
+
+    <!-- BANCO -->
+    <ng-container *ngIf="type === 'banco'">
+      <div class="po-row">
+        <po-input class="po-md-8" name="nome" [(ngModel)]="data.nome" p-label="Nome do Banco" p-required></po-input>
+        <po-input class="po-md-4" name="codigo" [(ngModel)]="data.codigo" p-label="Código do Banco" p-required></po-input>
+      </div>
+      <div class="po-row">
+        <po-input class="po-md-4" name="agencia" [(ngModel)]="data.agencia" p-label="Agência" p-required></po-input>
+        <po-input class="po-md-4" name="conta" [(ngModel)]="data.conta" p-label="Conta" p-required></po-input>
+        <po-select class="po-md-4" name="tipo" [(ngModel)]="data.tipo" p-label="Tipo" p-required [p-options]="[{label: 'Corrente', value: 'Corrente'}, {label: 'Poupança', value: 'Poupança'}]"></po-select>
+      </div>
+    </ng-container>
+
+    <!-- CENTRO DE CUSTO -->
+    <ng-container *ngIf="type === 'centro_custo'">
+      <div class="po-row">
+        <po-input class="po-md-8" name="nome" [(ngModel)]="data.nome" p-label="Nome do Centro de Custo" p-required></po-input>
+        <po-select class="po-md-4" name="tipo" [(ngModel)]="data.tipo" p-label="Tipo" p-required [p-options]="[{label: 'Despesa', value: 'Despesa'}, {label: 'Receita', value: 'Receita'}]"></po-select>
+      </div>
+    </ng-container>
+
+    <!-- PERFIL -->
+    <ng-container *ngIf="type === 'perfil'">
+      <div class="po-row">
+        <po-input class="po-md-12" name="nome" [(ngModel)]="data.nome" p-label="Nome do Perfil" p-required></po-input>
+      </div>
+    </ng-container>
+  </form>
+
+</po-modal>

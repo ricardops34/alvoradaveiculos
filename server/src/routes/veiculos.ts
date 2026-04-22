@@ -5,7 +5,19 @@ const router = Router();
 
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    const result = await pool.query('SELECT * FROM veiculos ORDER BY id');
+    const result = await pool.query(`
+      SELECT v.*, 
+             COALESCE(ma.nome, v.marca) as marca_nome, 
+             COALESCE(mo.nome, v.modelo) as modelo_nome,
+             f.nome as fornecedor_nome,
+             c.nome as cliente_nome
+      FROM veiculos v
+      LEFT JOIN marcas ma ON v.marca_id = ma.id
+      LEFT JOIN modelos mo ON v.modelo_id = mo.id
+      LEFT JOIN pessoas f ON v.fornecedor_id = f.id
+      LEFT JOIN pessoas c ON v.cliente_id = c.id
+      ORDER BY v.id
+    `);
     res.json(result.rows);
   } catch (err) {
     console.error('Erro ao listar veículos:', err);
@@ -17,12 +29,12 @@ router.post('/', async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, centro_custo_id, fornecedor_id, cliente_id, fotos } = req.body;
+    const { placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, centro_custo_id, fornecedor_id, cliente_id, fotos } = req.body;
     
     const result = await client.query(
-      `INSERT INTO veiculos (placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
-      [placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[]]
+      `INSERT INTO veiculos (placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING *`,
+      [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[]]
     );
 
     const vehicle = result.rows[0];
@@ -49,11 +61,11 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos } = req.body;
+    const { placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos } = req.body;
     const result = await pool.query(
-      `UPDATE veiculos SET placa=$1, marca=$2, modelo=$3, versao=$4, ano_fabricacao=$5, ano_modelo=$6, cor=$7, quilometragem=$8, valor_compra=$9, valor_avaliacao=$10, valor_venda=$11, data_compra=$12, status=$13, forma_compra=$14, banco_id=$15, fornecedor_id=$16, cliente_id=$17, fotos=$18
-       WHERE id=$19 RETURNING *`,
-      [placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], id]
+      `UPDATE veiculos SET placa=$1, marca=$2, modelo=$3, marca_id=$4, modelo_id=$5, tipo_veiculo=$6, versao=$7, ano_fabricacao=$8, ano_modelo=$9, cor=$10, quilometragem=$11, valor_compra=$12, valor_avaliacao=$13, valor_venda=$14, data_compra=$15, status=$16, forma_compra=$17, banco_id=$18, fornecedor_id=$19, cliente_id=$20, fotos=$21
+       WHERE id=$22 RETURNING *`,
+      [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], id]
     );
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Veículo não encontrado' });
@@ -107,9 +119,9 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
       );
     } else if (forma_venda === 'Troca') {
       await client.query(
-        `INSERT INTO veiculos (placa, marca, modelo, cor, ano_fabricacao, ano_modelo, valor_compra, data_compra, status, forma_compra, fornecedor_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [troca_placa, troca_marca, troca_modelo, troca_cor || null, troca_ano_fab || null, troca_ano_mod || null, troca_valor, data_venda || new Date().toISOString().split('T')[0], 'Estoque', 'Troca', cliente_id]
+        `INSERT INTO veiculos (placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, cor, ano_fabricacao, ano_modelo, valor_compra, data_compra, status, forma_compra, fornecedor_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+        [troca_placa, troca_marca, troca_modelo, null, null, 'Carro', troca_cor || null, troca_ano_fab || null, troca_ano_mod || null, troca_valor, data_venda || new Date().toISOString().split('T')[0], 'Estoque', 'Troca', cliente_id]
       );
     }
 

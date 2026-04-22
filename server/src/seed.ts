@@ -57,11 +57,26 @@ async function seed() {
         tipo VARCHAR(20)
       );
 
+      CREATE TABLE IF NOT EXISTS marcas (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL UNIQUE
+      );
+
+      CREATE TABLE IF NOT EXISTS modelos (
+        id SERIAL PRIMARY KEY,
+        marca_id INTEGER REFERENCES marcas(id) ON DELETE CASCADE,
+        nome VARCHAR(100) NOT NULL,
+        UNIQUE (marca_id, nome)
+      );
+
       CREATE TABLE IF NOT EXISTS veiculos (
         id SERIAL PRIMARY KEY,
+        tipo_veiculo VARCHAR(20) DEFAULT 'Carro',
         placa VARCHAR(10),
-        marca VARCHAR(50),
-        modelo VARCHAR(50),
+        marca VARCHAR(50), -- DEPRECATED
+        modelo VARCHAR(50), -- DEPRECATED
+        marca_id INTEGER REFERENCES marcas(id) ON DELETE SET NULL,
+        modelo_id INTEGER REFERENCES modelos(id) ON DELETE SET NULL,
         versao VARCHAR(50),
         ano_fabricacao INTEGER,
         ano_modelo INTEGER,
@@ -78,6 +93,10 @@ async function seed() {
         cliente_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
         fotos TEXT[] DEFAULT '{}'
       );
+
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS marca_id INTEGER REFERENCES marcas(id) ON DELETE SET NULL;
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS modelo_id INTEGER REFERENCES modelos(id) ON DELETE SET NULL;
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
 
       CREATE TABLE IF NOT EXISTS movimentos (
         id SERIAL PRIMARY KEY,
@@ -221,6 +240,43 @@ async function seed() {
     `);
 
     console.log('✅ Dados de teste inseridos com sucesso!');
+    
+    // Seed de Marcas e Modelos
+    const marcasCount = await client.query('SELECT COUNT(*) FROM marcas');
+    if (parseInt(marcasCount.rows[0].count) === 0) {
+      const marcasSeed = [
+        { nome: 'Volkswagen', modelos: ['Polo', 'Gol', 'Nivus', 'T-Cross', 'Taos', 'Virtus', 'Saveiro', 'Amarok', 'Jetta'] },
+        { nome: 'Chevrolet', modelos: ['Onix', 'Onix Plus', 'Tracker', 'Montana', 'S10', 'Equinox', 'Spin', 'Cruze'] },
+        { nome: 'Fiat', modelos: ['Strada', 'Argo', 'Mobi', 'Toro', 'Pulse', 'Fastback', 'Fiorino', 'Cronos'] },
+        { nome: 'Toyota', modelos: ['Corolla', 'Corolla Cross', 'Hilux', 'Yaris', 'SW4', 'RAV4'] },
+        { nome: 'Hyundai', modelos: ['HB20', 'HB20S', 'Creta', 'Tucson'] },
+        { nome: 'Honda', modelos: ['HR-V', 'Civic', 'City', 'CR-V', 'Fit'] },
+        { nome: 'Jeep', modelos: ['Renegade', 'Compass', 'Commander', 'Wrangler'] },
+        { nome: 'Nissan', modelos: ['Kicks', 'Versa', 'Frontier', 'Sentra'] },
+        { nome: 'Renault', modelos: ['Kwid', 'Duster', 'Sandero', 'Logan', 'Oroch', 'Captur'] },
+        { nome: 'Ford', modelos: ['Ranger', 'Territory', 'Bronco', 'Mustang', 'Maverick'] },
+        { nome: 'Peugeot', modelos: ['208', '2008', '3008'] },
+        { nome: 'Citroën', modelos: ['C3', 'C4 Cactus', 'C3 Aircross'] },
+        { nome: 'Mitsubishi', modelos: ['L200 Triton', 'Eclipse Cross', 'Pajero', 'Outlander'] },
+        { nome: 'BMW', modelos: ['Série 3', 'X1', 'X3', 'X5', 'Série 1'] },
+        { nome: 'Audi', modelos: ['A3', 'Q3', 'A4', 'A5', 'Q5'] },
+        { nome: 'Mercedes-Benz', modelos: ['Classe C', 'GLA', 'GLC', 'GLE'] }
+      ];
+
+      for (const marca of marcasSeed) {
+        const insertMarca = await client.query('INSERT INTO marcas (nome) VALUES ($1) RETURNING id', [marca.nome]);
+        const marcaId = insertMarca.rows[0].id;
+        for (const modelo of marca.modelos) {
+          await client.query('INSERT INTO modelos (marca_id, nome) VALUES ($1, $2)', [marcaId, modelo]);
+        }
+      }
+      
+      await client.query(`
+        SELECT setval('marcas_id_seq', (SELECT MAX(id) FROM marcas));
+        SELECT setval('modelos_id_seq', (SELECT MAX(id) FROM modelos));
+      `);
+      console.log('✅ Marcas e Modelos inseridos com sucesso!');
+    }
   } catch (err) {
     console.error('❌ Erro no seed:', err);
     throw err;
@@ -230,14 +286,16 @@ async function seed() {
 }
 
 // Executar seed e exportar para uso no index.ts
-export default seed;
-
 // Se executado diretamente
 if (require.main === module) {
   seed().then(() => {
     console.log('Seed finalizado.');
     process.exit(0);
-  }).catch(() => {
+  }).catch((e) => {
+    console.error(e);
     process.exit(1);
   });
 }
+
+
+export default seed;

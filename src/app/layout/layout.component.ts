@@ -65,7 +65,12 @@ export class LayoutComponent implements OnInit {
 
     // Veículos
     if (permissions.includes('veiculos')) {
-      allMenus.push({ label: 'Veículos', link: '/home/veiculos', icon: 'an an-car', shortLabel: 'Veículos' });
+      const veiculoItems = [];
+      veiculoItems.push({ label: 'Gerenciar Veículos', link: '/home/veiculos', icon: 'an an-car' });
+      veiculoItems.push({ label: 'Marcas', link: '/home/marcas', icon: 'an an-tag' });
+      veiculoItems.push({ label: 'Modelos', link: '/home/modelos', icon: 'an an-list' });
+      
+      allMenus.push({ label: 'Veículos', icon: 'an an-car', shortLabel: 'Veículos', subItems: veiculoItems });
     }
 
     // Financeiro

@@ -13,6 +13,8 @@ import veiculosRoutes from './routes/veiculos';
 import movimentosRoutes from './routes/movimentos';
 import usuariosRoutes from './routes/usuarios';
 import dashboardRoutes from './routes/dashboard';
+import marcasRoutes from './routes/marcas';
+import modelosRoutes from './routes/modelos';
 
 dotenv.config();
 
@@ -33,6 +35,8 @@ app.use('/api/veiculos', veiculosRoutes);
 app.use('/api/movimentos', movimentosRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/marcas', marcasRoutes);
+app.use('/api/modelos', modelosRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

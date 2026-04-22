@@ -1,10 +1,13 @@
 export interface Vehicle {
   id?: number;
+  tipo_veiculo: string;
   placa: string;
   renavam?: string;
   chassi?: string;
-  marca: string;
-  modelo: string;
+  marca?: string; // DEPRECATED
+  modelo?: string; // DEPRECATED
+  marca_id?: number;
+  modelo_id?: number;
   versao?: string;
   ano_fabricacao: number;
   ano_modelo: number;

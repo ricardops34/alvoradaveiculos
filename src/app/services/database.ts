@@ -39,6 +39,16 @@ export class DatabaseService {
     }
   }
 
+  async getById(table: string, id: string | number): Promise<any> {
+    try {
+      const endpoint = this.getEndpoint(table);
+      return await firstValueFrom(this.http.get<any>(`${endpoint}/${id}`));
+    } catch (err) {
+      console.error(`Erro ao buscar ${table} ${id}:`, err);
+      return null;
+    }
+  }
+
   async insert(table: string, record: any): Promise<any> {
     try {
       const endpoint = this.getEndpoint(table);
