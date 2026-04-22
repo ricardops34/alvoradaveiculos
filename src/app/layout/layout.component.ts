@@ -32,7 +32,7 @@ export class LayoutComponent implements OnInit {
     { 
       label: 'Trocar Tema', 
       action: this.toggleTheme.bind(this), 
-      icon: this.themeService.getTheme() === 'light' ? 'an an-moon' : 'an an-sun' 
+      icon: 'an an-moon' 
     }
   ];
 
@@ -40,7 +40,10 @@ export class LayoutComponent implements OnInit {
     private authService: AuthService, 
     private router: Router,
     private themeService: ThemeService
-  ) {}
+  ) {
+    // Ajusta o ícone inicial com base no tema ativo
+    this.updateToolbarIcon();
+  }
 
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
