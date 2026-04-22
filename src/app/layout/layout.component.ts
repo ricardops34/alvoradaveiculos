@@ -7,6 +7,7 @@ import {
   PoModule 
 } from '@po-ui/ng-components';
 import { AuthService } from '../services/auth';
+import { ThemeService } from '../services/theme.service';
 
 @Component({
   selector: 'app-layout',
@@ -27,7 +28,19 @@ export class LayoutComponent implements OnInit {
     { label: 'Sair', action: this.logout.bind(this), icon: 'an an-sign-out' }
   ];
 
-  constructor(private authService: AuthService, private router: Router) {}
+  toolbarActions: Array<PoToolbarAction> = [
+    { 
+      label: 'Trocar Tema', 
+      action: this.toggleTheme.bind(this), 
+      icon: this.themeService.getTheme() === 'light' ? 'an an-moon' : 'an an-sun' 
+    }
+  ];
+
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    private themeService: ThemeService
+  ) {}
 
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
@@ -90,6 +103,12 @@ export class LayoutComponent implements OnInit {
     }
 
     this.menus = allMenus;
+  }
+
+  toggleTheme() {
+    this.themeService.toggleTheme();
+    // Atualiza o ícone do botão
+    this.toolbarActions[0].icon = this.themeService.getTheme() === 'light' ? 'an an-moon' : 'an an-sun';
   }
 
   logout() {

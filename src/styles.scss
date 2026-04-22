@@ -32,3 +32,35 @@
   display: inline-block !important;
   visibility: visible !important;
 }
+
+/* DEFINIÇÃO DO TEMA DARK (Baseado no PO UI Theme Constructor) */
+.po-theme-dark {
+  --po-color-background: #1c1c1c;
+  --po-color-surface: #262626;
+  --po-color-surface-secondary: #333333;
+  --po-color-text: #e1e1e1;
+  --po-color-text-secondary: #b0b0b0;
+  
+  /* Cores Primárias */
+  --po-color-primary: #00b5e2;
+  --po-color-primary-hover: #00c4f3;
+  
+  /* Tabela e Componentes */
+  --po-color-table-row-hover: #3d3d3d;
+  --po-color-input-background: #333333;
+  --po-color-input-border: #4d4d4d;
+  --po-color-input-text: #ffffff;
+
+  /* Aplicando cores no body quando o tema está ativo */
+  background-color: var(--po-color-background) !important;
+  color: var(--po-color-text) !important;
+}
+
+/* Ajuste global para o wrapper do PO UI no modo Dark */
+.po-theme-dark .po-wrapper {
+  background-color: var(--po-color-background);
+}
+
+.po-theme-dark .po-page-header-title {
+  color: var(--po-color-text);
+}
