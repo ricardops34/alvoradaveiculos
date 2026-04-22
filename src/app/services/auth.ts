@@ -9,6 +9,7 @@ export interface User {
   name: string;
   role: 'admin' | 'user';
   permissoes: string[];
+  theme?: 'light' | 'dark';
 }
 
 @Injectable({
@@ -44,7 +45,8 @@ export class AuthService {
             email: userFound.email,
             name: userFound.nome,
             role: (userFound.perfil_id === 1) ? 'admin' : 'user',
-            permissoes: profile ? profile.rotinas : []
+            permissoes: profile ? profile.rotinas : [],
+            theme: userFound.theme || 'light'
           };
           localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
@@ -99,5 +101,22 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return this.currentUserValue !== null;
+  }
+
+  updateUserTheme(theme: 'light' | 'dark'): void {
+    const user = this.currentUserValue;
+    if (user) {
+      user.theme = theme;
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      this.currentUserSubject.next(user);
+
+      // Persistir no banco real
+      const dbUsers = this.db.getAll('usuarios');
+      const userIdx = dbUsers.findIndex(u => u.id.toString() === user.id);
+      if (userIdx !== -1) {
+        dbUsers[userIdx].theme = theme;
+        this.db.update('usuarios', dbUsers[userIdx].id, dbUsers[userIdx]);
+      }
+    }
   }
 }

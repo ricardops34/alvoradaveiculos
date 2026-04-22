@@ -48,6 +48,12 @@ export class LayoutComponent implements OnInit {
         this.profile.title = user.name;
         this.profile.subtitle = user.role === 'admin' ? 'Administrador' : 'Usuário';
         this.buildMenu(user);
+        
+        // Aplicar o tema salvo no usuário
+        if (user.theme) {
+          this.themeService.setTheme(user.theme);
+          this.updateToolbarIcon();
+        }
       }
     });
   }
@@ -107,7 +113,14 @@ export class LayoutComponent implements OnInit {
 
   toggleTheme() {
     this.themeService.toggleTheme();
-    // Atualiza o ícone do botão
+    const newTheme = this.themeService.getTheme();
+    this.updateToolbarIcon();
+    
+    // Salvar no perfil do usuário
+    this.authService.updateUserTheme(newTheme);
+  }
+
+  private updateToolbarIcon() {
     this.toolbarActions[0].icon = this.themeService.getTheme() === 'light' ? 'an an-moon' : 'an an-sun';
   }
 
