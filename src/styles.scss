@@ -58,18 +58,34 @@ body.po-theme-dark {
     background-color: var(--color-neutral-light-00) !important;
   }
 
-  /* Dropdowns e listboxes (usam background hardcoded branco) */
+  /* Dropdowns, combos e listboxes - cobertura total */
   .po-listbox,
   .po-listbox-item,
+  .po-combo-container-content,
+  .po-combo-item,
   .po-combo-item-list,
+  .po-combo-container,
   .po-select-button,
-  po-listbox {
+  .po-select-container,
+  po-listbox,
+  po-combo,
+  po-select,
+  [class*="po-combo-container"],
+  [class*="po-listbox"] {
     background-color: var(--color-neutral-light-00) !important;
     color: var(--color-neutral-dark-90) !important;
   }
 
-  .po-listbox-item:hover {
+  .po-listbox-item:hover,
+  .po-combo-item:hover {
     background-color: var(--color-neutral-light-10) !important;
+    color: var(--color-neutral-dark-90) !important;
+  }
+
+  /* Texto dos itens do combo/select */
+  .po-combo-item-title,
+  .po-select-item-title {
+    color: var(--color-neutral-dark-90) !important;
   }
 
   /* Hover sobre itens de menu e tabela - texto legível */
