@@ -1,30 +1,30 @@
-<po-page-list 
-  p-title="Cadastro de Bancos" 
-  [p-actions]="actions">
-
+<po-page-default p-title="Contas Bancárias" [p-actions]="actions">
   <po-table 
     [p-columns]="columns" 
     [p-items]="banks" 
     [p-actions]="tableActions">
   </po-table>
-
-</po-page-list>
+</po-page-default>
 
 <po-modal #bankModal 
   [p-title]="isEditing ? 'Editar Banco' : 'Novo Banco'"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
-  [p-secondary-action]="{ label: 'Cancelar', action: bankModal.close.bind(bankModal) }">
-
+  p-primary-label="Salvar"
+  [p-primary-action]="{ action: save.bind(this), label: 'Salvar' }">
+  
   <form #bankForm="ngForm">
     <div class="po-row">
-      <po-input class="po-md-3" name="codigo" [(ngModel)]="bank.codigo" p-label="Código" p-required></po-input>
-      <po-input class="po-md-9" name="nome" [(ngModel)]="bank.nome" p-label="Nome do Banco" p-required></po-input>
+      <po-input class="po-md-4" name="codigo" [(ngModel)]="bank.codigo" p-label="Código" p-required></po-input>
+      <po-input class="po-md-8" name="nome" [(ngModel)]="bank.nome" p-label="Nome do Banco" p-required></po-input>
     </div>
 
     <div class="po-row">
-      <po-input class="po-md-4" name="agencia" [(ngModel)]="bank.agencia" p-label="Agência" p-required></po-input>
-      <po-input class="po-md-4" name="conta" [(ngModel)]="bank.conta" p-label="Conta" p-required></po-input>
-      <po-select class="po-md-4" name="tipo" [(ngModel)]="bank.tipo" p-label="Tipo" [p-options]="typeOptions" p-required></po-select>
+      <po-input class="po-md-6" name="agencia" [(ngModel)]="bank.agencia" p-label="Agência" p-required></po-input>
+      <po-input class="po-md-6" name="conta" [(ngModel)]="bank.conta" p-label="Conta" p-required></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-select class="po-md-6" name="tipo" [(ngModel)]="bank.tipo" p-label="Tipo de Conta" [p-options]="typeOptions"></po-select>
+      <po-number class="po-md-6" name="limite_credito" [(ngModel)]="bank.limite_credito" p-label="Limite de Crédito" p-help="Valor do cheque especial/limite"></po-number>
     </div>
   </form>
 </po-modal>

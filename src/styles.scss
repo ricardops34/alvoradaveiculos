@@ -1,1 +1,34 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Forçando o carregamento das fontes de ícones do PO-UI via URLs diretas do repositório oficial no GitHub */
+@font-face {
+  font-family: 'po-icon';
+  src: url('https://cdn.jsdelivr.net/gh/po-ui/po-style@master/font/po-icon.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/po-ui/po-style@master/font/po-icon.woff') format('woff'),
+       url('https://cdn.jsdelivr.net/gh/po-ui/po-style@master/font/po-icon.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.po-icon {
+  font-family: 'po-icon' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Garante que os ícones do menu usem a fonte carregada */
+[class^="po-icon-"], [class*=" po-icon-"], .po-menu-item-icon {
+  font-family: 'po-icon' !important;
+}
+
+/* Ajustes visuais para garantir que o menu recolhido mostre os ícones */
+.po-menu-item-icon {
+  display: inline-block !important;
+  visibility: visible !important;
+}

@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { PoModule } from '@po-ui/ng-components';
+import { PoModule, PoNotificationService } from '@po-ui/ng-components';
 import { AuthService, User } from '../../services/auth';
 
 @Component({
@@ -20,7 +20,8 @@ export class LoginComponent {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private poNotification: PoNotificationService
   ) {}
 
   onLogin(form: any): void {
@@ -31,12 +32,17 @@ export class LoginComponent {
     this.loading = true;
 
     this.authService.login(this.email, this.password).subscribe({
-      next: (user: User) => {
+      next: (user: User | null) => {
         this.loading = false;
-        this.router.navigate(['/home']);
+        if (user) {
+          this.router.navigate(['/home']);
+        } else {
+          this.poNotification.error('Usuário ou senha inválidos!');
+        }
       },
       error: () => {
         this.loading = false;
+        this.poNotification.error('Erro ao tentar realizar login. Tente novamente.');
       }
     });
   }

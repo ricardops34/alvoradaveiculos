@@ -8,7 +8,7 @@ import {
   PoTableAction, 
   PoModalComponent, 
   PoNotificationService, 
-  PoSelectOption 
+  PoSelectOption
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 
@@ -22,30 +22,25 @@ export class UsuariosComponent implements OnInit {
   @ViewChild('userModal', { static: true }) userModal!: PoModalComponent;
 
   users: any[] = [];
-  user: any = { nome: '', email: '', senha: '', role: 'user' };
+  profiles: any[] = [];
+  user: any = { nome: '', email: '', senha: '', perfil_id: null };
   isEditing: boolean = false;
 
+  public profileOptions: PoSelectOption[] = [];
+
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Usuário', action: this.openNew.bind(this), icon: 'po-icon-user-add' }
+    { label: 'Novo Usuário', action: this.openNew.bind(this), icon: 'an an-user-plus' }
   ];
 
   public readonly tableActions: PoTableAction[] = [
-    { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
-    { label: 'Excluir', action: this.delete.bind(this), icon: 'po-icon-delete', type: 'danger' }
+    { label: 'Editar', action: this.openEdit.bind(this), icon: 'an an-pencil-simple' },
+    { label: 'Excluir', action: this.delete.bind(this), icon: 'an an-trash', type: 'danger' }
   ];
 
   public readonly columns: PoTableColumn[] = [
     { property: 'nome', label: 'Nome' },
     { property: 'email', label: 'E-mail' },
-    { property: 'role', label: 'Perfil', type: 'label', labels: [
-      { value: 'admin', color: 'color-07', label: 'Administrador' },
-      { value: 'user', color: 'color-01', label: 'Usuário Padrão' }
-    ]}
-  ];
-
-  public readonly roleOptions: PoSelectOption[] = [
-    { label: 'Administrador', value: 'admin' },
-    { label: 'Usuário Padrão', value: 'user' }
+    { property: 'perfil_nome', label: 'Perfil' }
   ];
 
   constructor(
@@ -55,16 +50,26 @@ export class UsuariosComponent implements OnInit {
 
   async ngOnInit() {
     await this.db.init();
+    this.loadProfiles();
     this.loadUsers();
   }
 
+  loadProfiles() {
+    this.profiles = this.db.getAll('perfis');
+    this.profileOptions = this.profiles.map(p => ({ label: p.nome, value: p.id }));
+  }
+
   loadUsers() {
-    this.users = this.db.getAll('usuarios');
+    const rawUsers = this.db.getAll('usuarios');
+    this.users = rawUsers.map(u => {
+      const profile = this.profiles.find(p => p.id === u.perfil_id);
+      return { ...u, perfil_nome: profile ? profile.nome : 'N/A' };
+    });
   }
 
   openNew() {
     this.isEditing = false;
-    this.user = { nome: '', email: '', senha: '', role: 'user' };
+    this.user = { nome: '', email: '', senha: '', perfil_id: 2 }; // Default to 'Vendedor'
     this.userModal.open();
   }
 

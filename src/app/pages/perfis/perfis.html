@@ -1,0 +1,31 @@
+<po-page-default p-title="Gestão de Perfis de Acesso" [p-actions]="actions">
+  <po-table 
+    [p-columns]="columns" 
+    [p-items]="profiles" 
+    [p-actions]="tableActions">
+  </po-table>
+</po-page-default>
+
+<po-modal #profileModal 
+  [p-title]="isEditing ? 'Editar Perfil' : 'Novo Perfil'"
+  p-primary-label="Salvar"
+  [p-primary-action]="{ action: save.bind(this), label: 'Salvar' }">
+  
+  <form #profileForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-12" name="nome" [(ngModel)]="profile.nome" p-label="Nome do Perfil" p-required p-help="Ex: Vendedor, Gerente, Administrativo"></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-divider class="po-md-12" p-label="Rotinas Permitidas"></po-divider>
+      <po-checkbox-group 
+        class="po-md-12" 
+        name="rotinas" 
+        [(ngModel)]="profile.rotinas" 
+        p-label="Selecione o que este perfil pode acessar"
+        [p-options]="routineOptions"
+        p-columns="2">
+      </po-checkbox-group>
+    </div>
+  </form>
+</po-modal>

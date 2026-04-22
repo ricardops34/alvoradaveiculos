@@ -26,6 +26,8 @@ export class ExtratoBancarioComponent implements OnInit {
   banks: PoSelectOption[] = [];
   movements: any[] = [];
   totalBalance: number = 0;
+  creditLimit: number = 0;
+  availableBalance: number = 0;
 
   public readonly columns: PoTableColumn[] = [
     { property: 'data', label: 'Data', type: 'date', format: 'dd/MM/yyyy' },
@@ -67,6 +69,9 @@ export class ExtratoBancarioComponent implements OnInit {
 
     const allMovements = this.db.getAll('movimentos');
     const centers = this.db.getAll('centros_custo');
+    const bank = this.db.getAll('bancos').find(b => b.id === this.filter.banco_id);
+    
+    this.creditLimit = bank ? (bank.limite_credito || 0) : 0;
 
     this.movements = allMovements
       .filter(m => m.banco_id === this.filter.banco_id)
@@ -81,6 +86,9 @@ export class ExtratoBancarioComponent implements OnInit {
       }))
       .sort((a, b) => a.data.localeCompare(b.data));
 
-    this.totalBalance = this.movements.reduce((sum, m) => sum + m.valor, 0);
+    // Calculate total balance for this bank considering ALL movements up to date_fim
+    const totalMovementsUntilNow = allMovements.filter(m => m.banco_id === this.filter.banco_id);
+    this.totalBalance = totalMovementsUntilNow.reduce((sum, m) => sum + m.valor, 0);
+    this.availableBalance = this.totalBalance + this.creditLimit;
   }
 }

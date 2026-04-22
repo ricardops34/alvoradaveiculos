@@ -1,32 +1,30 @@
-<po-page-list 
-  p-title="Controle de Usuários e Permissões" 
-  [p-actions]="actions">
-
+<po-page-default p-title="Gestão de Usuários" [p-actions]="actions">
   <po-table 
     [p-columns]="columns" 
     [p-items]="users" 
     [p-actions]="tableActions">
   </po-table>
-
-</po-page-list>
+</po-page-default>
 
 <po-modal #userModal 
   [p-title]="isEditing ? 'Editar Usuário' : 'Novo Usuário'"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
-  [p-secondary-action]="{ label: 'Cancelar', action: userModal.close.bind(userModal) }">
-
+  p-primary-label="Salvar"
+  [p-primary-action]="{ action: save.bind(this), label: 'Salvar' }">
+  
   <form #userForm="ngForm">
     <div class="po-row">
-      <po-input class="po-md-12" name="nome" [(ngModel)]="user.nome" p-label="Nome Completo" p-required></po-input>
-    </div>
-
-    <div class="po-row">
-      <po-input class="po-md-12" name="email" [(ngModel)]="user.email" p-label="E-mail / Login" p-required p-icon="po-icon-user"></po-input>
+      <po-input class="po-md-6" name="nome" [(ngModel)]="user.nome" p-label="Nome Completo" p-required></po-input>
+      <po-input class="po-md-6" name="email" [(ngModel)]="user.email" p-label="E-mail / Login" p-required></po-input>
     </div>
 
     <div class="po-row">
       <po-password class="po-md-6" name="senha" [(ngModel)]="user.senha" p-label="Senha" p-required></po-password>
-      <po-select class="po-md-6" name="role" [(ngModel)]="user.role" p-label="Perfil de Acesso" [p-options]="roleOptions" p-required></po-select>
+      <po-select class="po-md-6" name="perfil_id" [(ngModel)]="user.perfil_id" p-label="Perfil de Acesso" [p-options]="profileOptions" p-required></po-select>
+    </div>
+
+    <div class="po-row">
+      <po-divider class="po-md-12" p-label="Informações do Perfil"></po-divider>
+      <p class="po-md-12 po-text-color-08">As permissões deste usuário são definidas pelo Perfil de Acesso selecionado acima. Para alterar as telas permitidas, vá no menu "Perfis de Acesso".</p>
     </div>
   </form>
 </po-modal>

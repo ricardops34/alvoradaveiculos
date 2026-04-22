@@ -1,24 +1,29 @@
 <po-page-default p-title="Extrato Bancário">
-
-  <po-container>
-    <div class="po-row">
-      <po-select class="po-md-4" name="banco" [(ngModel)]="filter.banco_id" p-label="Banco" [p-options]="banks" (p-change)="search()"></po-select>
-      <po-datepicker class="po-md-3" name="inicio" [(ngModel)]="filter.data_inicio" p-label="Data Início" (p-change)="search()"></po-datepicker>
-      <po-datepicker class="po-md-3" name="fim" [(ngModel)]="filter.data_fim" p-label="Data Fim" (p-change)="search()"></po-datepicker>
-      <div class="po-md-2 po-mt-4">
-        <po-button p-label="Filtrar" p-type="primary" (p-click)="search()"></po-button>
-      </div>
-    </div>
-  </po-container>
+  <div class="po-row">
+    <po-select class="po-md-4" name="banco" [(ngModel)]="filter.banco_id" p-label="Banco" [p-options]="banks" (p-change)="search()"></po-select>
+    <po-datepicker class="po-md-3" name="inicio" [(ngModel)]="filter.data_inicio" p-label="Data Início"></po-datepicker>
+    <po-datepicker class="po-md-3" name="fim" [(ngModel)]="filter.data_fim" p-label="Data Fim"></po-datepicker>
+    <po-button class="po-md-2 po-mt-4" p-label="Filtrar" (p-click)="search()" p-icon="an an-funnel"></po-button>
+  </div>
 
   <div class="po-row po-mt-2">
-    <po-widget class="po-md-12" p-title="Resumo do Período">
-      <div class="po-row">
-        <po-info class="po-md-6" p-label="Saldo Acumulado no Período" [p-value]="(totalBalance | currency:'BRL') ?? ''"
-          [style.color]="totalBalance >= 0 ? 'green' : 'red'">
-        </po-info>
-        <po-info class="po-md-6" p-label="Movimentações" [p-value]="movements.length.toString()"></po-info>
+    <po-widget class="po-md-4" p-title="Saldo Atual">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 24px;" [style.color]="totalBalance >= 0 ? 'green' : 'red'">
+        {{ totalBalance | currency:'BRL' }}
       </div>
+    </po-widget>
+
+    <po-widget class="po-md-4" p-title="Limite de Crédito">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 24px; color: #ff9800;">
+        {{ creditLimit | currency:'BRL' }}
+      </div>
+    </po-widget>
+
+    <po-widget class="po-md-4" p-title="Saldo Disponível">
+      <div class="po-font-subtitle po-text-center po-py-2" style="font-size: 24px;" [style.color]="availableBalance >= 0 ? 'green' : 'red'">
+        {{ availableBalance | currency:'BRL' }}
+      </div>
+      <div class="po-text-center po-text-color-08">Saldo + Limite</div>
     </po-widget>
   </div>
 
@@ -27,5 +32,4 @@
     [p-columns]="columns" 
     [p-items]="movements">
   </po-table>
-
 </po-page-default>

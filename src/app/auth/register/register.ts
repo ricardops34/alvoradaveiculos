@@ -50,11 +50,11 @@ export class RegisterComponent {
     this.error = '';
 
     this.authService.register(this.name, this.email, this.password).subscribe({
-      next: (user) => {
+      next: (user: any) => {
         this.loading = false;
         this.router.navigate(['/home']);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.loading = false;
         this.error = 'Erro ao criar conta. Tente novamente.';
       }

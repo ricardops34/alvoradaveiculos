@@ -8,6 +8,7 @@ export interface User {
   email: string;
   name: string;
   role: 'admin' | 'user';
+  permissoes: string[];
 }
 
 @Injectable({
@@ -35,11 +36,15 @@ export class AuthService {
         const userFound = users.find(u => u.email === email && u.senha === password);
         
         if (userFound) {
+          const profiles = this.db.getAll('perfis');
+          const profile = profiles.find(p => p.id === userFound.perfil_id);
+          
           const user: User = {
             id: userFound.id.toString(),
             email: userFound.email,
             name: userFound.nome,
-            role: userFound.role
+            role: (userFound.perfil_id === 1) ? 'admin' : 'user',
+            permissoes: profile ? profile.rotinas : []
           };
           localStorage.setItem('currentUser', JSON.stringify(user));
           this.currentUserSubject.next(user);
@@ -47,6 +52,10 @@ export class AuthService {
         } else {
           return null;
         }
+      }),
+      catchError(err => {
+        console.error('Login error:', err);
+        throw err;
       })
     );
   }
@@ -54,18 +63,26 @@ export class AuthService {
   register(name: string, email: string, password: string): Observable<User> {
     return from(this.db.init()).pipe(
       map(() => {
-        const newUser = { nome: name, email, senha: password, role: 'user' };
+        const newUser = { 
+          nome: name, 
+          email, 
+          senha: password, 
+          perfil_id: 2 // Default to Vendedor
+        };
         this.db.insert('usuarios', newUser);
         
-        // Find it back to get ID
+        // Find it back to get ID and Profile
         const users = this.db.getAll('usuarios');
         const userFound = users.find(u => u.email === email);
+        const profiles = this.db.getAll('perfis');
+        const profile = profiles.find(p => p.id === userFound.perfil_id);
         
         const user: User = {
           id: userFound.id.toString(),
           email,
           name,
-          role: 'user'
+          role: 'user',
+          permissoes: profile ? profile.rotinas : []
         };
         
         localStorage.setItem('currentUser', JSON.stringify(user));

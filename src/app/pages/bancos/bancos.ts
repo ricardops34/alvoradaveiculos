@@ -22,16 +22,16 @@ export class BancosComponent implements OnInit {
   @ViewChild('bankModal', { static: true }) bankModal!: PoModalComponent;
 
   banks: any[] = [];
-  bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente' };
+  bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0 };
   isEditing: boolean = false;
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Banco', action: this.openNew.bind(this), icon: 'po-icon-plus' }
+    { label: 'Novo Banco', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
   public readonly tableActions: PoTableAction[] = [
-    { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
-    { label: 'Excluir', action: this.delete.bind(this), icon: 'po-icon-delete', type: 'danger' }
+    { label: 'Editar', action: this.openEdit.bind(this), icon: 'an an-pencil-simple' },
+    { label: 'Excluir', action: this.delete.bind(this), icon: 'an an-trash', type: 'danger' }
   ];
 
   public readonly columns: PoTableColumn[] = [
@@ -39,6 +39,7 @@ export class BancosComponent implements OnInit {
     { property: 'nome', label: 'Banco' },
     { property: 'agencia', label: 'Agência' },
     { property: 'conta', label: 'Conta' },
+    { property: 'limite_credito', label: 'Limite de Crédito', type: 'currency', format: 'BRL' },
     { property: 'tipo', label: 'Tipo', type: 'label', labels: [
       { value: 'Corrente', color: 'color-10', label: 'Corrente' },
       { value: 'Poupança', color: 'color-11', label: 'Poupança' }
@@ -66,13 +67,13 @@ export class BancosComponent implements OnInit {
 
   openNew() {
     this.isEditing = false;
-    this.bank = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente' };
+    this.bank = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0 };
     this.bankModal.open();
   }
 
   openEdit(bank: any) {
     this.isEditing = true;
-    this.bank = { ...bank };
+    this.bank = { ...bank, limite_credito: bank.limite_credito || 0 };
     this.bankModal.open();
   }
 
