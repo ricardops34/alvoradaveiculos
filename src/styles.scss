@@ -66,36 +66,55 @@ body.po-theme-dark {
   .po-combo-item,
   .po-combo-item-list,
   .po-combo-container,
+  .po-combo-option,
   .po-select-button,
   .po-select-container,
+  .po-select-option,
   po-listbox,
   po-combo,
   po-select,
   [class*="po-combo-container"],
-  [class*="po-listbox"] {
+  [class*="po-listbox"],
+  [class*="po-select-container"] {
     background-color: var(--color-neutral-light-00) !important;
     color: var(--color-neutral-dark-90) !important;
   }
 
+  /* Hover e seleção de itens do dropdown */
   .po-listbox-item:hover,
-  .po-combo-item:hover {
-    background-color: var(--color-neutral-light-10) !important;
+  .po-combo-item:hover,
+  .po-combo-option:hover,
+  .po-select-option:hover,
+  [class*="po-combo-item"]:hover,
+  [class*="po-listbox-item"]:hover {
+    background-color: var(--color-neutral-light-20) !important;
     color: var(--color-neutral-dark-90) !important;
+  }
+
+  /* Item selecionado no dropdown */
+  .po-listbox-item-selected,
+  .po-combo-item-selected,
+  [class*="selected"] {
+    background-color: var(--color-neutral-light-10) !important;
   }
 
   /* Texto dos itens do combo/select */
   .po-combo-item-title,
-  .po-select-item-title {
+  .po-select-item-title,
+  .po-combo-option-label {
     color: var(--color-neutral-dark-90) !important;
   }
 
-  /* Labels de checkbox, radio e links - forçar texto legível */
+  /* Labels de checkbox e radio - classes corretas do PO UI */
+  .po-checkbox-group-item-label,
   .po-checkbox-group-label,
   .po-checkbox-label,
+  .po-radio-group-item-label,
   .po-radio-group-label,
+  po-checkbox-group label,
   po-checkbox label,
   po-radio label {
-    color: var(--color-neutral-dark-90) !important;
+    color: #e8e8e8 !important;
   }
 
   /* Hover sobre itens de menu e tabela - texto legível */
