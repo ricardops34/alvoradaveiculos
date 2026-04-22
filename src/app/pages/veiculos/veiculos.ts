@@ -8,7 +8,8 @@ import {
   PoTableAction, 
   PoModalComponent, 
   PoNotificationService, 
-  PoSelectOption 
+  PoSelectOption,
+  PoUploadFile 
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Vehicle } from '../../types/vehicle';
@@ -54,6 +55,7 @@ export class VeiculosComponent implements OnInit {
     { property: 'cliente_nome', label: 'Cliente' },
     { property: 'valor_compra', label: 'Vlr. Compra', type: 'currency', format: 'BRL' },
     { property: 'valor_venda', label: 'Vlr. Venda', type: 'currency', format: 'BRL' },
+    { property: 'valor_avaliacao', label: 'Vlr. Avaliação', type: 'currency', format: 'BRL' },
     { property: 'status', label: 'Status', type: 'label', labels: [
       { value: 'Estoque', color: 'color-10', label: 'Estoque' },
       { value: 'Vendido', color: 'color-11', label: 'Vendido' },
@@ -114,9 +116,34 @@ export class VeiculosComponent implements OnInit {
       ano_modelo: new Date().getFullYear(),
       quilometragem: 0,
       valor_compra: 0,
+      valor_avaliacao: 0,
       data_compra: new Date().toISOString().split('T')[0],
-      status: 'Estoque'
+      status: 'Estoque',
+      fotos: []
     };
+  }
+
+  onUpload(event: any) {
+    const files: PoUploadFile[] = event;
+    if (files && files.length > 0) {
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          if (!this.vehicle.fotos) this.vehicle.fotos = [];
+          this.vehicle.fotos.push(e.target.result);
+        };
+        // The file property of PoUploadFile might be a Blob or File
+        if (file.rawFile) {
+          reader.readAsDataURL(file.rawFile);
+        }
+      });
+    }
+  }
+
+  removeFoto(index: number) {
+    if (this.vehicle.fotos) {
+      this.vehicle.fotos.splice(index, 1);
+    }
   }
 
   openNew() {

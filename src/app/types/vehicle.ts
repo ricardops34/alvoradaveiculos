@@ -13,7 +13,9 @@ export interface Vehicle {
   valor_compra: number;
   data_compra?: string;
   valor_venda?: number;
+  valor_avaliacao?: number; // Novo campo
   fornecedor_id?: number;
   cliente_id?: number;
   status: string;
+  fotos?: string[]; // Array de strings Base64
 }
