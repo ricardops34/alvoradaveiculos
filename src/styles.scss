@@ -1,6 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 
-/* Forçando o carregamento das fontes de ícones do PO-UI via URLs diretas do repositório oficial no GitHub */
+/* Forçando o carregamento das fontes de ícones do PO-UI */
 @font-face {
   font-family: 'po-icon';
   src: url('https://cdn.jsdelivr.net/gh/po-ui/po-style@master/font/po-icon.woff2') format('woff2'),
@@ -33,15 +33,15 @@
   visibility: visible !important;
 }
 
-/* DEFINIÇÃO DO TEMA DARK (Reforçada para PO-UI) */
+/* DEFINIÇÃO DO TEMA DARK (Versão Total Black) */
 body.po-theme-dark {
-  --po-color-background: #121212;
-  --po-color-surface: #1e1e1e;
-  --po-color-surface-secondary: #2c2c2c;
+  --po-color-background: #000000;
+  --po-color-surface: #121212;
+  --po-color-surface-secondary: #1e1e1e;
   --po-color-text: #ffffff;
   --po-color-text-secondary: #b0b0b0;
   
-  /* Cores de Neutros (Usadas pelo PO-UI internamente) */
+  /* Forçando neutralidades do PO-UI */
   --po-color-neutral-lightest: #121212;
   --po-color-neutral-lighter: #1e1e1e;
   --po-color-neutral-light: #2c2c2c;
@@ -49,37 +49,79 @@ body.po-theme-dark {
   --po-color-neutral-dark: #e1e1e1;
   --po-color-neutral-darker: #ffffff;
   
-  /* Cores de Feedback */
   --po-color-primary: #00b5e2;
   
-  background-color: var(--po-color-background) !important;
-  color: var(--po-color-text) !important;
+  background-color: #000000 !important;
+  color: #ffffff !important;
 }
 
-/* Forçando cores em componentes específicos no modo Dark */
+/* ATAQUE AOS BLOCOS BRANCOS DO PO-UI NO MODO DARK */
 .po-theme-dark {
-  .po-wrapper, .po-toolbar, .po-menu, .po-page-content, .po-container, .po-widget, .po-table, .po-modal-content {
-    background-color: var(--po-color-surface) !important;
-    color: var(--po-color-text) !important;
+  
+  /* Fundo Geral e Container de Página */
+  .po-wrapper, .po-page-default, .po-page-header, .po-page-content, .po-container, .po-widget {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
   }
 
-  .po-menu-item-link, .po-toolbar-item, .po-page-header-title, .po-info-label, .po-table-column-label {
-    color: var(--po-color-text) !important;
+  /* Título da Página e Textos de Informação */
+  .po-page-header-title, .po-info-label, .po-info-value, .po-chart-title {
+    color: #ffffff !important;
   }
 
-  .po-table-header {
-    background-color: var(--po-color-neutral-light) !important;
-    color: var(--po-color-text) !important;
+  /* Tabela - Fundo das Células e Cabeçalho */
+  .po-table, .po-table-header, .po-table-main-container {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+  }
+
+  .po-table-column, .po-table-header-ellipsis {
+    background-color: #2c2c2c !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+  }
+
+  .po-table-row {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
   }
 
   .po-table-row:hover {
-    background-color: var(--po-color-neutral-mid) !important;
+    background-color: #333333 !important;
   }
 
-  /* Inputs */
-  .po-input, .po-select, .po-datepicker-input {
-    background-color: #333333 !important;
+  /* Inputs, Selects e Datepickers */
+  .po-input, .po-select, .po-datepicker-input, .po-field-container-content {
+    background-color: #2c2c2c !important;
     color: #ffffff !important;
     border-color: #444444 !important;
+  }
+
+  .po-field-title {
+    color: #b0b0b0 !important;
+  }
+
+  /* Toolbar e Menu (Garantindo que fiquem escuros) */
+  .po-toolbar, .po-menu, .po-menu-inner, .po-toolbar-item {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  .po-menu-item-link {
+    color: #e1e1e1 !important;
+  }
+
+  .po-menu-item-link:hover, .po-menu-item-link-active {
+    background-color: #1e1e1e !important;
+    color: var(--po-color-primary) !important;
+  }
+
+  /* Modais */
+  .po-modal-content, .po-modal-header, .po-modal-footer {
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
   }
 }
