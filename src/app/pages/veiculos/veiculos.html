@@ -19,7 +19,7 @@
 
   <form #vehicleForm="ngForm">
     <div class="po-row">
-      <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" (ngModelChange)="vehicle.placa = $event?.toUpperCase()" p-label="Placa" p-required p-maxlength="7" p-pattern="^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$"></po-input>
+      <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
       <po-input class="po-md-3" name="marca" [(ngModel)]="vehicle.marca" p-label="Marca" p-required></po-input>
       <po-input class="po-md-4" name="modelo" [(ngModel)]="vehicle.modelo" p-label="Modelo" p-required></po-input>
       <po-input class="po-md-3" name="cor" [(ngModel)]="vehicle.cor" p-label="Cor"></po-input>
