@@ -17,7 +17,7 @@ router.post('/', async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos } = req.body;
+    const { placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, centro_custo_id, fornecedor_id, cliente_id, fotos } = req.body;
     
     const result = await client.query(
       `INSERT INTO veiculos (placa, marca, modelo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos)
@@ -27,11 +27,11 @@ router.post('/', async (req: Request, res: Response) => {
 
     const vehicle = result.rows[0];
 
-    if (forma_compra === 'Banco' && banco_id && valor_compra) {
+    if (forma_compra === 'Banco' && banco_id && centro_custo_id && valor_compra) {
       await client.query(
-        `INSERT INTO movimentos (data, banco_id, tipo, historico, valor, veiculo_id, pessoa_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [data_compra || new Date().toISOString().split('T')[0], banco_id, 'Débito', `Compra Veículo ${marca} ${modelo} (${placa})`, -Math.abs(valor_compra), vehicle.id, fornecedor_id || null]
+        `INSERT INTO movimentos (data, banco_id, tipo, historico, valor, veiculo_id, pessoa_id, centro_custo_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [data_compra || new Date().toISOString().split('T')[0], banco_id, 'Débito', `Compra Veículo ${marca} ${modelo} (${placa})`, -Math.abs(valor_compra), vehicle.id, fornecedor_id || null, centro_custo_id]
       );
     }
 

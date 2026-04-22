@@ -16,6 +16,7 @@ export interface Vehicle {
   valor_avaliacao?: number; // Novo campo
   forma_compra?: 'Troca' | 'Banco';
   banco_id?: number;
+  centro_custo_id?: number;
   fornecedor_id?: number;
   cliente_id?: number;
   status: string;

@@ -32,6 +32,7 @@ export class VeiculosComponent implements OnInit {
   supplierOptions: PoSelectOption[] = [];
   clientOptions: PoSelectOption[] = [];
   bankOptions: PoSelectOption[] = [];
+  costCenterOptions: PoSelectOption[] = [];
 
   public readonly formaCompraOptions: PoSelectOption[] = [
     { label: 'Troca', value: 'Troca' },
@@ -103,6 +104,9 @@ export class VeiculosComponent implements OnInit {
 
     const banks = await this.db.getAll('bancos');
     this.bankOptions = banks.map(b => ({ label: b.nome, value: b.id }));
+
+    const centers = await this.db.getAll('centros_custo');
+    this.costCenterOptions = centers.map(c => ({ label: c.nome, value: c.id }));
   }
 
   async loadVehicles() {
@@ -193,12 +197,23 @@ export class VeiculosComponent implements OnInit {
   }
 
   async save() {
+    if (!this.vehicle.placa || !this.vehicle.marca || !this.vehicle.modelo || !this.vehicle.fornecedor_id || !this.vehicle.data_compra || !this.vehicle.valor_compra) {
+      this.poNotification.warning('Por favor, preencha todos os campos obrigatórios (Placa, Marca, Modelo, Fornecedor, Data de Compra e Valor).');
+      return;
+    }
+
+    if (this.vehicle.forma_compra === 'Banco' && (!this.vehicle.banco_id || !this.vehicle.centro_custo_id)) {
+      this.poNotification.warning('Para forma de compra via Banco, é necessário informar a Conta Bancária e o Centro de Custo.');
+      return;
+    }
+
     if (this.vehicle.placa) {
       this.vehicle.placa = this.vehicle.placa.toUpperCase();
     }
     
     if (this.vehicle.forma_compra === 'Troca') {
       this.vehicle.banco_id = undefined;
+      this.vehicle.centro_custo_id = undefined;
     }
 
     if (this.isEditing) {
