@@ -20,6 +20,7 @@ import { DatabaseService } from '../../services/database';
 })
 export class PerfisComponent implements OnInit {
   @ViewChild('profileModal', { static: true }) profileModal!: PoModalComponent;
+  @ViewChild('profileForm', { static: false }) profileForm!: any;
 
   profiles: any[] = [];
   profile: any = { nome: '', rotinas: [] };
@@ -84,6 +85,12 @@ export class PerfisComponent implements OnInit {
   }
 
   async save() {
+    if (this.profileForm && this.profileForm.invalid) {
+      Object.values(this.profileForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
+      return;
+    }
+
     if (this.isEditing) {
       await this.db.update('perfis', this.profile.id, this.profile);
       this.poNotification.success('Perfil atualizado!');

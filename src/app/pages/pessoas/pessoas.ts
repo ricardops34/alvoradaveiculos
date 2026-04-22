@@ -22,6 +22,7 @@ import { Person } from '../../types/person';
 })
 export class PessoasComponent implements OnInit {
   @ViewChild('personModal', { static: true }) personModal!: PoModalComponent;
+  @ViewChild('personForm', { static: false }) personForm!: any;
 
   people: Person[] = [];
   person: Person = this.getEmptyPerson();
@@ -113,6 +114,12 @@ export class PessoasComponent implements OnInit {
   }
 
   async save() {
+    if (this.personForm && this.personForm.invalid) {
+      Object.values(this.personForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
+      return;
+    }
+
     // Sync roles to person object
     this.person.is_cliente = this.roles.includes('cliente');
     this.person.is_fornecedor = this.roles.includes('fornecedor');

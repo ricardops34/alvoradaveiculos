@@ -20,6 +20,7 @@ import { DatabaseService } from '../../services/database';
 })
 export class BancosComponent implements OnInit {
   @ViewChild('bankModal', { static: true }) bankModal!: PoModalComponent;
+  @ViewChild('bankForm', { static: false }) bankForm!: any;
 
   banks: any[] = [];
   bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
@@ -79,6 +80,12 @@ export class BancosComponent implements OnInit {
   }
 
   async save() {
+    if (this.bankForm && this.bankForm.invalid) {
+      Object.values(this.bankForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
+      return;
+    }
+
     if (this.isEditing) {
       await this.db.update('bancos', this.bank.id, this.bank);
       this.poNotification.success('Banco atualizado com sucesso!');

@@ -20,6 +20,7 @@ import { DatabaseService } from '../../services/database';
 })
 export class CentrosCustoComponent implements OnInit {
   @ViewChild('ccModal', { static: true }) ccModal!: PoModalComponent;
+  @ViewChild('ccForm', { static: false }) ccForm!: any;
 
   costCenters: any[] = [];
   cc: any = { codigo: '', nome: '', tipo: 'Despesa' };
@@ -77,6 +78,12 @@ export class CentrosCustoComponent implements OnInit {
   }
 
   async save() {
+    if (this.ccForm && this.ccForm.invalid) {
+      Object.values(this.ccForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
+      return;
+    }
+
     if (this.isEditing) {
       await this.db.update('centros_custo', this.cc.id, this.cc);
       this.poNotification.success('Centro de custo atualizado!');

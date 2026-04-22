@@ -24,6 +24,8 @@ export class VeiculosComponent implements OnInit {
   @ViewChild('vehicleModal', { static: true }) vehicleModal!: PoModalComponent;
   @ViewChild('statementModal', { static: true }) statementModal!: PoModalComponent;
   @ViewChild('sellModal', { static: true }) sellModal!: PoModalComponent;
+  @ViewChild('vehicleForm', { static: false }) vehicleForm!: any;
+  @ViewChild('sellForm', { static: false }) sellForm!: any;
 
   vehicles: any[] = [];
   vehicle: Vehicle = this.getEmptyVehicle();
@@ -208,8 +210,9 @@ export class VeiculosComponent implements OnInit {
   }
 
   async save() {
-    if (!this.vehicle.placa || !this.vehicle.marca || !this.vehicle.modelo || !this.vehicle.fornecedor_id || !this.vehicle.data_compra || !this.vehicle.valor_compra) {
-      this.poNotification.warning('Por favor, preencha todos os campos obrigatórios (Placa, Marca, Modelo, Fornecedor, Data de Compra e Valor).');
+    if (this.vehicleForm && this.vehicleForm.invalid) {
+      Object.values(this.vehicleForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha todos os campos obrigatórios em vermelho.');
       return;
     }
 
@@ -265,8 +268,9 @@ export class VeiculosComponent implements OnInit {
   }
 
   async confirmSale() {
-    if (!this.sellData.cliente_id || !this.sellData.data_venda || !this.sellData.valor_venda || !this.sellData.forma_venda) {
-      this.poNotification.warning('Preencha os campos obrigatórios da venda.');
+    if (this.sellForm && this.sellForm.invalid) {
+      Object.values(this.sellForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
       return;
     }
 

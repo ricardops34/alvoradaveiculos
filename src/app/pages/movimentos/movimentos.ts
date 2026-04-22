@@ -21,6 +21,7 @@ import { Movement } from '../../types/movement';
 })
 export class MovimentosComponent implements OnInit {
   @ViewChild('movementModal', { static: true }) movementModal!: PoModalComponent;
+  @ViewChild('movementForm', { static: false }) movementForm!: any;
 
   movements: any[] = [];
   movement: Movement = this.getEmptyMovement();
@@ -121,6 +122,12 @@ export class MovimentosComponent implements OnInit {
   }
 
   async save() {
+    if (this.movementForm && this.movementForm.invalid) {
+      Object.values(this.movementForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
+      return;
+    }
+
     // Ensure value sign matches type
     if (this.movement.tipo === 'Débito' && this.movement.valor > 0) {
       this.movement.valor *= -1;

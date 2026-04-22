@@ -20,6 +20,7 @@ import { DatabaseService } from '../../services/database';
 })
 export class UsuariosComponent implements OnInit {
   @ViewChild('userModal', { static: true }) userModal!: PoModalComponent;
+  @ViewChild('userForm', { static: false }) userForm!: any;
 
   users: any[] = [];
   profiles: any[] = [];
@@ -80,6 +81,12 @@ export class UsuariosComponent implements OnInit {
   }
 
   async save() {
+    if (this.userForm && this.userForm.invalid) {
+      Object.values(this.userForm.controls).forEach((c: any) => c.markAsTouched());
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
+      return;
+    }
+
     if (this.isEditing) {
       await this.db.update('usuarios', this.user.id, this.user);
       this.poNotification.success('Usuário atualizado!');
