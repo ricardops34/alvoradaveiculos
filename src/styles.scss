@@ -1,374 +1,72 @@
 /* You can add global styles to this file, and also import other style files */
 
-/* Forçando o carregamento das fontes de ícones do PO-UI */
-@font-face {
-  font-family: 'po-icon';
-  src: url('https://cdn.jsdelivr.net/gh/po-ui/po-style@master/font/po-icon.woff2') format('woff2'),
-       url('https://cdn.jsdelivr.net/gh/po-ui/po-style@master/font/po-icon.woff') format('woff'),
-       url('https://cdn.jsdelivr.net/gh/po-ui/po-style@master/font/po-icon.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-.po-icon {
-  font-family: 'po-icon' !important;
-  speak: none;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  text-transform: none;
-  line-height: 1;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Garante que os ícones do menu usem a fonte carregada */
-[class^="po-icon-"], [class*=" po-icon-"], .po-menu-item-icon {
-  font-family: 'po-icon' !important;
-}
-
-/* Ajustes visuais para garantir que o menu recolhido mostre os ícones */
-.po-menu-item-icon {
-  display: inline-block !important;
-  visibility: visible !important;
-}
-
-/* DEFINIÇÃO DO TEMA DARK (Versão Total Black) */
-body.po-theme-dark {
-  --po-color-background: #0a0a0a;
-  --po-color-surface: #121212;
-  --po-color-surface-secondary: #1e1e1e;
-  --po-color-text: #e8e8e8;
-  --po-color-text-secondary: #b0b0b0;
-  
-  /* Forçando neutralidades do PO-UI */
-  --po-color-neutral-lightest: #121212;
-  --po-color-neutral-lighter: #1e1e1e;
-  --po-color-neutral-light: #2c2c2c;
-  --po-color-neutral-mid: #3d3d3d;
-  --po-color-neutral-dark: #e1e1e1;
-  --po-color-neutral-darker: #ffffff;
-  
-  --po-color-primary: #00b5e2;
-  
-  background-color: #0a0a0a !important;
-  color: #e8e8e8 !important;
-}
-
 /* ============================
-   DARK MODE - COBERTURA TOTAL
+   TEMA DARK - PO UI NATIVO
+   Sobrescrevendo variáveis CSS do PO UI
+   para que TODOS os componentes se adaptem
+   automaticamente via cascata.
    ============================ */
-.po-theme-dark {
-  
-  /* ---- FUNDO GERAL E PÁGINAS ---- */
-  .po-wrapper,
-  .po-page-default,
-  .po-page-list,
-  .po-page-detail,
-  .po-page-edit,
-  .po-page-header,
-  .po-page-content,
-  .po-page-content-area,
-  .po-container {
-    background-color: #121212 !important;
-    color: #e8e8e8 !important;
-  }
 
-  /* ---- WIDGETS E CARDS ---- */
-  .po-widget,
-  .po-widget-header,
-  .po-widget-body,
-  po-widget {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-    border-color: #333333 !important;
-  }
+body.po-theme-dark {
+  /* Inversão da paleta neutral do PO UI */
+  --color-neutral-light-00: #1a1a1a;   /* era #fff - backgrounds principais */
+  --color-neutral-light-05: #1e1e1e;   /* era #fbfbfb - backgrounds secundários */
+  --color-neutral-light-10: #2c2c2c;   /* era #eceeee - bordas */
+  --color-neutral-light-20: #3a3a3a;   /* era #dadedf - bordas suaves */
+  --color-neutral-light-30: #505050;   /* era #b6bdbf - elementos desabilitados */
+  --color-neutral-mid-40: #707070;     /* era #9da7a9 - placeholders */
+  --color-neutral-mid-60: #909090;     /* era #6e7c7f - textos secundários */
+  --color-neutral-dark-70: #b0b0b0;    /* era #4a5c60 - textos */
+  --color-neutral-dark-80: #d0d0d0;    /* era #2c3739 - textos importantes */
+  --color-neutral-dark-90: #e8e8e8;    /* era #1d2426 - textos principais */
+  --color-neutral-dark-95: #f0f0f0;    /* era #0b0e0e - textos de destaque */
 
-  .po-widget-title {
-    color: #b0b0b0 !important;
-  }
+  /* Cores de fundo específicas */
+  --color-page-background-color-page: #121212;
+  --color-chart-background-color: #1e1e1e;
+  --color-chart-axis-stroke: #3a3a3a;
+  --color-chart-legend-text: #b0b0b0;
+  --color-chart-axis-label-text: #e8e8e8;
 
-  /* ---- TÍTULOS E TEXTOS ---- */
-  .po-page-header-title,
-  .po-page-list-title,
-  .po-info-label,
-  .po-info-value,
-  .po-chart-title,
-  .po-font-subtitle,
-  .po-font-title,
-  h1, h2, h3, h4, h5, h6 {
-    color: #e8e8e8 !important;
-  }
+  /* Sombras adaptadas para dark */
+  --color-black-alpha-10: rgba(0, 0, 0, 0.3);
+  --color-black-alpha-15: rgba(0, 0, 0, 0.4);
+  --color-black-alpha-30: rgba(0, 0, 0, 0.5);
 
-  .po-text-color-08 {
-    color: #888888 !important;
-  }
+  /* Scrollbar */
+  --color-track: #1e1e1e;
+  --color-thumb: #505050;
 
-  /* ---- TABELAS ---- */
-  .po-table,
-  .po-table-header,
-  .po-table-main-container,
-  .po-table-container,
-  .po-table-footer,
-  po-table {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-    border-color: #333333 !important;
-  }
+  /* Background geral */
+  background-color: #121212;
+  color: #e8e8e8;
+}
 
-  .po-table-column,
-  .po-table-header-ellipsis,
-  .po-table-column-detail-toggle,
-  .po-table-header-master-detail,
-  .po-table-column-master-detail {
-    background-color: #2c2c2c !important;
-    color: #e8e8e8 !important;
-    border-color: #333333 !important;
-  }
+/* Botão de troca de tema posicionado na toolbar */
+.theme-toggle-btn {
+  position: fixed;
+  top: 10px;
+  right: 70px;
+  z-index: 900;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  padding: 6px 10px;
+  border-radius: 50%;
+  transition: background 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-neutral-dark-70, #4a5c60);
+}
 
-  .po-table-row {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-  }
+.theme-toggle-btn:hover {
+  background: var(--color-neutral-light-10, #eceeee);
+  transform: scale(1.1);
+}
 
-  .po-table-row:nth-child(even) {
-    background-color: #1a1a1a !important;
-  }
-
-  .po-table-row:hover {
-    background-color: #2a2a2a !important;
-  }
-
-  /* Coluna de ações da tabela */
-  .po-table-header-actions,
-  .po-table-column-actions,
-  .po-table-header-action,
-  .po-table-column-action {
-    background-color: #2c2c2c !important;
-  }
-
-  /* ---- GRÁFICOS ---- */
-  .po-chart-container,
-  .po-chart-wrapper,
-  .po-chart,
-  po-chart {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-    border-color: #333333 !important;
-  }
-
-  .po-chart-legend-text {
-    color: #b0b0b0 !important;
-  }
-
-  /* ---- INPUTS, SELECTS, FORMS ---- */
-  .po-input,
-  .po-select,
-  .po-select-container,
-  .po-datepicker-input,
-  .po-decimal,
-  .po-number,
-  .po-textarea,
-  .po-field-container-content,
-  .po-field-container,
-  .po-upload {
-    background-color: #2c2c2c !important;
-    color: #e8e8e8 !important;
-    border-color: #444444 !important;
-  }
-
-  .po-field-title,
-  .po-field-optional,
-  .po-field-help {
-    color: #b0b0b0 !important;
-  }
-
-  /* ---- TOOLBAR ---- */
-  .po-toolbar,
-  .po-toolbar-item,
-  .po-toolbar-actions {
-    background-color: #0a0a0a !important;
-    color: #e8e8e8 !important;
-  }
-
-  .po-toolbar-title {
-    color: var(--po-color-primary) !important;
-  }
-
-  /* ---- MENU LATERAL ---- */
-  .po-menu,
-  .po-menu-inner,
-  .po-menu-header,
-  .po-menu-footer {
-    background-color: #0a0a0a !important;
-    color: #e8e8e8 !important;
-  }
-
-  .po-menu-item-link {
-    color: #c0c0c0 !important;
-  }
-
-  .po-menu-item-link:hover,
-  .po-menu-item-link-active {
-    background-color: #1e1e1e !important;
-    color: var(--po-color-primary) !important;
-  }
-
-  .po-menu-filter {
-    background-color: #1e1e1e !important;
-    border-color: #333333 !important;
-    color: #e8e8e8 !important;
-  }
-
-  /* ---- MODAIS ---- */
-  .po-modal-content,
-  .po-modal-header,
-  .po-modal-body,
-  .po-modal-footer {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-    border-color: #333333 !important;
-  }
-
-  .po-modal-overlay {
-    background-color: rgba(0, 0, 0, 0.7) !important;
-  }
-
-  /* ---- DROPDOWN E POPUP ---- */
-  .po-dropdown,
-  .po-popup,
-  .po-popup-container,
-  .po-toolbar-profile-detail,
-  .po-toolbar-profile-detail-body,
-  .po-listbox,
-  .po-listbox-item,
-  .po-select-option-group,
-  .po-combo-container {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-    border-color: #333333 !important;
-  }
-
-  .po-listbox-item:hover,
-  .po-combo-item:hover {
-    background-color: #2c2c2c !important;
-  }
-
-  /* ---- DIVIDERS E LINHAS ---- */
-  .po-divider,
-  .po-divider-label,
-  hr {
-    border-color: #333333 !important;
-    color: #888888 !important;
-  }
-
-  /* ---- NOTIFICAÇÕES ---- */
-  .po-notification {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-    border-color: #333333 !important;
-  }
-
-  /* ---- BOTÕES SECUNDÁRIOS ---- */
-  .po-button-default {
-    background-color: #2c2c2c !important;
-    color: #e8e8e8 !important;
-    border-color: #444444 !important;
-  }
-
-  .po-button-default:hover {
-    background-color: #3c3c3c !important;
-  }
-
-  /* ---- PAGE-LIST BARRA DE AÇÕES ---- */
-  .po-page-list-actions,
-  .po-page-list-filter,
-  .po-disclaimer-group {
-    background-color: #121212 !important;
-  }
-
-  /* ---- SCROLLBAR ---- */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #1e1e1e;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #444444;
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #555555;
-  }
-
-  /* ---- COBERTURA PROFUNDA (Shadow DOM / ViewEncapsulation) ---- */
-  /* Gráficos internos */
-  po-chart .po-chart-container,
-  po-chart .po-chart-wrapper,
-  po-chart .po-chart-svg-container,
-  po-chart .po-chart-legend,
-  po-chart > div,
-  po-chart > div > div {
-    background-color: #1e1e1e !important;
-    color: #b0b0b0 !important;
-  }
-
-  /* Área interna da página */
-  .po-page-default-content,
-  .po-page-list-content,
-  .po-page-default > div,
-  .po-page-list > div,
-  po-page-default > div,
-  po-page-list > div {
-    background-color: #121212 !important;
-  }
-
-  /* Barra de ação do page-list (o separador vermelho/branco) */
-  .po-page-list-header,
-  .po-page-list-header-wrapper {
-    background-color: #121212 !important;
-    border-color: #333333 !important;
-  }
-
-  /* Linha da action bar */
-  .po-page-action,
-  .po-page-header-actions {
-    background-color: #121212 !important;
-  }
-
-  /* Cobertura wildcard para sub-elementos brancos */
-  .po-row,
-  .po-py-2 {
-    color: inherit !important;
-  }
-
-  /* Toolbar dropdown menu */
-  .po-toolbar-action,
-  .po-toolbar-action-item,
-  .po-popup-content {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-  }
-
-  .po-toolbar-action-item:hover {
-    background-color: #2c2c2c !important;
-  }
-
-  /* Tooltip */
-  .po-tooltip {
-    background-color: #2c2c2c !important;
-    color: #e8e8e8 !important;
-  }
-
-  /* Tabs (se usar) */
-  .po-tab-button,
-  .po-tab-container {
-    background-color: #1e1e1e !important;
-    color: #e8e8e8 !important;
-  }
+.theme-toggle-btn .theme-icon {
+  font-size: 22px;
+  line-height: 1;
 }

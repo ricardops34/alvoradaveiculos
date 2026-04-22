@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { 
   PoMenuItem, 
   PoToolbarAction, 
@@ -12,11 +13,12 @@ import { ThemeService } from '../services/theme.service';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, PoModule],
+  imports: [RouterOutlet, PoModule, CommonModule],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent implements OnInit {
   menus: Array<PoMenuItem> = [];
+  isDarkMode: boolean = false;
 
   profile: PoToolbarProfile = {
     avatar: '',
@@ -28,21 +30,12 @@ export class LayoutComponent implements OnInit {
     { label: 'Sair', action: this.logout.bind(this), icon: 'an an-sign-out' }
   ];
 
-  toolbarActions: Array<PoToolbarAction> = [
-    { 
-      label: 'Modo Escuro', 
-      action: this.toggleTheme.bind(this), 
-      icon: 'an an-moon' 
-    }
-  ];
-
   constructor(
     private authService: AuthService, 
     private router: Router,
     private themeService: ThemeService
   ) {
-    // Ajusta o ícone inicial com base no tema ativo
-    this.updateToolbarIcon();
+    this.isDarkMode = this.themeService.getTheme() === 'dark';
   }
 
   ngOnInit() {
@@ -55,7 +48,7 @@ export class LayoutComponent implements OnInit {
         // Aplicar o tema salvo no usuário
         if (user.theme) {
           this.themeService.setTheme(user.theme);
-          this.updateToolbarIcon();
+          this.isDarkMode = user.theme === 'dark';
         }
       }
     });
@@ -116,18 +109,10 @@ export class LayoutComponent implements OnInit {
 
   toggleTheme() {
     this.themeService.toggleTheme();
-    const newTheme = this.themeService.getTheme();
-    this.updateToolbarIcon();
+    this.isDarkMode = this.themeService.getTheme() === 'dark';
     
     // Salvar no perfil do usuário
-    this.authService.updateUserTheme(newTheme);
-  }
-
-  private updateToolbarIcon() {
-    const isLight = this.themeService.getTheme() === 'light';
-    this.toolbarActions[0].icon = isLight ? 'an an-moon' : 'an an-sun';
-    this.toolbarActions[0].label = isLight ? 'Modo Escuro' : 'Modo Claro';
-    this.toolbarActions = [...this.toolbarActions]; // Força o Angular a atualizar o componente
+    this.authService.updateUserTheme(this.themeService.getTheme());
   }
 
   logout() {
