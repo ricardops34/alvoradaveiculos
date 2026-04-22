@@ -33,34 +33,53 @@
   visibility: visible !important;
 }
 
-/* DEFINIÇÃO DO TEMA DARK (Baseado no PO UI Theme Constructor) */
-.po-theme-dark {
-  --po-color-background: #1c1c1c;
-  --po-color-surface: #262626;
-  --po-color-surface-secondary: #333333;
-  --po-color-text: #e1e1e1;
+/* DEFINIÇÃO DO TEMA DARK (Reforçada para PO-UI) */
+body.po-theme-dark {
+  --po-color-background: #121212;
+  --po-color-surface: #1e1e1e;
+  --po-color-surface-secondary: #2c2c2c;
+  --po-color-text: #ffffff;
   --po-color-text-secondary: #b0b0b0;
   
-  /* Cores Primárias */
-  --po-color-primary: #00b5e2;
-  --po-color-primary-hover: #00c4f3;
+  /* Cores de Neutros (Usadas pelo PO-UI internamente) */
+  --po-color-neutral-lightest: #121212;
+  --po-color-neutral-lighter: #1e1e1e;
+  --po-color-neutral-light: #2c2c2c;
+  --po-color-neutral-mid: #3d3d3d;
+  --po-color-neutral-dark: #e1e1e1;
+  --po-color-neutral-darker: #ffffff;
   
-  /* Tabela e Componentes */
-  --po-color-table-row-hover: #3d3d3d;
-  --po-color-input-background: #333333;
-  --po-color-input-border: #4d4d4d;
-  --po-color-input-text: #ffffff;
-
-  /* Aplicando cores no body quando o tema está ativo */
+  /* Cores de Feedback */
+  --po-color-primary: #00b5e2;
+  
   background-color: var(--po-color-background) !important;
   color: var(--po-color-text) !important;
 }
 
-/* Ajuste global para o wrapper do PO UI no modo Dark */
-.po-theme-dark .po-wrapper {
-  background-color: var(--po-color-background);
-}
+/* Forçando cores em componentes específicos no modo Dark */
+.po-theme-dark {
+  .po-wrapper, .po-toolbar, .po-menu, .po-page-content, .po-container, .po-widget, .po-table, .po-modal-content {
+    background-color: var(--po-color-surface) !important;
+    color: var(--po-color-text) !important;
+  }
 
-.po-theme-dark .po-page-header-title {
-  color: var(--po-color-text);
+  .po-menu-item-link, .po-toolbar-item, .po-page-header-title, .po-info-label, .po-table-column-label {
+    color: var(--po-color-text) !important;
+  }
+
+  .po-table-header {
+    background-color: var(--po-color-neutral-light) !important;
+    color: var(--po-color-text) !important;
+  }
+
+  .po-table-row:hover {
+    background-color: var(--po-color-neutral-mid) !important;
+  }
+
+  /* Inputs */
+  .po-input, .po-select, .po-datepicker-input {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border-color: #444444 !important;
+  }
 }

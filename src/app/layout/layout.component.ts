@@ -125,6 +125,7 @@ export class LayoutComponent implements OnInit {
 
   private updateToolbarIcon() {
     this.toolbarActions[0].icon = this.themeService.getTheme() === 'light' ? 'an an-moon' : 'an an-sun';
+    this.toolbarActions = [...this.toolbarActions]; // Força o Angular a atualizar o componente
   }
 
   logout() {
