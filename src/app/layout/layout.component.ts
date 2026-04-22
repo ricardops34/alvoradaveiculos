@@ -30,7 +30,7 @@ export class LayoutComponent implements OnInit {
 
   toolbarActions: Array<PoToolbarAction> = [
     { 
-      label: 'Trocar Tema', 
+      label: 'Modo Escuro', 
       action: this.toggleTheme.bind(this), 
       icon: 'an an-moon' 
     }
@@ -124,7 +124,9 @@ export class LayoutComponent implements OnInit {
   }
 
   private updateToolbarIcon() {
-    this.toolbarActions[0].icon = this.themeService.getTheme() === 'light' ? 'an an-moon' : 'an an-sun';
+    const isLight = this.themeService.getTheme() === 'light';
+    this.toolbarActions[0].icon = isLight ? 'an an-moon' : 'an an-sun';
+    this.toolbarActions[0].label = isLight ? 'Modo Escuro' : 'Modo Claro';
     this.toolbarActions = [...this.toolbarActions]; // Força o Angular a atualizar o componente
   }
 
