@@ -11,13 +11,13 @@ services:
       placement:
         constraints:
           - node.role == manager
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.alvorada-crm.rule=Host(`alvorada.bjsoft.com.br`)"
-      - "traefik.http.routers.alvorada-crm.entrypoints=websecure"
-      - "traefik.http.routers.alvorada-crm.tls.certresolver=myresolver"
-      - "traefik.docker.network=network_public"
-      - "traefik.http.services.alvorada-crm.loadbalancer.server.port=80"
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.alvorada-crm.rule=Host(`alvorada.bjsoft.com.br`)"
+        - "traefik.http.routers.alvorada-crm.entrypoints=websecure"
+        - "traefik.http.routers.alvorada-crm.tls.certresolver=myresolver"
+        - "traefik.docker.network=network_public"
+        - "traefik.http.services.alvorada-crm.loadbalancer.server.port=80"
 
 networks:
   network_public:
