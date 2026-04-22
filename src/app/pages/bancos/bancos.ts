@@ -39,7 +39,7 @@ export class BancosComponent implements OnInit {
     { property: 'nome', label: 'Banco' },
     { property: 'agencia', label: 'Agência' },
     { property: 'conta', label: 'Conta' },
-    { property: 'limite_credito', label: 'Limite de Crédito', type: 'currency', format: 'BRL' },
+    { property: 'limite_credito', label: 'Limite', type: 'currency' },
     { property: 'tipo', label: 'Tipo', type: 'label', labels: [
       { value: 'Corrente', color: 'color-10', label: 'Corrente' },
       { value: 'Poupança', color: 'color-11', label: 'Poupança' }
@@ -63,6 +63,7 @@ export class BancosComponent implements OnInit {
 
   loadBanks() {
     this.banks = this.db.getAll('bancos');
+    console.log('Bancos carregados:', this.banks);
   }
 
   openNew() {

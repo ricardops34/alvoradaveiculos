@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.vscode
+.antigravity
+npm-debug.log
+README.md
+Dockerfile
+docker-compose.yml
+nginx.conf

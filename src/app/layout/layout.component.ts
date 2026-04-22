@@ -65,9 +65,9 @@ export class LayoutComponent implements OnInit {
 
     // Relatórios
     const relatorioItems = [];
-    if (permissions.includes('extrato_bancario')) relatorioItems.push({ label: 'Extrato Bancário', link: '/home/extrato-bancario', icon: 'an an-file-text' });
-    if (permissions.includes('extrato_veiculo')) relatorioItems.push({ label: 'Extrato por Veículo', link: '/home/extrato-veiculo', icon: 'an an-car-profile' });
-    if (permissions.includes('relatorio_despesas')) relatorioItems.push({ label: 'Relatório de Despesas', link: '/home/relatorio-despesas', icon: 'an an-chart-bar' });
+    if (permissions.includes('extrato_bancario')) relatorioItems.push({ label: 'Extrato Bancário', link: '/home/relatorios/extrato-bancario', icon: 'an an-file-text' });
+    if (permissions.includes('extrato_veiculo')) relatorioItems.push({ label: 'Extrato por Veículo', link: '/home/relatorios/extrato-veiculo', icon: 'an an-car-profile' });
+    if (permissions.includes('relatorio_despesas')) relatorioItems.push({ label: 'Relatório de Despesas', link: '/home/relatorios/relatorio-despesas', icon: 'an an-chart-bar' });
 
     if (relatorioItems.length > 0) {
       allMenus.push({ label: 'Relatórios', icon: 'an an-files', shortLabel: 'Relat', subItems: relatorioItems });

@@ -35,7 +35,8 @@ export class PerfisComponent implements OnInit {
     { label: 'Extrato Bancário', value: 'extrato_bancario' },
     { label: 'Extrato por Veículo', value: 'extrato_veiculo' },
     { label: 'Relatório de Despesas', value: 'relatorio_despesas' },
-    { label: 'Gestão de Usuários', value: 'usuarios' }
+    { label: 'Gestão de Usuários', value: 'usuarios' },
+    { label: 'Gestão de Perfis', value: 'perfis' }
   ];
 
   public readonly actions: PoPageAction[] = [
@@ -63,11 +64,11 @@ export class PerfisComponent implements OnInit {
   }
 
   loadProfiles() {
-    const rawProfiles = this.db.getAll('perfis');
-    this.profiles = rawProfiles.map(p => ({
+    this.profiles = this.db.getAll('perfis').map(p => ({
       ...p,
       qtd_rotinas: p.rotinas?.length || 0
     }));
+    console.log('Perfis carregados:', this.profiles);
   }
 
   openNew() {

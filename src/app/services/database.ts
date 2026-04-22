@@ -22,7 +22,7 @@ export class DatabaseService {
   private createDefaultData() {
     const defaultData = {
       perfis: [
-        { id: 1, nome: 'Administrador', rotinas: ['dashboard', 'veiculos', 'bancos', 'pessoas', 'centros_custo', 'movimentos', 'extrato_bancario', 'extrato_veiculo', 'relatorio_despesas', 'usuarios'] },
+        { id: 1, nome: 'Administrador', rotinas: ['dashboard', 'veiculos', 'bancos', 'pessoas', 'centros_custo', 'movimentos', 'extrato_bancario', 'extrato_veiculo', 'relatorio_despesas', 'usuarios', 'perfis'] },
         { id: 2, nome: 'Vendedor', rotinas: ['dashboard', 'veiculos', 'pessoas'] },
         { id: 3, nome: 'Financeiro', rotinas: ['dashboard', 'bancos', 'movimentos', 'extrato_bancario', 'extrato_veiculo', 'relatorio_despesas'] },
         { id: 4, nome: 'Gerente de Vendas', rotinas: ['dashboard', 'veiculos', 'pessoas', 'extrato_veiculo'] },

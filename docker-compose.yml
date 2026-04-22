@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  alvorada-crm:
+    build: .
+    image: alvorada-crm:latest
+    container_name: alvorada-crm-app
+    ports:
+      - "8080:80"
+    restart: always
