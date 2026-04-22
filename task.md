@@ -16,6 +16,7 @@ Este arquivo centraliza o progresso do desenvolvimento e as próximas metas do p
 - [x] Campo de **Valor de Avaliação**.
 - [x] Sistema de **Upload de Fotos** (Base64) com galeria de visualização.
 - [x] Lógica de status (Estoque, Vendido, Preparação, etc).
+- [x] **Novo: Sistema Hierárquico de Marcas e Modelos** (com anos e descrição).
 
 ### 🎨 Interface e Experiência (UX)
 - [x] Implementação do **Tema Dark** (Modo Noturno) via CSS Variables.
@@ -31,7 +32,7 @@ Este arquivo centraliza o progresso do desenvolvimento e as próximas metas do p
 
 ## 🚧 Em Andamento / Melhorias Imediatas
 - [/] Refinamento da persistência de fotos (avaliação de impacto no LocalStorage).
-- [/] Ajustes finos de contraste no Modo Dark em componentes complexos.
+- [/] Geração de Proposta Comercial em PDF.
 
 ---
 
