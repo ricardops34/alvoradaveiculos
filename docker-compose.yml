@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   alvorada-crm:
-    image: ricardops34/alvorada-crm:latest
+    image: bjsoftware/alvorada-crm:latest
     container_name: alvorada-crm-app
     restart: always
     networks:
