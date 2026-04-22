@@ -36,6 +36,7 @@ export class DashboardComponent implements OnInit {
   calculateMetrics() {
     const vehicles = this.db.getAll('veiculos');
     const movements = this.db.getAll('movimentos');
+    const banks = this.db.getAll('bancos');
 
     // 1. Total Stock Value (Vehicles in 'Estoque' or 'Preparação' or 'Manutenção')
     this.totalStockValue = vehicles
@@ -45,8 +46,10 @@ export class DashboardComponent implements OnInit {
     this.vehiclesCount = vehicles.filter(v => v.status !== 'Vendido').length;
     this.soldVehiclesCount = vehicles.filter(v => v.status === 'Vendido').length;
 
-    // 2. Total Bank Balance
-    this.totalBankBalance = movements.reduce((sum, m) => sum + m.valor, 0);
+    // 2. Total Bank Balance = Soma dos saldos iniciais + movimentos
+    const totalInitialBalance = banks.reduce((sum, b) => sum + (b.saldo_inicial || 0), 0);
+    const totalMovements = movements.reduce((sum, m) => sum + m.valor, 0);
+    this.totalBankBalance = totalInitialBalance + totalMovements;
 
     // 3. Revenue vs Expenses Chart (Filtered by Current Month)
     const currentMonth = this.today.getMonth();

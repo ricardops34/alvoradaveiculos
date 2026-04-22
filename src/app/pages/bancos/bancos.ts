@@ -22,7 +22,7 @@ export class BancosComponent implements OnInit {
   @ViewChild('bankModal', { static: true }) bankModal!: PoModalComponent;
 
   banks: any[] = [];
-  bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0 };
+  bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
   isEditing: boolean = false;
 
   public readonly actions: PoPageAction[] = [
@@ -35,11 +35,12 @@ export class BancosComponent implements OnInit {
   ];
 
   public readonly columns: PoTableColumn[] = [
-    { property: 'codigo', label: 'Código', width: '10%' },
+    { property: 'codigo', label: 'Código', width: '8%' },
     { property: 'nome', label: 'Banco' },
     { property: 'agencia', label: 'Agência' },
     { property: 'conta', label: 'Conta' },
-    { property: 'limite_credito', label: 'Limite', type: 'currency' },
+    { property: 'saldo_inicial', label: 'Saldo Inicial', type: 'currency', format: 'BRL' },
+    { property: 'limite_credito', label: 'Limite', type: 'currency', format: 'BRL' },
     { property: 'tipo', label: 'Tipo', type: 'label', labels: [
       { value: 'Corrente', color: 'color-10', label: 'Corrente' },
       { value: 'Poupança', color: 'color-11', label: 'Poupança' }
@@ -68,7 +69,7 @@ export class BancosComponent implements OnInit {
 
   openNew() {
     this.isEditing = false;
-    this.bank = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0 };
+    this.bank = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
     this.bankModal.open();
   }
 

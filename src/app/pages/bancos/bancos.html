@@ -23,8 +23,9 @@
     </div>
 
     <div class="po-row">
-      <po-select class="po-md-6" name="tipo" [(ngModel)]="bank.tipo" p-label="Tipo de Conta" [p-options]="typeOptions"></po-select>
-      <po-number class="po-md-6" name="limite_credito" [(ngModel)]="bank.limite_credito" p-label="Limite de Crédito" p-help="Valor do cheque especial/limite"></po-number>
+      <po-select class="po-md-4" name="tipo" [(ngModel)]="bank.tipo" p-label="Tipo de Conta" [p-options]="typeOptions"></po-select>
+      <po-decimal class="po-md-4" name="saldo_inicial" [(ngModel)]="bank.saldo_inicial" p-label="Saldo Inicial" p-decimals="2" p-help="Saldo de abertura da conta"></po-decimal>
+      <po-decimal class="po-md-4" name="limite_credito" [(ngModel)]="bank.limite_credito" p-label="Limite de Crédito" p-decimals="2" p-help="Valor do cheque especial/limite"></po-decimal>
     </div>
   </form>
 </po-modal>

@@ -30,9 +30,9 @@ export class DatabaseService {
         { id: 6, nome: 'Consultor Externo', rotinas: ['veiculos', 'pessoas'] }
       ],
       bancos: [
-        { id: 1, codigo: '001', nome: 'Banco do Brasil', agencia: '1234', conta: '12345-6', tipo: 'Corrente', limite_credito: 100000 },
-        { id: 2, codigo: '104', nome: 'Caixa Econômica', agencia: '5678', conta: '98765-4', tipo: 'Poupança', limite_credito: 0 },
-        { id: 3, codigo: '033', nome: 'Santander', agencia: '9988', conta: '11223-3', tipo: 'Corrente', limite_credito: 50000 }
+        { id: 1, codigo: '001', nome: 'Banco do Brasil', agencia: '1234', conta: '12345-6', tipo: 'Corrente', limite_credito: 100000, saldo_inicial: 500000 },
+        { id: 2, codigo: '104', nome: 'Caixa Econômica', agencia: '5678', conta: '98765-4', tipo: 'Poupança', limite_credito: 0, saldo_inicial: 150000 },
+        { id: 3, codigo: '033', nome: 'Santander', agencia: '9988', conta: '11223-3', tipo: 'Corrente', limite_credito: 50000, saldo_inicial: 300000 }
       ],
       pessoas: [
         { id: 1, nome: 'Ricardo Alvorada', documento: '123.456.789-00', tipo_pessoa: 'Física', is_cliente: 0, is_fornecedor: 0, is_vendedor: 0, is_socio: 1, telefone: '(11) 98888-8888', email: 'ricardo@alvorada.com', cidade: 'São Paulo', estado: 'SP' },
