@@ -115,7 +115,7 @@ export class PessoasComponent implements OnInit {
 
   async save() {
     if (this.personForm && this.personForm.invalid) {
-      Object.values(this.personForm.controls).forEach((c: any) => c.markAsTouched());
+      Object.values(this.personForm.controls).forEach((c: any) => { c.markAsTouched(); c.markAsDirty(); });
       this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
       return;
     }

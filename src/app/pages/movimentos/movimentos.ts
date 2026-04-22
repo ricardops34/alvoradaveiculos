@@ -123,7 +123,7 @@ export class MovimentosComponent implements OnInit {
 
   async save() {
     if (this.movementForm && this.movementForm.invalid) {
-      Object.values(this.movementForm.controls).forEach((c: any) => c.markAsTouched());
+      Object.values(this.movementForm.controls).forEach((c: any) => { c.markAsTouched(); c.markAsDirty(); });
       this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
       return;
     }

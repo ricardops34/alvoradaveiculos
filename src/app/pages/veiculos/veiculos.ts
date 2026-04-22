@@ -215,7 +215,10 @@ export class VeiculosComponent implements OnInit {
 
   async save() {
     if (this.vehicleForm && this.vehicleForm.invalid) {
-      Object.values(this.vehicleForm.controls).forEach((c: any) => c.markAsTouched());
+      Object.values(this.vehicleForm.controls).forEach((c: any) => {
+        c.markAsTouched(); c.markAsDirty();
+        c.markAsDirty();
+      });
       this.poNotification.warning('Por favor, preencha todos os campos obrigatórios em vermelho.');
       return;
     }
@@ -273,7 +276,10 @@ export class VeiculosComponent implements OnInit {
 
   async confirmSale() {
     if (this.sellForm && this.sellForm.invalid) {
-      Object.values(this.sellForm.controls).forEach((c: any) => c.markAsTouched());
+      Object.values(this.sellForm.controls).forEach((c: any) => {
+        c.markAsTouched();
+        c.markAsDirty();
+      });
       this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
       return;
     }

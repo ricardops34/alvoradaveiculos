@@ -82,7 +82,7 @@ export class UsuariosComponent implements OnInit {
 
   async save() {
     if (this.userForm && this.userForm.invalid) {
-      Object.values(this.userForm.controls).forEach((c: any) => c.markAsTouched());
+      Object.values(this.userForm.controls).forEach((c: any) => { c.markAsTouched(); c.markAsDirty(); });
       this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
       return;
     }

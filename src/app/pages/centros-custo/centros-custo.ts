@@ -79,7 +79,7 @@ export class CentrosCustoComponent implements OnInit {
 
   async save() {
     if (this.ccForm && this.ccForm.invalid) {
-      Object.values(this.ccForm.controls).forEach((c: any) => c.markAsTouched());
+      Object.values(this.ccForm.controls).forEach((c: any) => { c.markAsTouched(); c.markAsDirty(); });
       this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
       return;
     }
