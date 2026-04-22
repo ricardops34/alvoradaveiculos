@@ -110,6 +110,7 @@ async function seed() {
         await client.query(`
           ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS forma_compra VARCHAR(20) DEFAULT 'Troca';
           ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL;
+          ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS data_venda DATE;
         `);
       } catch (e) {
         // ignora se a tabela veiculos ainda não existir

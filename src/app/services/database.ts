@@ -6,10 +6,10 @@ import { firstValueFrom } from 'rxjs';
   providedIn: 'root'
 })
 export class DatabaseService {
-  private apiUrl = '/api';
+  public apiUrl = '/api';
   private initialized = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(public http: HttpClient) {}
 
   async init() {
     if (this.initialized) return;

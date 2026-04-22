@@ -77,4 +77,45 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
+router.post('/:id/vender', async (req: Request, res: Response) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+    const { cliente_id, data_venda, valor_venda, forma_venda, banco_id, centro_custo_id } = req.body;
+    
+    await client.query('BEGIN');
+    
+    const result = await client.query(
+      `UPDATE veiculos SET status = 'Vendido', cliente_id = $1, valor_venda = $2, data_venda = $3
+       WHERE id = $4 RETURNING *`,
+      [cliente_id, valor_venda, data_venda, id]
+    );
+
+    if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
+      res.status(404).json({ error: 'Veículo não encontrado' });
+      return;
+    }
+
+    const vehicle = result.rows[0];
+
+    if (forma_venda === 'Banco' && banco_id && centro_custo_id) {
+      await client.query(
+        `INSERT INTO movimentos (data, banco_id, tipo, historico, valor, veiculo_id, pessoa_id, centro_custo_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [data_venda || new Date().toISOString().split('T')[0], banco_id, 'Crédito', `Venda Veículo ${vehicle.marca} ${vehicle.modelo} (${vehicle.placa})`, Math.abs(valor_venda), vehicle.id, cliente_id, centro_custo_id]
+      );
+    }
+
+    await client.query('COMMIT');
+    res.json(vehicle);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Erro ao vender veículo:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;

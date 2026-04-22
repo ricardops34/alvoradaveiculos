@@ -47,10 +47,8 @@
     </div>
 
     <div class="po-row">
-      <po-select class="po-md-4" name="cliente" [(ngModel)]="vehicle.cliente_id" p-label="Cliente (Destino)" [p-options]="clientOptions"></po-select>
-      <po-decimal class="po-md-3" name="valor_venda" [(ngModel)]="vehicle.valor_venda" p-label="Valor de Venda" p-decimals="2"></po-decimal>
+      <po-info class="po-md-3" p-label="Status Atual" [p-value]="vehicle.status"></po-info>
       <po-decimal class="po-md-3" name="valor_avaliacao" [(ngModel)]="vehicle.valor_avaliacao" p-label="Valor de Avaliação" p-decimals="2"></po-decimal>
-      <po-select class="po-md-2" name="status" [(ngModel)]="vehicle.status" p-label="Status" [p-options]="statusOptions"></po-select>
     </div>
 
     <po-divider p-label="Fotos do Veículo"></po-divider>
@@ -108,4 +106,38 @@
     <po-info class="po-md-6" p-label="Total de Despesas Adicionais" [p-value]="(vehicleSummary.totalExpenses | currency:'BRL') ?? ''"></po-info>
     <po-info class="po-md-6" p-label="Total de Receitas Adicionais" [p-value]="(vehicleSummary.totalRevenue | currency:'BRL') ?? ''"></po-info>
   </div>
+</po-modal>
+
+<!-- Modal de Venda -->
+<po-modal #sellModal 
+  p-title="Vender Veículo"
+  p-size="xl"
+  [p-primary-action]="{ label: 'Confirmar Venda', action: confirmSale.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: sellModal.close.bind(sellModal) }">
+
+  <form #sellForm="ngForm">
+    <div class="po-row">
+      <po-info class="po-md-4" p-label="Veículo" [p-value]="vehicle.marca + ' ' + vehicle.modelo + ' (' + vehicle.placa + ')'"></po-info>
+      <po-info class="po-md-3" p-label="Valor de Compra" [p-value]="(vehicle.valor_compra | currency:'BRL') ?? ''"></po-info>
+      <po-info class="po-md-3" p-label="Avaliação" [p-value]="(vehicle.valor_avaliacao | currency:'BRL') ?? ''"></po-info>
+    </div>
+
+    <po-divider p-label="Dados da Venda"></po-divider>
+
+    <div class="po-row">
+      <po-select class="po-md-6" name="cliente_venda" [(ngModel)]="sellData.cliente_id" p-label="Cliente (Comprador)" [p-options]="clientOptions" p-required></po-select>
+      <po-datepicker class="po-md-3" name="data_venda" [(ngModel)]="sellData.data_venda" p-label="Data da Venda" p-required></po-datepicker>
+      <po-decimal class="po-md-3" name="valor_venda" [(ngModel)]="sellData.valor_venda" p-label="Valor da Venda" p-decimals="2" p-required></po-decimal>
+    </div>
+
+    <div class="po-row po-mt-2">
+      <po-radio-group class="po-md-3" name="forma_venda" [(ngModel)]="sellData.forma_venda" p-label="Forma de Recebimento" [p-options]="formaCompraOptions" p-required></po-radio-group>
+      <po-select class="po-md-4" name="banco_venda" [(ngModel)]="sellData.banco_id" p-label="Conta Bancária (Entrada)" [p-options]="bankOptions" *ngIf="sellData.forma_venda === 'Banco'" p-required></po-select>
+      <po-select class="po-md-5" name="centro_venda" [(ngModel)]="sellData.centro_custo_id" p-label="Centro de Custo (Receita)" [p-options]="costCenterOptions" *ngIf="sellData.forma_venda === 'Banco'" p-required></po-select>
+    </div>
+
+    <div class="po-row po-mt-2" *ngIf="sellData.forma_venda === 'Troca'">
+      <po-info class="po-md-12" p-value="Aviso: Ao confirmar, o veículo atual será marcado como vendido e a tela de cadastro se abrirá automaticamente para você registrar o veículo que entrou na troca."></po-info>
+    </div>
+  </form>
 </po-modal>

@@ -23,6 +23,7 @@ import { Vehicle } from '../../types/vehicle';
 export class VeiculosComponent implements OnInit {
   @ViewChild('vehicleModal', { static: true }) vehicleModal!: PoModalComponent;
   @ViewChild('statementModal', { static: true }) statementModal!: PoModalComponent;
+  @ViewChild('sellModal', { static: true }) sellModal!: PoModalComponent;
 
   vehicles: any[] = [];
   vehicle: Vehicle = this.getEmptyVehicle();
@@ -43,12 +44,22 @@ export class VeiculosComponent implements OnInit {
   selectedVehicleStatement: any[] = [];
   vehicleSummary = { totalExpenses: 0, totalRevenue: 0, profit: 0 };
 
+  sellData: any = {
+    data_venda: new Date().toISOString().split('T')[0],
+    cliente_id: null,
+    valor_venda: 0,
+    forma_venda: 'Banco',
+    banco_id: null,
+    centro_custo_id: null
+  };
+
   public readonly actions: PoPageAction[] = [
     { label: 'Novo Veículo', action: this.openNew.bind(this), icon: 'po-icon-plus' }
   ];
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
+    { label: 'Vender', action: this.openSellModal.bind(this), icon: 'po-icon-cart', visible: (row: any) => row.status === 'Estoque' || row.status === 'Preparação' },
     { label: 'Extrato/Custos', action: this.openStatement.bind(this), icon: 'po-icon-finance-secure' },
     { label: 'Excluir', action: this.delete.bind(this), icon: 'po-icon-delete', type: 'danger' }
   ];
@@ -231,5 +242,47 @@ export class VeiculosComponent implements OnInit {
     await this.db.delete('veiculos', vehicle.id!);
     this.poNotification.warning('Veículo excluído!');
     await this.loadVehicles();
+  }
+
+  openSellModal(vehicle: Vehicle) {
+    this.vehicle = vehicle;
+    this.sellData = {
+      data_venda: new Date().toISOString().split('T')[0],
+      cliente_id: null,
+      valor_venda: vehicle.valor_avaliacao || vehicle.valor_compra,
+      forma_venda: 'Banco',
+      banco_id: null,
+      centro_custo_id: null
+    };
+    this.sellModal.open();
+  }
+
+  async confirmSale() {
+    if (!this.sellData.cliente_id || !this.sellData.data_venda || !this.sellData.valor_venda || !this.sellData.forma_venda) {
+      this.poNotification.warning('Preencha os campos obrigatórios da venda.');
+      return;
+    }
+
+    if (this.sellData.forma_venda === 'Banco' && (!this.sellData.banco_id || !this.sellData.centro_custo_id)) {
+      this.poNotification.warning('Para forma de venda via Banco, é necessário informar a Conta Bancária e o Centro de Custo.');
+      return;
+    }
+
+    try {
+      await this.db.http.post<any>(`${this.db.apiUrl}/veiculos/${this.vehicle.id}/vender`, this.sellData).toPromise();
+      this.poNotification.success('Veículo vendido com sucesso!');
+      this.sellModal.close();
+      await this.loadVehicles();
+
+      if (this.sellData.forma_venda === 'Troca') {
+        const cliente_id = this.sellData.cliente_id;
+        this.openNew();
+        this.vehicle.forma_compra = 'Troca';
+        this.vehicle.fornecedor_id = cliente_id;
+      }
+    } catch (e) {
+      console.error(e);
+      this.poNotification.error('Erro ao processar a venda.');
+    }
   }
 }
