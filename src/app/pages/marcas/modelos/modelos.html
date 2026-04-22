@@ -1,0 +1,63 @@
+<po-page-default [p-title]="'Modelos: ' + marcaNome">
+  
+  <div class="po-row">
+    <po-button 
+      class="po-md-2" 
+      p-label="Voltar" 
+      p-icon="an an-arrow-left"
+      (p-click)="back()">
+    </po-button>
+    <po-button 
+      class="po-md-2" 
+      p-label="Novo Modelo" 
+      p-type="primary" 
+      p-icon="an an-plus"
+      (p-click)="add()">
+    </po-button>
+  </div>
+
+  <po-table 
+    class="po-mt-2"
+    [p-columns]="columns" 
+    [p-items]="modelos"
+    [p-actions]="actions">
+  </po-table>
+
+</po-page-default>
+
+<po-modal #modeloModal 
+  [p-title]="'Manutenção de Modelo - ' + marcaNome"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: modeloModal.close.bind(modeloModal) }">
+  
+  <div class="po-row">
+    <po-input 
+      class="po-md-12" 
+      name="nome" 
+      [(ngModel)]="modelo.nome" 
+      p-label="Nome do Modelo" 
+      p-required>
+    </po-input>
+    
+    <po-number 
+      class="po-md-6" 
+      name="ano_inicial" 
+      [(ngModel)]="modelo.ano_inicial" 
+      p-label="Ano Inicial">
+    </po-number>
+    
+    <po-number 
+      class="po-md-6" 
+      name="ano_final" 
+      [(ngModel)]="modelo.ano_final" 
+      p-label="Ano Final">
+    </po-number>
+
+    <po-textarea 
+      class="po-md-12" 
+      name="descricao" 
+      [(ngModel)]="modelo.descricao_detalhada" 
+      p-label="Descrição Detalhada">
+    </po-textarea>
+  </div>
+</po-modal>

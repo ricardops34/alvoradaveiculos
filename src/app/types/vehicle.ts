@@ -7,7 +7,9 @@ export interface Vehicle {
   marca?: string; // DEPRECATED
   modelo?: string; // DEPRECATED
   marca_id?: number;
+  marca_nome?: string;
   modelo_id?: number;
+  modelo_nome?: string;
   versao?: string;
   ano_fabricacao: number;
   ano_modelo: number;

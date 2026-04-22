@@ -99,7 +99,7 @@
   [p-primary-action]="{ label: 'Fechar', action: statementModal.close.bind(statementModal) }">
 
   <div class="po-row">
-    <po-info class="po-md-2" p-label="Veículo" [p-value]="vehicle.marca + ' ' + vehicle.modelo"></po-info>
+    <po-info class="po-md-2" p-label="Veículo" [p-value]="vehicle.marca_nome + ' ' + vehicle.modelo_nome"></po-info>
     <po-info class="po-md-2" p-label="Placa" [p-value]="vehicle.placa"></po-info>
     <po-info class="po-md-2" p-label="Avaliação" [p-value]="(vehicle.valor_avaliacao | currency:'BRL') ?? ''"></po-info>
     <po-info class="po-md-2" p-label="Compra" [p-value]="(vehicle.valor_compra | currency:'BRL') ?? ''"></po-info>
@@ -131,7 +131,7 @@
 
   <form #sellForm="ngForm">
     <div class="po-row">
-      <po-info class="po-md-4" p-label="Veículo" [p-value]="vehicle.marca + ' ' + vehicle.modelo + ' (' + vehicle.placa + ')'"></po-info>
+      <po-info class="po-md-4" p-label="Veículo" [p-value]="vehicle.marca_nome + ' ' + vehicle.modelo_nome + ' (' + vehicle.placa + ')'"></po-info>
       <po-info class="po-md-3" p-label="Valor de Compra" [p-value]="(vehicle.valor_compra | currency:'BRL') ?? ''"></po-info>
       <po-info class="po-md-3" p-label="Avaliação" [p-value]="(vehicle.valor_avaliacao | currency:'BRL') ?? ''"></po-info>
     </div>

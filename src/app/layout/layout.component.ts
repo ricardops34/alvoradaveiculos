@@ -67,8 +67,7 @@ export class LayoutComponent implements OnInit {
     if (permissions.includes('veiculos')) {
       const veiculoItems = [];
       veiculoItems.push({ label: 'Gerenciar Veículos', link: '/home/veiculos', icon: 'an an-car' });
-      veiculoItems.push({ label: 'Marcas', link: '/home/marcas', icon: 'an an-tag' });
-      veiculoItems.push({ label: 'Modelos', link: '/home/modelos', icon: 'an an-list' });
+      veiculoItems.push({ label: 'Marcas e Modelos', link: '/home/marcas', icon: 'an an-tag' });
       
       allMenus.push({ label: 'Veículos', icon: 'an an-car', shortLabel: 'Veículos', subItems: veiculoItems });
     }

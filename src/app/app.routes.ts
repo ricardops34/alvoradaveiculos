@@ -44,8 +44,8 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/marcas/marcas').then(m => m.MarcasComponent)
       },
       {
-        path: 'modelos',
-        loadComponent: () => import('./pages/modelos/modelos').then(m => m.ModelosComponent)
+        path: 'marcas/:id/modelos',
+        loadComponent: () => import('./pages/marcas/modelos/modelos').then(m => m.ModelosComponent)
       },
       {
         path: 'bancos',

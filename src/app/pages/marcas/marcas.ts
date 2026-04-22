@@ -1,8 +1,15 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PoModule, PoPageAction, PoTableColumn, PoTableAction, PoModalComponent, PoNotificationService } from '@po-ui/ng-components';
+import { 
+  PoModule, 
+  PoTableColumn, 
+  PoModalComponent, 
+  PoNotificationService,
+  PoTableAction
+} from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-marcas',
@@ -12,82 +19,70 @@ import { DatabaseService } from '../../services/database';
 })
 export class MarcasComponent implements OnInit {
   @ViewChild('marcaModal', { static: true }) marcaModal!: PoModalComponent;
-  @ViewChild('marcaForm', { static: false }) marcaForm!: any;
 
   marcas: any[] = [];
-  isEditing = false;
   marca: any = { nome: '' };
-
-  public readonly actions: PoPageAction[] = [
-    { label: 'Nova Marca', action: this.openNew.bind(this), icon: 'po-icon-plus' }
-  ];
-
-  public readonly tableActions: PoTableAction[] = [
-    { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
-    { label: 'Excluir', action: this.delete.bind(this), icon: 'po-icon-delete', type: 'danger' }
-  ];
-
+  
   public readonly columns: PoTableColumn[] = [
-    { property: 'id', label: 'ID', width: '10%' },
-    { property: 'nome', label: 'Nome da Marca' }
+    { property: 'id', label: 'ID', width: '80px' },
+    { property: 'nome', label: 'Marca' }
+  ];
+
+  public readonly actions: PoTableAction[] = [
+    { label: 'Editar', action: this.edit.bind(this), icon: 'an an-pencil' },
+    { label: 'Ver Modelos', action: this.viewModels.bind(this), icon: 'an an-car' },
+    { label: 'Excluir', action: this.delete.bind(this), type: 'danger', icon: 'an an-trash' }
   ];
 
   constructor(
-    private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private db: DatabaseService, 
+    private notification: PoNotificationService,
+    private router: Router
   ) {}
 
-  ngOnInit() {
-    this.loadMarcas();
+  async ngOnInit() {
+    this.load();
   }
 
-  async loadMarcas() {
+  async load() {
     this.marcas = await this.db.getAll('marcas');
   }
 
-  openNew() {
-    this.isEditing = false;
+  add() {
     this.marca = { nome: '' };
     this.marcaModal.open();
   }
 
-  openEdit(marca: any) {
-    this.isEditing = true;
-    this.marca = { ...marca };
+  edit(item: any) {
+    this.marca = { ...item };
     this.marcaModal.open();
   }
 
-  async save() {
-    if (this.marcaForm && this.marcaForm.invalid) {
-      Object.values(this.marcaForm.controls).forEach((c: any) => {
-        c.markAsTouched(); c.markAsDirty();
-      });
-      this.poNotification.warning('Preencha os campos obrigatórios.');
-      return;
-    }
+  viewModels(item: any) {
+    this.router.navigate(['/home/marcas', item.id, 'modelos']);
+  }
 
+  async save() {
     try {
-      if (this.isEditing) {
+      if (this.marca.id) {
         await this.db.update('marcas', this.marca.id, this.marca);
-        this.poNotification.success('Marca atualizada!');
+        this.notification.success('Marca atualizada!');
       } else {
         await this.db.insert('marcas', this.marca);
-        this.poNotification.success('Marca cadastrada!');
+        this.notification.success('Marca criada!');
       }
-      await this.loadMarcas();
       this.marcaModal.close();
-    } catch (e) {
-      this.poNotification.error('Erro ao salvar marca.');
+      this.load();
+    } catch (err) {
+      this.notification.error('Erro ao salvar marca.');
     }
   }
 
-  async delete(marca: any) {
-    try {
-      await this.db.delete('marcas', marca.id);
-      this.poNotification.warning('Marca excluída!');
-      await this.loadMarcas();
-    } catch (e) {
-      this.poNotification.error('Erro ao excluir marca. Verifique se existem veículos vinculados.');
+  async delete(item: any) {
+    if (confirm(`Deseja excluir a marca ${item.nome}? Todos os modelos vinculados serão apagados.`)) {
+      await this.db.delete('marcas', item.id);
+      this.notification.warning('Marca excluída!');
+      this.load();
     }
   }
 }

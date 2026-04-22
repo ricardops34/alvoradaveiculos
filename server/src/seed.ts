@@ -66,6 +66,9 @@ async function seed() {
         id SERIAL PRIMARY KEY,
         marca_id INTEGER REFERENCES marcas(id) ON DELETE CASCADE,
         nome VARCHAR(100) NOT NULL,
+        ano_inicial INTEGER,
+        ano_final INTEGER,
+        descricao_detalhada TEXT,
         UNIQUE (marca_id, nome)
       );
 
@@ -130,6 +133,11 @@ async function seed() {
           ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS forma_compra VARCHAR(20) DEFAULT 'Troca';
           ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL;
           ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS data_venda DATE;
+          
+          -- Atualização da tabela modelos
+          ALTER TABLE modelos ADD COLUMN IF NOT EXISTS ano_inicial INTEGER;
+          ALTER TABLE modelos ADD COLUMN IF NOT EXISTS ano_final INTEGER;
+          ALTER TABLE modelos ADD COLUMN IF NOT EXISTS descricao_detalhada TEXT;
         `);
       } catch (e) {
         // ignora se a tabela veiculos ainda não existir
@@ -245,29 +253,40 @@ async function seed() {
     const marcasCount = await client.query('SELECT COUNT(*) FROM marcas');
     if (parseInt(marcasCount.rows[0].count) === 0) {
       const marcasSeed = [
-        { nome: 'Volkswagen', modelos: ['Polo', 'Gol', 'Nivus', 'T-Cross', 'Taos', 'Virtus', 'Saveiro', 'Amarok', 'Jetta'] },
-        { nome: 'Chevrolet', modelos: ['Onix', 'Onix Plus', 'Tracker', 'Montana', 'S10', 'Equinox', 'Spin', 'Cruze'] },
-        { nome: 'Fiat', modelos: ['Strada', 'Argo', 'Mobi', 'Toro', 'Pulse', 'Fastback', 'Fiorino', 'Cronos'] },
-        { nome: 'Toyota', modelos: ['Corolla', 'Corolla Cross', 'Hilux', 'Yaris', 'SW4', 'RAV4'] },
-        { nome: 'Hyundai', modelos: ['HB20', 'HB20S', 'Creta', 'Tucson'] },
-        { nome: 'Honda', modelos: ['HR-V', 'Civic', 'City', 'CR-V', 'Fit'] },
-        { nome: 'Jeep', modelos: ['Renegade', 'Compass', 'Commander', 'Wrangler'] },
-        { nome: 'Nissan', modelos: ['Kicks', 'Versa', 'Frontier', 'Sentra'] },
-        { nome: 'Renault', modelos: ['Kwid', 'Duster', 'Sandero', 'Logan', 'Oroch', 'Captur'] },
-        { nome: 'Ford', modelos: ['Ranger', 'Territory', 'Bronco', 'Mustang', 'Maverick'] },
-        { nome: 'Peugeot', modelos: ['208', '2008', '3008'] },
-        { nome: 'Citroën', modelos: ['C3', 'C4 Cactus', 'C3 Aircross'] },
-        { nome: 'Mitsubishi', modelos: ['L200 Triton', 'Eclipse Cross', 'Pajero', 'Outlander'] },
-        { nome: 'BMW', modelos: ['Série 3', 'X1', 'X3', 'X5', 'Série 1'] },
-        { nome: 'Audi', modelos: ['A3', 'Q3', 'A4', 'A5', 'Q5'] },
-        { nome: 'Mercedes-Benz', modelos: ['Classe C', 'GLA', 'GLC', 'GLE'] }
+        { 
+          nome: 'Toyota', 
+          modelos: [
+            { nome: 'Corolla', ano_ini: 1966, ano_fim: 2024, desc: 'Sedan médio mais vendido do mundo, conhecido pela confiabilidade.' },
+            { nome: 'Hilux', ano_ini: 1968, ano_fim: 2024, desc: 'Picape robusta com alta liquidez no mercado de usados.' },
+            { nome: 'SW4', ano_ini: 1984, ano_fim: 2024, desc: 'SUV derivado da Hilux, referência em luxo e off-road.' }
+          ] 
+        },
+        { 
+          nome: 'Honda', 
+          modelos: [
+            { nome: 'Civic', ano_ini: 1972, ano_fim: 2024, desc: 'Principal concorrente do Corolla, focado em dirigibilidade e design.' },
+            { nome: 'HR-V', ano_ini: 2015, ano_fim: 2024, desc: 'SUV compacto com excelente aproveitamento de espaço interno.' }
+          ] 
+        },
+        { 
+          nome: 'Volkswagen', 
+          modelos: [
+            { nome: 'Gol', ano_ini: 1980, ano_fim: 2023, desc: 'Ícone brasileiro, líder de vendas por décadas.' },
+            { nome: 'Golf', ano_ini: 1974, ano_fim: 2024, desc: 'Hatchback médio de referência global em tecnologia.' }
+          ] 
+        },
+        { nome: 'Chevrolet', modelos: [{ nome: 'Onix' }, { nome: 'Tracker' }, { nome: 'S10' }] },
+        { nome: 'BMW', modelos: [{ nome: '320i', ano_ini: 1975, ano_fim: 2024, desc: 'Sedan premium mais vendido do Brasil.' }] }
       ];
 
       for (const marca of marcasSeed) {
         const insertMarca = await client.query('INSERT INTO marcas (nome) VALUES ($1) RETURNING id', [marca.nome]);
         const marcaId = insertMarca.rows[0].id;
         for (const modelo of marca.modelos) {
-          await client.query('INSERT INTO modelos (marca_id, nome) VALUES ($1, $2)', [marcaId, modelo]);
+          await client.query(
+            'INSERT INTO modelos (marca_id, nome, ano_inicial, ano_final, descricao_detalhada) VALUES ($1, $2, $3, $4, $5)', 
+            [marcaId, modelo.nome, (modelo as any).ano_ini || null, (modelo as any).ano_fim || null, (modelo as any).desc || null]
+          );
         }
       }
       
