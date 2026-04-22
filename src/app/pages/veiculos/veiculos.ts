@@ -31,6 +31,12 @@ export class VeiculosComponent implements OnInit {
   peopleOptions: PoSelectOption[] = [];
   supplierOptions: PoSelectOption[] = [];
   clientOptions: PoSelectOption[] = [];
+  bankOptions: PoSelectOption[] = [];
+
+  public readonly formaCompraOptions: PoSelectOption[] = [
+    { label: 'Troca', value: 'Troca' },
+    { label: 'Banco', value: 'Banco' }
+  ];
 
   // Statement data
   selectedVehicleStatement: any[] = [];
@@ -85,15 +91,18 @@ export class VeiculosComponent implements OnInit {
 
   async ngOnInit() {
     await this.db.init();
-    this.loadPeopleOptions();
-    this.loadVehicles();
+    await this.loadOptions();
+    await this.loadVehicles();
   }
 
-  async loadPeopleOptions() {
+  async loadOptions() {
     const people = await this.db.getAll('pessoas');
     this.peopleOptions = people.map(p => ({ label: p.nome, value: p.id }));
     this.supplierOptions = people.filter(p => p.is_fornecedor).map(p => ({ label: p.nome, value: p.id }));
     this.clientOptions = people.filter(p => p.is_cliente).map(p => ({ label: p.nome, value: p.id }));
+
+    const banks = await this.db.getAll('bancos');
+    this.bankOptions = banks.map(b => ({ label: b.nome, value: b.id }));
   }
 
   async loadVehicles() {
@@ -119,6 +128,7 @@ export class VeiculosComponent implements OnInit {
       valor_avaliacao: 0,
       data_compra: new Date().toISOString().split('T')[0],
       status: 'Estoque',
+      forma_compra: 'Troca',
       fotos: []
     };
   }
@@ -183,6 +193,14 @@ export class VeiculosComponent implements OnInit {
   }
 
   async save() {
+    if (this.vehicle.placa) {
+      this.vehicle.placa = this.vehicle.placa.toUpperCase();
+    }
+    
+    if (this.vehicle.forma_compra === 'Troca') {
+      this.vehicle.banco_id = undefined;
+    }
+
     if (this.isEditing) {
       await this.db.update('veiculos', this.vehicle.id!, this.vehicle);
       this.poNotification.success('Veículo atualizado com sucesso!');

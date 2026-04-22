@@ -72,6 +72,8 @@ async function seed() {
         valor_venda DECIMAL(15,2),
         data_compra DATE,
         status VARCHAR(20) DEFAULT 'Estoque',
+        forma_compra VARCHAR(20) DEFAULT 'Troca',
+        banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL,
         fornecedor_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
         cliente_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
         fotos TEXT[] DEFAULT '{}'

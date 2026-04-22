@@ -19,7 +19,7 @@
 
   <form #vehicleForm="ngForm">
     <div class="po-row">
-      <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-mask="AAA-9A99"></po-input>
+      <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" (ngModelChange)="vehicle.placa = $event?.toUpperCase()" p-label="Placa" p-required p-maxlength="7" p-pattern="^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$"></po-input>
       <po-input class="po-md-3" name="marca" [(ngModel)]="vehicle.marca" p-label="Marca" p-required></po-input>
       <po-input class="po-md-4" name="modelo" [(ngModel)]="vehicle.modelo" p-label="Modelo" p-required></po-input>
       <po-input class="po-md-3" name="cor" [(ngModel)]="vehicle.cor" p-label="Cor"></po-input>
@@ -38,6 +38,11 @@
       <po-select class="po-md-6" name="fornecedor" [(ngModel)]="vehicle.fornecedor_id" p-label="Fornecedor (Origem)" [p-options]="supplierOptions" p-required></po-select>
       <po-datepicker class="po-md-3" name="data_compra" [(ngModel)]="vehicle.data_compra" p-label="Data Compra"></po-datepicker>
       <po-decimal class="po-md-3" name="valor_compra" [(ngModel)]="vehicle.valor_compra" p-label="Valor de Compra" p-decimals="2" p-required></po-decimal>
+    </div>
+
+    <div class="po-row po-mt-2">
+      <po-radio-group class="po-md-4" name="forma_compra" [(ngModel)]="vehicle.forma_compra" p-label="Forma de Compra" [p-options]="formaCompraOptions" p-required></po-radio-group>
+      <po-select class="po-md-4" name="banco_id" [(ngModel)]="vehicle.banco_id" p-label="Conta Bancária (Saída do Valor)" [p-options]="bankOptions" *ngIf="vehicle.forma_compra === 'Banco'" p-required></po-select>
     </div>
 
     <div class="po-row">
