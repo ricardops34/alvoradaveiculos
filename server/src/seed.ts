@@ -105,9 +105,19 @@ async function seed() {
 
     // Se tabelas já existiam com dados, não faz seed novamente
     if (tablesExist) {
+      // Garantir que novas colunas existam para quem já tinha o banco criado
+      try {
+        await client.query(`
+          ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS forma_compra VARCHAR(20) DEFAULT 'Troca';
+          ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL;
+        `);
+      } catch (e) {
+        // ignora se a tabela veiculos ainda não existir
+      }
+
       const countCheck = await client.query('SELECT COUNT(*) FROM perfis');
       if (parseInt(countCheck.rows[0].count) > 0) {
-        console.log('ℹ️  Dados já existem. Seed ignorado.');
+        console.log('ℹ️  Dados já existem. Seed ignorado (esquema atualizado).');
         return;
       }
     }
