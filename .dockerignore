@@ -5,6 +5,5 @@ dist
 .antigravity
 npm-debug.log
 README.md
-Dockerfile
-docker-compose.yml
-nginx.conf
+# Dockerfile e nginx.conf NÃO devem ser ignorados para o build funcionar
+# docker-compose.yml
