@@ -5,6 +5,17 @@ services:
     build: .
     image: alvorada-crm:latest
     container_name: alvorada-crm-app
-    ports:
-      - "8080:80"
     restart: always
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      # Altere a URL abaixo para o seu domínio real
+      - "traefik.http.routers.alvorada-crm.rule=Host(`crm.alvorada.com.br`)"
+      - "traefik.http.routers.alvorada-crm.entrypoints=websecure"
+      - "traefik.http.routers.alvorada-crm.tls.certresolver=myresolver"
+      - "traefik.http.services.alvorada-crm.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    external: true
