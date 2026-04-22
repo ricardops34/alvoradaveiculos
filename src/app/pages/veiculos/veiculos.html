@@ -81,11 +81,12 @@
   [p-primary-action]="{ label: 'Fechar', action: statementModal.close.bind(statementModal) }">
 
   <div class="po-row">
-    <po-info class="po-md-3" p-label="Veículo" [p-value]="vehicle.marca + ' ' + vehicle.modelo"></po-info>
+    <po-info class="po-md-2" p-label="Veículo" [p-value]="vehicle.marca + ' ' + vehicle.modelo"></po-info>
     <po-info class="po-md-2" p-label="Placa" [p-value]="vehicle.placa"></po-info>
+    <po-info class="po-md-2" p-label="Avaliação" [p-value]="(vehicle.valor_avaliacao | currency:'BRL') ?? ''"></po-info>
     <po-info class="po-md-2" p-label="Compra" [p-value]="(vehicle.valor_compra | currency:'BRL') ?? ''"></po-info>
     <po-info class="po-md-2" p-label="Venda" [p-value]="((vehicle.valor_venda || 0) | currency:'BRL') ?? ''"></po-info>
-    <po-info class="po-md-3" p-label="Lucro/Prejuízo Estimado" [p-value]="(vehicleSummary.profit | currency:'BRL') ?? ''" 
+    <po-info class="po-md-2" p-label="Resultado" [p-value]="(vehicleSummary.profit | currency:'BRL') ?? ''" 
       [style.color]="vehicleSummary.profit >= 0 ? 'green' : 'red'">
     </po-info>
   </div>

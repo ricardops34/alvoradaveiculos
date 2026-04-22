@@ -3,6 +3,10 @@
   <po-container>
     <div class="po-row">
       <po-select class="po-md-6" name="veiculo" [(ngModel)]="veiculo_id" p-label="Selecione o Veículo" [p-options]="vehicles" (p-change)="onChangeVehicle()"></po-select>
+      <div class="po-md-2 po-mt-4 po-p-0 po-row" *ngIf="vehicleData">
+        <po-button class="po-md-6" p-icon="an an-file-xls" (p-click)="exportXLS()" p-tooltip="Exportar Excel"></po-button>
+        <po-button class="po-md-6" p-icon="an an-file-pdf" (p-click)="exportPDF()" p-tooltip="Exportar PDF"></po-button>
+      </div>
     </div>
   </po-container>
 
@@ -18,9 +22,6 @@
 
       <po-widget class="po-md-8" p-title="Informações do Veículo">
         <div class="po-row">
-          <po-button class="po-md-2 po-mt-4" p-label="Filtrar" p-type="primary" (p-click)="search()"></po-button>
-          <po-button class="po-md-1 po-mt-4" p-icon="an an-file-xls" (p-click)="exportXLS()" p-tooltip="Exportar Excel"></po-button>
-          <po-button class="po-md-1 po-mt-4" p-icon="an an-file-pdf" (p-click)="exportPDF()" p-tooltip="Exportar PDF"></po-button>
           <po-info class="po-md-3" p-label="Placa" [p-value]="vehicleData.placa"></po-info>
           <po-info class="po-md-3" p-label="Compra" [p-value]="(vehicleData.valor_compra | currency:'BRL') ?? ''"></po-info>
           <po-info class="po-md-3" p-label="Venda" [p-value]="((vehicleData.valor_venda || 0) | currency:'BRL') ?? ''"></po-info>

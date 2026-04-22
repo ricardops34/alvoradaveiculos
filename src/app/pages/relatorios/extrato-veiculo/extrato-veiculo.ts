@@ -74,7 +74,11 @@ export class ExtratoVeiculoComponent implements OnInit {
       revenue: rev,
       profit: (this.vehicleData.valor_venda || 0) - this.vehicleData.valor_compra - exp + rev
     };
+  }
+
   exportXLS() {
+    if (!this.vehicleData) return;
+
     const data = this.movements.map(m => ({
       Data: m.data,
       Histórico: m.historico,
@@ -86,14 +90,16 @@ export class ExtratoVeiculoComponent implements OnInit {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Extrato_Veiculo');
-    XLSX.writeFile(wb, `Extrato_Veiculo_${this.selectedVehicle?.placa}.xlsx`);
+    XLSX.writeFile(wb, `Extrato_Veiculo_${this.vehicleData.placa}.xlsx`);
   }
 
   exportPDF() {
+    if (!this.vehicleData) return;
+
     const doc = new jsPDF();
     doc.text('Extrato por Veículo - Alvorada Veículos', 14, 15);
     doc.setFontSize(10);
-    doc.text(`Veículo: ${this.selectedVehicle?.marca} ${this.selectedVehicle?.modelo} (${this.selectedVehicle?.placa})`, 14, 22);
+    doc.text(`Veículo: ${this.vehicleData.marca} ${this.vehicleData.modelo} (${this.vehicleData.placa})`, 14, 22);
 
     const body = this.movements.map(m => [
       m.data,
@@ -110,8 +116,8 @@ export class ExtratoVeiculoComponent implements OnInit {
     });
 
     const finalY = (doc as any).lastAutoTable.cursor.y || 40;
-    doc.text(`Lucro/Prejuízo: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.vehicleSummary.profit)}`, 14, finalY + 10);
+    doc.text(`Lucro/Prejuízo: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(this.summary.profit)}`, 14, finalY + 10);
     
-    doc.save(`Extrato_Veiculo_${this.selectedVehicle?.placa}.pdf`);
+    doc.save(`Extrato_Veiculo_${this.vehicleData.placa}.pdf`);
   }
 }
