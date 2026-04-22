@@ -13,14 +13,11 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
+        - "traefik.swarm.network=network_public"
         - "traefik.http.routers.alvorada-crm.rule=Host(`alvorada.bjsoft.com.br`)"
         - "traefik.http.routers.alvorada-crm.entrypoints=websecure"
-        - "traefik.docker.network=network_public"
-        - "traefik.http.services.alvorada-crm.loadbalancer.server.port=80"
-        - "traefik.http.routers.alvorada-crm.tls=true"
         - "traefik.http.routers.alvorada-crm.tls.certresolver=letsencryptresolver"
-        - "traefik.http.middlewares.alvorada-crm-compress.compress=true"       
-
+        - "traefik.http.services.alvorada-crm.loadbalancer.server.port=80"
 networks:
   network_public:
     external: true
