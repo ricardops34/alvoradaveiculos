@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { AuthGuard } from './auth/auth.guard';
+import { AuthGuard } from './guards/auth-guard';
 import { LayoutComponent } from './layout/layout.component';
 
 export const routes: Routes = [
@@ -33,7 +33,7 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        loadComponent: () => import('./pages/dashboard/dashboard').then(m => m.DashboardComponent)
+        loadComponent: () => import('./home/dashboard/dashboard').then(m => m.DashboardComponent)
       },
       {
         path: 'veiculos',
