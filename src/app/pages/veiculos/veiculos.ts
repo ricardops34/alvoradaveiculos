@@ -89,16 +89,16 @@ export class VeiculosComponent implements OnInit {
     this.loadVehicles();
   }
 
-  loadPeopleOptions() {
-    const people = this.db.getAll('pessoas');
+  async loadPeopleOptions() {
+    const people = await this.db.getAll('pessoas');
     this.peopleOptions = people.map(p => ({ label: p.nome, value: p.id }));
     this.supplierOptions = people.filter(p => p.is_fornecedor).map(p => ({ label: p.nome, value: p.id }));
     this.clientOptions = people.filter(p => p.is_cliente).map(p => ({ label: p.nome, value: p.id }));
   }
 
-  loadVehicles() {
-    const rawVehicles = this.db.getAll('veiculos');
-    const people = this.db.getAll('pessoas');
+  async loadVehicles() {
+    const rawVehicles = await this.db.getAll('veiculos');
+    const people = await this.db.getAll('pessoas');
 
     this.vehicles = rawVehicles.map(v => ({
       ...v,
@@ -160,8 +160,9 @@ export class VeiculosComponent implements OnInit {
 
   async openStatement(vehicle: Vehicle) {
     this.vehicle = vehicle;
-    const movements = this.db.getAll('movimentos').filter(m => m.veiculo_id === vehicle.id);
-    const centers = this.db.getAll('centros_custo');
+    const allMovements = await this.db.getAll('movimentos');
+    const movements = allMovements.filter(m => m.veiculo_id === vehicle.id);
+    const centers = await this.db.getAll('centros_custo');
 
     this.selectedVehicleStatement = movements.map(m => ({
       ...m,
@@ -169,8 +170,8 @@ export class VeiculosComponent implements OnInit {
     }));
 
     // Calculate Summary
-    const expenses = movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(m.valor), 0);
-    const revenue = movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + m.valor, 0);
+    const expenses = movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
+    const revenue = movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + parseFloat(m.valor), 0);
     
     this.vehicleSummary = {
       totalExpenses: expenses,
@@ -181,21 +182,21 @@ export class VeiculosComponent implements OnInit {
     this.statementModal.open();
   }
 
-  save() {
+  async save() {
     if (this.isEditing) {
-      this.db.update('veiculos', this.vehicle.id!, this.vehicle);
+      await this.db.update('veiculos', this.vehicle.id!, this.vehicle);
       this.poNotification.success('Veículo atualizado com sucesso!');
     } else {
-      this.db.insert('veiculos', this.vehicle);
+      await this.db.insert('veiculos', this.vehicle);
       this.poNotification.success('Veículo cadastrado com sucesso!');
     }
-    this.loadVehicles();
+    await this.loadVehicles();
     this.vehicleModal.close();
   }
 
-  delete(vehicle: Vehicle) {
-    this.db.delete('veiculos', vehicle.id!);
+  async delete(vehicle: Vehicle) {
+    await this.db.delete('veiculos', vehicle.id!);
     this.poNotification.warning('Veículo excluído!');
-    this.loadVehicles();
+    await this.loadVehicles();
   }
 }

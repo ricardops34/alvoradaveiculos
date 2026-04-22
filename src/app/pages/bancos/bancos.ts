@@ -62,9 +62,8 @@ export class BancosComponent implements OnInit {
     this.loadBanks();
   }
 
-  loadBanks() {
-    this.banks = this.db.getAll('bancos');
-    console.log('Bancos carregados:', this.banks);
+  async loadBanks() {
+    this.banks = await this.db.getAll('bancos');
   }
 
   openNew() {
@@ -79,21 +78,21 @@ export class BancosComponent implements OnInit {
     this.bankModal.open();
   }
 
-  save() {
+  async save() {
     if (this.isEditing) {
-      this.db.update('bancos', this.bank.id, this.bank);
+      await this.db.update('bancos', this.bank.id, this.bank);
       this.poNotification.success('Banco atualizado com sucesso!');
     } else {
-      this.db.insert('bancos', this.bank);
+      await this.db.insert('bancos', this.bank);
       this.poNotification.success('Banco cadastrado com sucesso!');
     }
-    this.loadBanks();
+    await this.loadBanks();
     this.bankModal.close();
   }
 
-  delete(bank: any) {
-    this.db.delete('bancos', bank.id);
+  async delete(bank: any) {
+    await this.db.delete('bancos', bank.id);
     this.poNotification.warning('Banco excluído!');
-    this.loadBanks();
+    await this.loadBanks();
   }
 }

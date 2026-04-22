@@ -70,19 +70,23 @@ export class MovimentosComponent implements OnInit {
     this.loadMovements();
   }
 
-  loadOptions() {
-    this.banks = this.db.getAll('bancos').map(b => ({ label: b.nome, value: b.id }));
-    this.costCenters = this.db.getAll('centros_custo').map(c => ({ label: c.nome, value: c.id }));
-    this.people = this.db.getAll('pessoas').map(p => ({ label: p.nome, value: p.id }));
-    this.vehicles = this.db.getAll('veiculos').map(v => ({ label: `${v.marca} ${v.modelo} (${v.placa})`, value: v.id }));
+  async loadOptions() {
+    const banks = await this.db.getAll('bancos');
+    const costCenters = await this.db.getAll('centros_custo');
+    const people = await this.db.getAll('pessoas');
+    const vehicles = await this.db.getAll('veiculos');
+    this.banks = banks.map(b => ({ label: b.nome, value: b.id }));
+    this.costCenters = costCenters.map(c => ({ label: c.nome, value: c.id }));
+    this.people = people.map(p => ({ label: p.nome, value: p.id }));
+    this.vehicles = vehicles.map(v => ({ label: `${v.marca} ${v.modelo} (${v.placa})`, value: v.id }));
   }
 
-  loadMovements() {
-    const rawMovements = this.db.getAll('movimentos');
-    const banks = this.db.getAll('bancos');
-    const centers = this.db.getAll('centros_custo');
-    const people = this.db.getAll('pessoas');
-    const vehicles = this.db.getAll('veiculos');
+  async loadMovements() {
+    const rawMovements = await this.db.getAll('movimentos');
+    const banks = await this.db.getAll('bancos');
+    const centers = await this.db.getAll('centros_custo');
+    const people = await this.db.getAll('pessoas');
+    const vehicles = await this.db.getAll('veiculos');
 
     this.movements = rawMovements.map(m => ({
       ...m,
@@ -116,7 +120,7 @@ export class MovimentosComponent implements OnInit {
     this.movementModal.open();
   }
 
-  save() {
+  async save() {
     // Ensure value sign matches type
     if (this.movement.tipo === 'Débito' && this.movement.valor > 0) {
       this.movement.valor *= -1;
@@ -125,19 +129,19 @@ export class MovimentosComponent implements OnInit {
     }
 
     if (this.isEditing) {
-      this.db.update('movimentos', this.movement.id!, this.movement);
+      await this.db.update('movimentos', this.movement.id!, this.movement);
       this.poNotification.success('Lançamento atualizado!');
     } else {
-      this.db.insert('movimentos', this.movement);
+      await this.db.insert('movimentos', this.movement);
       this.poNotification.success('Lançamento realizado!');
     }
-    this.loadMovements();
+    await this.loadMovements();
     this.movementModal.close();
   }
 
-  delete(movement: any) {
-    this.db.delete('movimentos', movement.id!);
+  async delete(movement: any) {
+    await this.db.delete('movimentos', movement.id!);
     this.poNotification.warning('Lançamento excluído!');
-    this.loadMovements();
+    await this.loadMovements();
   }
 }

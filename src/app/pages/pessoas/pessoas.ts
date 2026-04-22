@@ -69,8 +69,8 @@ export class PessoasComponent implements OnInit {
     this.loadPeople();
   }
 
-  loadPeople() {
-    const rawPeople = this.db.getAll('pessoas');
+  async loadPeople() {
+    const rawPeople = await this.db.getAll('pessoas');
     this.people = rawPeople.map(p => {
       const papeis = [];
       if (p.is_cliente) papeis.push('Cliente');
@@ -112,14 +112,14 @@ export class PessoasComponent implements OnInit {
     this.personModal.open();
   }
 
-  save() {
+  async save() {
     // Sync roles to person object
     this.person.is_cliente = this.roles.includes('cliente');
     this.person.is_fornecedor = this.roles.includes('fornecedor');
     this.person.is_vendedor = this.roles.includes('vendedor');
     this.person.is_socio = this.roles.includes('socio');
 
-    // Convert boolean to number for SQLite
+    // Convert boolean to number for PostgreSQL
     const dataToSave = {
       ...this.person,
       is_cliente: this.person.is_cliente ? 1 : 0,
@@ -130,20 +130,20 @@ export class PessoasComponent implements OnInit {
     delete (dataToSave as any).papeis;
 
     if (this.isEditing) {
-      this.db.update('pessoas', this.person.id!, dataToSave);
+      await this.db.update('pessoas', this.person.id!, dataToSave);
       this.poNotification.success('Pessoa atualizada!');
     } else {
-      this.db.insert('pessoas', dataToSave);
+      await this.db.insert('pessoas', dataToSave);
       this.poNotification.success('Pessoa cadastrada!');
     }
-    this.loadPeople();
+    await this.loadPeople();
     this.personModal.close();
   }
 
-  delete(person: Person) {
-    this.db.delete('pessoas', person.id!);
+  async delete(person: Person) {
+    await this.db.delete('pessoas', person.id!);
     this.poNotification.warning('Pessoa excluída!');
-    this.loadPeople();
+    await this.loadPeople();
   }
 
   get documentMask(): string {

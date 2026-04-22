@@ -50,10 +50,10 @@ export class RelatorioDespesasComponent implements OnInit {
     this.search();
   }
 
-  search() {
-    const allMovements = this.db.getAll('movimentos');
-    const centers = this.db.getAll('centros_custo');
-    const vehicles = this.db.getAll('veiculos');
+  async search() {
+    const allMovements = await this.db.getAll('movimentos');
+    const centers = await this.db.getAll('centros_custo');
+    const vehicles = await this.db.getAll('veiculos');
 
     this.movements = allMovements
       .filter(m => m.tipo === 'Débito')

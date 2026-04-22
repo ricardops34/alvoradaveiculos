@@ -39,25 +39,26 @@ export class ExtratoVeiculoComponent implements OnInit {
     this.loadVehicles();
   }
 
-  loadVehicles() {
-    this.vehicles = this.db.getAll('veiculos').map(v => ({ 
+  async loadVehicles() {
+    const veiculos = await this.db.getAll('veiculos');
+    this.vehicles = veiculos.map(v => ({ 
       label: `${v.marca} ${v.modelo} (${v.placa})`, 
       value: v.id 
     }));
   }
 
-  onChangeVehicle() {
+  async onChangeVehicle() {
     if (!this.veiculo_id) {
       this.vehicleData = null;
       this.movements = [];
       return;
     }
 
-    const allVehicles = this.db.getAll('veiculos');
+    const allVehicles = await this.db.getAll('veiculos');
     this.vehicleData = allVehicles.find(v => v.id === this.veiculo_id);
 
-    const allMovements = this.db.getAll('movimentos');
-    const centers = this.db.getAll('centros_custo');
+    const allMovements = await this.db.getAll('movimentos');
+    const centers = await this.db.getAll('centros_custo');
 
     this.movements = allMovements
       .filter(m => m.veiculo_id === this.veiculo_id)
@@ -66,8 +67,8 @@ export class ExtratoVeiculoComponent implements OnInit {
         centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome
       }));
 
-    const exp = this.movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(m.valor), 0);
-    const rev = this.movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + m.valor, 0);
+    const exp = this.movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
+    const rev = this.movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + parseFloat(m.valor), 0);
 
     this.summary = {
       expenses: exp,

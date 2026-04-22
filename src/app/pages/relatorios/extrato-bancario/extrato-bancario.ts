@@ -56,23 +56,25 @@ export class ExtratoBancarioComponent implements OnInit {
     this.filter.data_fim = today.toISOString().split('T')[0];
   }
 
-  loadBanks() {
-    this.banks = this.db.getAll('bancos').map(b => ({ label: b.nome, value: b.id }));
+  async loadBanks() {
+    const bancos = await this.db.getAll('bancos');
+    this.banks = bancos.map(b => ({ label: b.nome, value: b.id }));
     if (this.banks.length > 0) {
       this.filter.banco_id = this.banks[0].value as any;
-      this.search();
+      await this.search();
     }
   }
 
-  search() {
+  async search() {
     if (!this.filter.banco_id) {
       this.poNotification.warning('Selecione um banco.');
       return;
     }
 
-    const allMovements = this.db.getAll('movimentos');
-    const centers = this.db.getAll('centros_custo');
-    const bank = this.db.getAll('bancos').find(b => b.id === this.filter.banco_id);
+    const allMovements = await this.db.getAll('movimentos');
+    const centers = await this.db.getAll('centros_custo');
+    const bancos = await this.db.getAll('bancos');
+    const bank = bancos.find(b => b.id === this.filter.banco_id);
     
     this.creditLimit = bank ? (bank.limite_credito || 0) : 0;
 
@@ -91,7 +93,7 @@ export class ExtratoBancarioComponent implements OnInit {
 
     // Calculate total balance for this bank considering ALL movements up to date_fim
     const totalMovementsUntilNow = allMovements.filter(m => m.banco_id === this.filter.banco_id);
-    this.totalBalance = totalMovementsUntilNow.reduce((sum, m) => sum + m.valor, 0);
+    this.totalBalance = totalMovementsUntilNow.reduce((sum, m) => sum + parseFloat(m.valor), 0);
     this.availableBalance = this.totalBalance + this.creditLimit;
   }
 

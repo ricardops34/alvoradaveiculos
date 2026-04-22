@@ -60,8 +60,8 @@ export class CentrosCustoComponent implements OnInit {
     this.loadCC();
   }
 
-  loadCC() {
-    this.costCenters = this.db.getAll('centros_custo');
+  async loadCC() {
+    this.costCenters = await this.db.getAll('centros_custo');
   }
 
   openNew() {
@@ -76,21 +76,21 @@ export class CentrosCustoComponent implements OnInit {
     this.ccModal.open();
   }
 
-  save() {
+  async save() {
     if (this.isEditing) {
-      this.db.update('centros_custo', this.cc.id, this.cc);
+      await this.db.update('centros_custo', this.cc.id, this.cc);
       this.poNotification.success('Centro de custo atualizado!');
     } else {
-      this.db.insert('centros_custo', this.cc);
+      await this.db.insert('centros_custo', this.cc);
       this.poNotification.success('Centro de custo cadastrado!');
     }
-    this.loadCC();
+    await this.loadCC();
     this.ccModal.close();
   }
 
-  delete(cc: any) {
-    this.db.delete('centros_custo', cc.id);
+  async delete(cc: any) {
+    await this.db.delete('centros_custo', cc.id);
     this.poNotification.warning('Centro de custo excluído!');
-    this.loadCC();
+    await this.loadCC();
   }
 }

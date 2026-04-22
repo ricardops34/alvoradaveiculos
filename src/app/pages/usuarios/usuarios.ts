@@ -54,13 +54,13 @@ export class UsuariosComponent implements OnInit {
     this.loadUsers();
   }
 
-  loadProfiles() {
-    this.profiles = this.db.getAll('perfis');
+  async loadProfiles() {
+    this.profiles = await this.db.getAll('perfis');
     this.profileOptions = this.profiles.map(p => ({ label: p.nome, value: p.id }));
   }
 
-  loadUsers() {
-    const rawUsers = this.db.getAll('usuarios');
+  async loadUsers() {
+    const rawUsers = await this.db.getAll('usuarios');
     this.users = rawUsers.map(u => {
       const profile = this.profiles.find(p => p.id === u.perfil_id);
       return { ...u, perfil_nome: profile ? profile.nome : 'N/A' };
@@ -79,25 +79,25 @@ export class UsuariosComponent implements OnInit {
     this.userModal.open();
   }
 
-  save() {
+  async save() {
     if (this.isEditing) {
-      this.db.update('usuarios', this.user.id, this.user);
+      await this.db.update('usuarios', this.user.id, this.user);
       this.poNotification.success('Usuário atualizado!');
     } else {
-      this.db.insert('usuarios', this.user);
+      await this.db.insert('usuarios', this.user);
       this.poNotification.success('Usuário criado!');
     }
-    this.loadUsers();
+    await this.loadUsers();
     this.userModal.close();
   }
 
-  delete(user: any) {
+  async delete(user: any) {
     if (user.email === 'admin@alvorada.com') {
       this.poNotification.error('O administrador principal não pode ser excluído.');
       return;
     }
-    this.db.delete('usuarios', user.id);
+    await this.db.delete('usuarios', user.id);
     this.poNotification.warning('Usuário excluído!');
-    this.loadUsers();
+    await this.loadUsers();
   }
 }

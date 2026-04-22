@@ -63,12 +63,12 @@ export class PerfisComponent implements OnInit {
     this.loadProfiles();
   }
 
-  loadProfiles() {
-    this.profiles = this.db.getAll('perfis').map(p => ({
+  async loadProfiles() {
+    const perfis = await this.db.getAll('perfis');
+    this.profiles = perfis.map(p => ({
       ...p,
       qtd_rotinas: p.rotinas?.length || 0
     }));
-    console.log('Perfis carregados:', this.profiles);
   }
 
   openNew() {
@@ -83,25 +83,25 @@ export class PerfisComponent implements OnInit {
     this.profileModal.open();
   }
 
-  save() {
+  async save() {
     if (this.isEditing) {
-      this.db.update('perfis', this.profile.id, this.profile);
+      await this.db.update('perfis', this.profile.id, this.profile);
       this.poNotification.success('Perfil atualizado!');
     } else {
-      this.db.insert('perfis', this.profile);
+      await this.db.insert('perfis', this.profile);
       this.poNotification.success('Perfil criado!');
     }
-    this.loadProfiles();
+    await this.loadProfiles();
     this.profileModal.close();
   }
 
-  delete(profile: any) {
+  async delete(profile: any) {
     if (profile.id === 1) {
       this.poNotification.error('O perfil Administrador não pode ser excluído.');
       return;
     }
-    this.db.delete('perfis', profile.id);
+    await this.db.delete('perfis', profile.id);
     this.poNotification.warning('Perfil excluído!');
-    this.loadProfiles();
+    await this.loadProfiles();
   }
 }
