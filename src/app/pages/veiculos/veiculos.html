@@ -137,7 +137,20 @@
     </div>
 
     <div class="po-row po-mt-2" *ngIf="sellData.forma_venda === 'Troca'">
-      <po-info class="po-md-12" p-value="Aviso: Ao confirmar, o veículo atual será marcado como vendido e a tela de cadastro se abrirá automaticamente para você registrar o veículo que entrou na troca."></po-info>
+      <po-divider p-label="Dados do Veículo de Entrada (Troca)"></po-divider>
+    </div>
+    
+    <div class="po-row" *ngIf="sellData.forma_venda === 'Troca'">
+      <po-input class="po-md-2" name="troca_placa" [(ngModel)]="sellData.troca_placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
+      <po-input class="po-md-3" name="troca_marca" [(ngModel)]="sellData.troca_marca" p-label="Marca" p-required></po-input>
+      <po-input class="po-md-4" name="troca_modelo" [(ngModel)]="sellData.troca_modelo" p-label="Modelo" p-required></po-input>
+      <po-input class="po-md-3" name="troca_cor" [(ngModel)]="sellData.troca_cor" p-label="Cor"></po-input>
+    </div>
+
+    <div class="po-row" *ngIf="sellData.forma_venda === 'Troca'">
+      <po-number class="po-md-3" name="troca_ano_fab" [(ngModel)]="sellData.troca_ano_fab" p-label="Ano Fabricação"></po-number>
+      <po-number class="po-md-3" name="troca_ano_mod" [(ngModel)]="sellData.troca_ano_mod" p-label="Ano Modelo"></po-number>
+      <po-decimal class="po-md-6" name="troca_valor" [(ngModel)]="sellData.troca_valor" p-label="Valor de Avaliação na Troca (Compra)" p-decimals="2" p-required></po-decimal>
     </div>
   </form>
 </po-modal>

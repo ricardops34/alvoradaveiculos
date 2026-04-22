@@ -252,7 +252,14 @@ export class VeiculosComponent implements OnInit {
       valor_venda: vehicle.valor_avaliacao || vehicle.valor_compra,
       forma_venda: 'Banco',
       banco_id: null,
-      centro_custo_id: null
+      centro_custo_id: null,
+      troca_placa: '',
+      troca_marca: '',
+      troca_modelo: '',
+      troca_cor: '',
+      troca_ano_fab: null,
+      troca_ano_mod: null,
+      troca_valor: null
     };
     this.sellModal.open();
   }
@@ -268,18 +275,19 @@ export class VeiculosComponent implements OnInit {
       return;
     }
 
+    if (this.sellData.forma_venda === 'Troca') {
+      if (!this.sellData.troca_placa || !this.sellData.troca_marca || !this.sellData.troca_modelo || !this.sellData.troca_valor) {
+        this.poNotification.warning('Preencha os campos obrigatórios do veículo de troca (Placa, Marca, Modelo e Valor).');
+        return;
+      }
+      this.sellData.troca_placa = this.sellData.troca_placa.toUpperCase();
+    }
+
     try {
       await this.db.http.post<any>(`${this.db.apiUrl}/veiculos/${this.vehicle.id}/vender`, this.sellData).toPromise();
-      this.poNotification.success('Veículo vendido com sucesso!');
+      this.poNotification.success('Veículo vendido e troca registrada com sucesso!');
       this.sellModal.close();
       await this.loadVehicles();
-
-      if (this.sellData.forma_venda === 'Troca') {
-        const cliente_id = this.sellData.cliente_id;
-        this.openNew();
-        this.vehicle.forma_compra = 'Troca';
-        this.vehicle.fornecedor_id = cliente_id;
-      }
     } catch (e) {
       console.error(e);
       this.poNotification.error('Erro ao processar a venda.');

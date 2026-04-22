@@ -81,7 +81,7 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { cliente_id, data_venda, valor_venda, forma_venda, banco_id, centro_custo_id } = req.body;
+    const { cliente_id, data_venda, valor_venda, forma_venda, banco_id, centro_custo_id, troca_placa, troca_marca, troca_modelo, troca_cor, troca_ano_fab, troca_ano_mod, troca_valor } = req.body;
     
     await client.query('BEGIN');
     
@@ -104,6 +104,12 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
         `INSERT INTO movimentos (data, banco_id, tipo, historico, valor, veiculo_id, pessoa_id, centro_custo_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [data_venda || new Date().toISOString().split('T')[0], banco_id, 'Crédito', `Venda Veículo ${vehicle.marca} ${vehicle.modelo} (${vehicle.placa})`, Math.abs(valor_venda), vehicle.id, cliente_id, centro_custo_id]
+      );
+    } else if (forma_venda === 'Troca') {
+      await client.query(
+        `INSERT INTO veiculos (placa, marca, modelo, cor, ano_fabricacao, ano_modelo, valor_compra, data_compra, status, forma_compra, fornecedor_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        [troca_placa, troca_marca, troca_modelo, troca_cor || null, troca_ano_fab || null, troca_ano_mod || null, troca_valor, data_venda || new Date().toISOString().split('T')[0], 'Estoque', 'Troca', cliente_id]
       );
     }
 
