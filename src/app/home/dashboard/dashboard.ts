@@ -48,13 +48,21 @@ export class DashboardComponent implements OnInit {
     // 2. Total Bank Balance
     this.totalBankBalance = movements.reduce((sum, m) => sum + m.valor, 0);
 
-    // 3. Revenue vs Expenses Chart
-    const revenue = movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + m.valor, 0);
-    const expenses = movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(m.valor), 0);
+    // 3. Revenue vs Expenses Chart (Filtered by Current Month)
+    const currentMonth = this.today.getMonth();
+    const currentYear = this.today.getFullYear();
+
+    const monthMovements = movements.filter(m => {
+      const d = new Date(m.data);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+
+    const revenue = monthMovements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + m.valor, 0);
+    const expenses = monthMovements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(m.valor), 0);
 
     this.revenueVsExpenses = [
-      { label: 'Receitas', data: revenue, color: 'color-10' },
-      { label: 'Despesas', data: expenses, color: 'color-07' }
+      { label: 'Receitas', data: [revenue], color: 'color-10' },
+      { label: 'Despesas', data: [expenses], color: 'color-07' }
     ];
 
     // 4. Vehicles by Status Chart
