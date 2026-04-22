@@ -40,6 +40,43 @@ body.po-theme-dark {
   /* Background geral */
   background-color: #121212;
   color: #e8e8e8;
+
+  /* Brand colors mais claras para legibilidade no dark */
+  --color-brand-01-base: #a366cc;
+  --color-brand-01-dark: #c490e0;
+  --color-brand-02-base: #e06090;
+  --color-action-default: #a366cc;
+  --color-action-hover: #c490e0;
+
+  /* Correções pontuais - elementos com background hardcoded */
+  .po-toolbar {
+    background-color: var(--color-neutral-light-00) !important;
+  }
+
+  po-page-header,
+  .po-page-header {
+    background-color: var(--color-neutral-light-00) !important;
+  }
+
+  /* Dropdowns e listboxes (usam background hardcoded branco) */
+  .po-listbox,
+  .po-listbox-item,
+  .po-combo-item-list,
+  .po-select-button,
+  po-listbox {
+    background-color: var(--color-neutral-light-00) !important;
+    color: var(--color-neutral-dark-90) !important;
+  }
+
+  .po-listbox-item:hover {
+    background-color: var(--color-neutral-light-10) !important;
+  }
+
+  /* Hover sobre itens de menu e tabela - texto legível */
+  .po-menu-item-link:hover,
+  .po-table-row:hover {
+    color: var(--color-neutral-dark-90) !important;
+  }
 }
 
 /* Botão de troca de tema posicionado na toolbar */
