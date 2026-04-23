@@ -15,6 +15,7 @@ import { Movement } from '../../types/movement';
 import { QuickAddComponent } from '../../components/quick-add/quick-add.component';
 import { PessoasLookupService, BancosLookupService, CentrosCustoLookupService, VeiculosLookupService } from '../../services/lookups';
 
+// Version: 1.0.1 - Adding Quick Add buttons
 @Component({
   selector: 'app-movimentos',
   standalone: true,
