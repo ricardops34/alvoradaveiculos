@@ -12,13 +12,16 @@
       <po-widget p-title="Identidade Visual">
         <form #formParametros="ngForm">
           <div class="po-row">
-            <po-input class="po-md-12" name="empresa_nome" [(ngModel)]="parametros.empresa_nome" p-label="Nome da Empresa" p-required></po-input>
+            <po-input class="po-md-12" name="empresa_nome" [(ngModel)]="parametros.empresa_nome" p-label="Nome da Empresa" 
+              p-help="Nome exibido na barra de ferramentas e tela de login. Padrão: BJ Software" p-required>
+            </po-input>
           </div>
           <div class="po-row">
             <div class="po-md-6">
               <po-upload
                 name="logo_file"
                 p-label="Logo da Empresa"
+                p-help="Ícone exibido no menu lateral. Formato sugerido: PNG transparente, 200x50px."
                 p-url="/api/config/upload"
                 (p-success)="onUploadSuccess($event, 'logo_url')">
               </po-upload>
@@ -31,6 +34,7 @@
               <po-upload
                 name="favicon_file"
                 p-label="Favicon"
+                p-help="Ícone da aba do navegador. Formato sugerido: .ico ou .png de 32x32px."
                 p-url="/api/config/upload"
                 (p-success)="onUploadSuccess($event, 'favicon_url')">
               </po-upload>
@@ -45,6 +49,7 @@
               <po-upload
                 name="bg_file"
                 p-label="Imagem de Fundo (Login)"
+                p-help="Fundo da tela de login. Formato sugerido: JPG/PNG de alta resolução (1920x1080px)."
                 p-url="/api/config/upload"
                 (p-success)="onUploadSuccess($event, 'background_url')">
               </po-upload>
@@ -57,7 +62,7 @@
           
           <div class="po-row po-mt-1">
             <div class="po-md-12">
-              <p class="po-font-text-smaller">Arquivos atuais: 
+              <p class="po-font-text-smaller">Arquivos atuais em uso: 
                 <b>Logo:</b> {{parametros.logo_url}} | 
                 <b>Favicon:</b> {{parametros.favicon_url}} | 
                 <b>Fundo:</b> {{parametros.background_url}}
@@ -68,7 +73,7 @@
           <div class="po-row po-mt-2">
             <po-button 
               class="po-md-12"
-              p-label="Salvar Alterações" 
+              p-label="Salvar Alterações de Nome" 
               p-kind="primary" 
               p-icon="an an-floppy-disk"
               [p-loading]="loading"
@@ -80,17 +85,41 @@
     </div>
 
     <div class="po-md-6">
-      <po-widget p-title="Importação de Dados Base">
+      <po-widget p-title="Importação e Modelos de Dados">
         <div class="po-row">
           <po-info class="po-md-12" p-label="Registros Atuais" [p-value]="marcasCount + ' Marcas cadastradas'"></po-info>
         </div>
         
-        <div class="po-row po-mt-2">
+        <po-divider p-label="Download de Modelos"></po-divider>
+        <div class="po-row">
+          <div class="po-md-12">
+            <p class="po-font-text-smaller po-mb-1">Baixe os arquivos atuais para usar como base para novas edições:</p>
+            <div class="po-row">
+              <po-button class="po-md-6" p-label="Marcas (CSV)" p-small p-icon="an an-download" (p-click)="downloadModelo('marcas-carros')"></po-button>
+              <po-button class="po-md-6" p-label="Modelos (CSV)" p-small p-icon="an an-download" (p-click)="downloadModelo('modelos-carro')"></po-button>
+            </div>
+          </div>
+        </div>
+
+        <po-divider p-label="Upload de Novos Dados"></po-divider>
+        <div class="po-row">
+          <po-upload
+            class="po-md-12"
+            name="file"
+            p-label="Enviar novo arquivo de dados"
+            p-help="Envie arquivos com o mesmo nome dos modelos (ex: marcas-carros.csv) para substituir os dados base."
+            p-url="/api/config/upload-csv"
+            (p-success)="onCsvUploadSuccess()">
+          </po-upload>
+        </div>
+
+        <po-divider p-label="Executar Carga"></po-divider>
+        <div class="po-row po-mt-1">
           <po-button 
             class="po-md-12"
-            p-label="Importar Marcas e Modelos (CSV)" 
+            p-label="Processar Importação para o Banco" 
             p-kind="secondary" 
-            p-icon="an an-download-simple"
+            p-icon="an an-database"
             [p-loading]="loading"
             [p-disabled]="marcasCount > 0"
             (p-click)="importarDados()">
@@ -98,10 +127,7 @@
         </div>
 
         <p *ngIf="marcasCount > 0" class="po-font-text-smaller po-mt-1" style="color: green;">
-          ✅ Os dados já foram importados.
-        </p>
-        <p *ngIf="marcasCount === 0" class="po-font-text-smaller po-mt-1" style="color: orange;">
-          ⚠️ Clique no botão acima para carregar as Marcas e Modelos.
+          ✅ Os dados já estão carregados no banco de dados.
         </p>
       </po-widget>
     </div>

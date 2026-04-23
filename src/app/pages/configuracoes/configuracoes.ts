@@ -59,6 +59,15 @@ export class ConfiguracoesComponent implements OnInit {
     }
   }
 
+  downloadModelo(tipo: string) {
+    const url = `/api/config/modelos-csv/${tipo}`;
+    window.open(url, '_blank');
+  }
+
+  onCsvUploadSuccess() {
+    this.poNotification.success('Arquivo de modelo atualizado com sucesso! Agora você pode processar a importação.');
+  }
+
   async checkData() {
     try {
       const marcas = await this.db.getAll('marcas');

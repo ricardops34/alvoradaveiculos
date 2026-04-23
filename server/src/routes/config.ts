@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// POST - Upload de arquivos
+// POST - Upload de arquivos de imagem
 router.post('/upload', upload.single('file'), (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
@@ -27,6 +27,45 @@ router.post('/upload', upload.single('file'), (req: Request, res: Response) => {
     url: `/${req.file.filename}`,
     filename: req.file.filename 
   });
+});
+
+// GET - Download de modelos CSV
+router.get('/modelos-csv/:tipo', (req: Request, res: Response) => {
+  const { tipo } = req.params;
+  const basePath = path.join(__dirname, '..', '..', '..', 'base', 'marcas-e-modelos');
+  
+  const files: any = {
+    'marcas-carros': 'marcas-carros.csv',
+    'modelos-carro': 'modelos-carro.csv',
+    'marcas-motos': 'marcas-motos.csv',
+    'modelos-moto': 'modelos-moto.csv'
+  };
+
+  const fileName = files[tipo];
+  if (!fileName) return res.status(404).send('Modelo não encontrado');
+
+  const filePath = path.join(basePath, fileName);
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('Arquivo não encontrado no servidor');
+  }
+});
+
+// POST - Upload de CSV customizado
+router.post('/upload-csv', upload.single('file'), (req: Request, res: Response) => {
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  
+  // Mover o arquivo da pasta public para a pasta base/marcas-e-modelos
+  const srcPath = req.file.path;
+  const destPath = path.join(__dirname, '..', '..', '..', 'base', 'marcas-e-modelos', req.file.originalname);
+  
+  try {
+    fs.renameSync(srcPath, destPath);
+    res.json({ message: 'Arquivo de modelo atualizado com sucesso!' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erro ao mover arquivo para pasta de base.' });
+  }
 });
 
 router.post('/importar-marcas-modelos', async (req: Request, res: Response) => {
