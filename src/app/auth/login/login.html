@@ -1,4 +1,5 @@
-<div class="login-page" [style.background-image]="'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(' + parametros.background_url + ')'">
+<div class="login-page"
+  [style.background-image]="'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(' + parametros.background_url + ')'">
   <div class="login-card">
     <div class="logo-section">
       <img [src]="parametros.logo_url" [alt]="parametros.empresa_nome" class="logo-img">
@@ -7,39 +8,24 @@
 
     <form #formLogin="ngForm" class="login-form">
       <div class="form-field">
-        <po-input
-          name="login"
-          [(ngModel)]="email"
-          p-label="E-mail"
-          p-placeholder="seu@email.com"
-          p-required="true">
-        </po-input>
+        <po-email name="login" [(ngModel)]="email" p-clean p-error-pattern="e-mail inválido" p-label="E-mail"
+          p-placeholder="Informe seu e-mail" p-required>
+        </po-email>
       </div>
 
       <div class="form-field">
-        <po-password
-          name="password"
-          [(ngModel)]="password"
-          p-label="Senha"
-          p-required="true"
+        <po-password name="password" [(ngModel)]="password" p-label="Senha" p-required="true"
           (keyup.enter)="onLogin(formLogin)">
         </po-password>
       </div>
 
       <div class="form-field remember-field">
-        <po-checkbox
-          name="remember"
-          [(ngModel)]="rememberMe"
-          p-label="Lembrar-me">
+        <po-checkbox name="remember" [(ngModel)]="rememberMe" p-label="Lembrar-me">
         </po-checkbox>
       </div>
 
       <div class="form-field">
-        <po-button
-          p-label="Entrar"
-          p-kind="primary"
-          [p-loading]="loading"
-          (p-click)="onLogin(formLogin)">
+        <po-button p-label="Entrar" p-kind="primary" [p-loading]="loading" (p-click)="onLogin(formLogin)">
         </po-button>
       </div>
     </form>
