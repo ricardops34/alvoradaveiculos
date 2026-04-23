@@ -79,4 +79,8 @@ export class LoginComponent implements OnInit {
       }
     });
   }
+
+  forgotPassword() {
+    this.poNotification.information('Para recuperar sua senha, entre em contato com o administrador do sistema.');
+  }
 }
