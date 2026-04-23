@@ -1,0 +1,25 @@
+.img-preview-mini {
+  max-width: 100px;
+  max-height: 50px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  padding: 4px;
+  background: #f9f9f9;
+  object-fit: contain;
+}
+
+.img-preview-bg {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  padding: 4px;
+  background: #f9f9f9;
+  object-fit: cover;
+}
+
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

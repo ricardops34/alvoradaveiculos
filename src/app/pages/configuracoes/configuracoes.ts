@@ -8,7 +8,8 @@ import { DatabaseService } from '../../services/database';
   selector: 'app-configuracoes',
   standalone: true,
   imports: [CommonModule, FormsModule, PoModule],
-  templateUrl: './configuracoes.html'
+  templateUrl: './configuracoes.html',
+  styleUrl: './configuracoes.scss'
 })
 export class ConfiguracoesComponent implements OnInit {
   loading = false;

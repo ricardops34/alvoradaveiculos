@@ -15,29 +15,44 @@
             <po-input class="po-md-12" name="empresa_nome" [(ngModel)]="parametros.empresa_nome" p-label="Nome da Empresa" p-required></po-input>
           </div>
           <div class="po-row">
-            <po-upload
-              class="po-md-6"
-              name="logo_file"
-              p-label="Logo da Empresa"
-              p-url="/api/config/upload"
-              (p-success)="onUploadSuccess($event, 'logo_url')">
-            </po-upload>
-            <po-upload
-              class="po-md-6"
-              name="favicon_file"
-              p-label="Favicon"
-              p-url="/api/config/upload"
-              (p-success)="onUploadSuccess($event, 'favicon_url')">
-            </po-upload>
+            <div class="po-md-6">
+              <po-upload
+                name="logo_file"
+                p-label="Logo da Empresa"
+                p-url="/api/config/upload"
+                (p-success)="onUploadSuccess($event, 'logo_url')">
+              </po-upload>
+              <div class="preview-container po-mt-1" *ngIf="parametros.logo_url">
+                <p class="po-font-text-smaller">Preview Logo:</p>
+                <img [src]="'/' + parametros.logo_url" class="img-preview-mini">
+              </div>
+            </div>
+            <div class="po-md-6">
+              <po-upload
+                name="favicon_file"
+                p-label="Favicon"
+                p-url="/api/config/upload"
+                (p-success)="onUploadSuccess($event, 'favicon_url')">
+              </po-upload>
+              <div class="preview-container po-mt-1" *ngIf="parametros.favicon_url">
+                <p class="po-font-text-smaller">Preview Favicon:</p>
+                <img [src]="'/' + parametros.favicon_url" class="img-preview-mini">
+              </div>
+            </div>
           </div>
           <div class="po-row">
-            <po-upload
-              class="po-md-12"
-              name="bg_file"
-              p-label="Imagem de Fundo"
-              p-url="/api/config/upload"
-              (p-success)="onUploadSuccess($event, 'background_url')">
-            </po-upload>
+            <div class="po-md-12">
+              <po-upload
+                name="bg_file"
+                p-label="Imagem de Fundo (Login)"
+                p-url="/api/config/upload"
+                (p-success)="onUploadSuccess($event, 'background_url')">
+              </po-upload>
+              <div class="preview-container po-mt-1" *ngIf="parametros.background_url">
+                <p class="po-font-text-smaller">Preview Fundo:</p>
+                <img [src]="'/' + parametros.background_url" class="img-preview-bg">
+              </div>
+            </div>
           </div>
           
           <div class="po-row po-mt-1">
