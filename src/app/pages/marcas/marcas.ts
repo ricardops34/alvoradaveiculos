@@ -25,7 +25,12 @@ export class MarcasComponent implements OnInit {
 
   marcas: any[] = [];
   allMarcas: any[] = [];
+  filteredMarcas: any[] = [];
   marca: any = { nome: '', tipo_veiculo: 'Carro' };
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 10;
   
   public readonly columns: PoTableColumn[] = [
     { property: 'id', label: 'ID', width: '80px' },
@@ -72,20 +77,44 @@ export class MarcasComponent implements OnInit {
 
   async load() {
     this.allMarcas = await this.db.getAll('marcas');
-    this.marcas = [...this.allMarcas];
+    this.filteredMarcas = [...this.allMarcas];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterMarcas(filter: string) {
     if (!filter) {
-      this.marcas = [...this.allMarcas];
-      return;
+      this.filteredMarcas = [...this.allMarcas];
+    } else {
+      const searchTerm = filter.toLowerCase();
+      this.filteredMarcas = this.allMarcas.filter(m => 
+        m.nome.toLowerCase().includes(searchTerm) ||
+        m.id.toString().includes(searchTerm) ||
+        m.tipo_veiculo?.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.marcas = this.allMarcas.filter(m => 
-      m.nome.toLowerCase().includes(searchTerm) ||
-      m.id.toString().includes(searchTerm) ||
-      m.tipo_veiculo?.toLowerCase().includes(searchTerm)
-    );
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.marcas = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredMarcas.slice(startIndex, endIndex);
+    
+    this.marcas = [...this.marcas, ...nextItems];
+    this.hasNext = endIndex < this.filteredMarcas.length;
+    console.log(`[Pagination] Page: ${this.page}, Size: ${this.pageSize}, Reset: ${reset}`);
+    console.log(`[Pagination] Start: ${startIndex}, End: ${endIndex}, FilteredTotal: ${this.filteredMarcas.length}`);
+    console.log(`[Pagination] nextItems length: ${nextItems.length}, Marcas length: ${this.marcas.length}, HasNext: ${this.hasNext}`);
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
   }
 
   add() {

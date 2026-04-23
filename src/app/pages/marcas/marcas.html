@@ -1,5 +1,5 @@
 <po-page-list 
-  p-title="Cadastro de Marcas"
+  p-title="Cadastro de Marcas (Paginação Ativa)"
   [p-actions]="pageActions"
   [p-filter]="filterSettings">
   
@@ -8,7 +8,9 @@
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="marcas"
-    [p-actions]="actions">
+    [p-actions]="actions"
+    [p-show-more-disabled]="!hasNext"
+    (p-show-more)="showMore()">
   </po-table>
 
 </po-page-list>
