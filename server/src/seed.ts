@@ -220,6 +220,30 @@ async function seed() {
     }
 
     console.log('✅ Importação concluída com sucesso!');
+
+    // --- MIGRAÇÃO DE VÍNCULOS EM VEÍCULOS ---
+    console.log('🔄 Sincronizando vínculos de Marcas/Modelos nos Veículos...');
+    
+    // Atualizar marca_id baseado no nome (caso esteja nulo)
+    await client.query(`
+      UPDATE veiculos v
+      SET marca_id = m.id
+      FROM marcas m
+      WHERE v.marca_id IS NULL 
+      AND UPPER(TRIM(v.marca)) = m.nome;
+    `);
+
+    // Atualizar modelo_id baseado no nome e marca_id (caso esteja nulo)
+    await client.query(`
+      UPDATE veiculos v
+      SET modelo_id = mo.id
+      FROM modelos mo
+      WHERE v.modelo_id IS NULL 
+      AND v.marca_id = mo.marca_id
+      AND UPPER(TRIM(v.modelo)) = mo.nome;
+    `);
+
+    console.log('✅ Vínculos de veículos sincronizados!');
     
     // Resetar sequences
     await client.query(`
