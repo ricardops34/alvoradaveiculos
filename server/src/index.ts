@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import seed from './seed';
 
 // Rotas
@@ -25,6 +26,7 @@ const PORT = process.env.PORT || 3000;
 // Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 
 // Rotas da API
 app.use('/api/auth', authRoutes);

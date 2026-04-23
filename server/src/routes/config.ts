@@ -3,8 +3,31 @@ import pool from '../db';
 import path from 'path';
 import fs from 'fs';
 import { parse } from 'csv-parse';
+import multer from 'multer';
 
 const router = Router();
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, path.join(__dirname, '..', '..', '..', 'public'));
+  },
+  filename: (_req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+
+const upload = multer({ storage });
+
+// POST - Upload de arquivos
+router.post('/upload', upload.single('file'), (req: Request, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  }
+  res.json({ 
+    url: `/${req.file.filename}`,
+    filename: req.file.filename 
+  });
+});
 
 router.post('/importar-marcas-modelos', async (req: Request, res: Response) => {
   const client = await pool.connect();

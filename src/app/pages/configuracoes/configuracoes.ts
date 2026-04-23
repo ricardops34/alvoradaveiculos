@@ -51,6 +51,13 @@ export class ConfiguracoesComponent implements OnInit {
     }
   }
 
+  onUploadSuccess(event: any, field: string) {
+    if (event && event.body && event.body.filename) {
+      this.parametros[field] = event.body.filename;
+      this.poNotification.success(`Arquivo ${event.body.filename} enviado com sucesso!`);
+    }
+  }
+
   async checkData() {
     try {
       const marcas = await this.db.getAll('marcas');
