@@ -1,19 +1,6 @@
 version: '3.8'
 
 services:
-  alvorada-db:
-    image: postgres:16-alpine
-    container_name: alvorada-db
-    restart: always
-    volumes:
-      - alvorada_pgdata:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: alvorada
-      POSTGRES_PASSWORD: alvorada2026
-      POSTGRES_DB: alvorada_db
-    networks:
-      - alvorada_internal
-
   alvorada-api:
     image: bjsoftware/alvorada-api:latest
     container_name: alvorada-api
@@ -21,10 +8,8 @@ services:
     environment:
       DATABASE_URL: postgres://alvorada:alvorada2026@alvorada-db:5432/alvorada_db
       PORT: "3000"
-    depends_on:
-      - alvorada-db
     networks:
-      - alvorada_internal
+      - network_db
       - network_public
 
   alvorada-crm:
@@ -34,7 +19,7 @@ services:
     depends_on:
       - alvorada-api
     networks:
-      - alvorada_internal
+      - network_db
       - network_public
     deploy:
       placement:
@@ -48,10 +33,8 @@ services:
         - "traefik.http.routers.alvorada-crm.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.alvorada-crm.loadbalancer.server.port=80"
 
-volumes:
-  alvorada_pgdata:
-
 networks:
-  alvorada_internal:
+  network_db:
+    external: true
   network_public:
     external: true
