@@ -6,7 +6,9 @@
 
 </po-page-list>
 
-<po-modal #marcaModal p-title="Manutenção de Marca" [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+<po-modal #marcaModal 
+  [p-title]="marca.id ? 'Editar Marca' : 'Nova Marca'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: marcaModal.close.bind(marcaModal) }">
 
   <div class="po-row">

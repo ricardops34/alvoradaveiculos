@@ -8,7 +8,8 @@ import {
   PoTableAction, 
   PoModalComponent, 
   PoNotificationService, 
-  PoSelectOption
+  PoSelectOption,
+  PoDialogService
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { PerfisLookupService } from '../../services/lookups';
@@ -27,6 +28,7 @@ export class UsuariosComponent implements OnInit {
   allUsers: any[] = [];
   filteredUsers: any[] = [];
   isLoading: boolean = true;
+  isLoadingSave: boolean = false;
   profiles: any[] = [];
   
   hasNext: boolean = false;
@@ -60,6 +62,7 @@ export class UsuariosComponent implements OnInit {
   constructor(
     private db: DatabaseService,
     private poNotification: PoNotificationService,
+    private poDialog: PoDialogService,
     public perfisLookup: PerfisLookupService
   ) {}
 
@@ -138,24 +141,45 @@ export class UsuariosComponent implements OnInit {
       return;
     }
 
-    if (this.isEditing) {
-      await this.db.update('usuarios', this.user.id, this.user);
-      this.poNotification.success('Usuário atualizado!');
-    } else {
-      await this.db.insert('usuarios', this.user);
-      this.poNotification.success('Usuário criado!');
+    this.isLoadingSave = true;
+    try {
+      if (this.isEditing) {
+        await this.db.update('usuarios', this.user.id, this.user);
+        this.poNotification.success('Usuário atualizado!');
+      } else {
+        await this.db.insert('usuarios', this.user);
+        this.poNotification.success('Usuário cadastrado!');
+      }
+      this.userModal.close();
+      await this.loadUsers();
+    } catch (error) {
+      this.poNotification.error('Erro ao salvar usuário.');
+    } finally {
+      this.isLoadingSave = false;
     }
-    await this.loadUsers();
-    this.userModal.close();
   }
 
-  async delete(user: any) {
+  delete(user: any) {
     if (user.email === 'admin@alvorada.com') {
       this.poNotification.error('O administrador principal não pode ser excluído.');
       return;
     }
-    await this.db.delete('usuarios', user.id);
-    this.poNotification.warning('Usuário excluído!');
-    await this.loadUsers();
+
+    this.poDialog.confirm({
+      title: 'Excluir Usuário',
+      message: `Deseja excluir o usuário ${user.nome}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('usuarios', user.id);
+          this.poNotification.warning('Usuário excluído!');
+          await this.loadUsers();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir usuário.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }

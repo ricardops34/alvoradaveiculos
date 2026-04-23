@@ -17,8 +17,9 @@
 
 <po-modal #userModal 
   [p-title]="isEditing ? 'Editar Usuário' : 'Novo Usuário'"
-  p-primary-label="Salvar"
-  [p-primary-action]="{ action: save.bind(this), label: 'Salvar' }">
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: userModal.close.bind(userModal) }">
   
   <form #userForm="ngForm">
     <div class="po-row">

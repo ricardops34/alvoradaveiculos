@@ -8,7 +8,8 @@ import {
   PoNotificationService,
   PoTableAction,
   PoPageAction,
-  PoSelectOption
+  PoSelectOption,
+  PoDialogService
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Router } from '@angular/router';
@@ -27,6 +28,7 @@ export class MarcasComponent implements OnInit {
   allMarcas: any[] = [];
   filteredMarcas: any[] = [];
   isLoading: boolean = true;
+  isLoadingSave: boolean = false;
   marca: any = { nome: '', tipo_veiculo: 'Carro' };
   
   selectedTipos: string[] = [];
@@ -79,8 +81,9 @@ export class MarcasComponent implements OnInit {
 
   constructor(
     private db: DatabaseService, 
-    private notification: PoNotificationService,
-    private router: Router
+    private poNotification: PoNotificationService,
+    private router: Router,
+    private poDialog: PoDialogService
   ) {}
 
   async ngOnInit() {
@@ -175,26 +178,40 @@ export class MarcasComponent implements OnInit {
   }
 
   async save() {
+    this.isLoadingSave = true;
     try {
       if (this.marca.id) {
         await this.db.update('marcas', this.marca.id, this.marca);
-        this.notification.success('Marca atualizada!');
+        this.poNotification.success('Marca atualizada!');
       } else {
         await this.db.insert('marcas', this.marca);
-        this.notification.success('Marca criada!');
+        this.poNotification.success('Marca criada!');
       }
       this.marcaModal.close();
-      this.load();
+      await this.load();
     } catch (err) {
-      this.notification.error('Erro ao salvar marca.');
+      this.poNotification.error('Erro ao salvar marca.');
+    } finally {
+      this.isLoadingSave = false;
     }
   }
 
-  async delete(item: any) {
-    if (confirm(`Deseja excluir a marca ${item.nome}? Todos os modelos vinculados serão apagados.`)) {
-      await this.db.delete('marcas', item.id);
-      this.notification.warning('Marca excluída!');
-      this.load();
-    }
+  delete(item: any) {
+    this.poDialog.confirm({
+      title: 'Excluir Marca',
+      message: `Deseja excluir a marca ${item.nome}? Todos os modelos vinculados serão apagados.`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('marcas', item.id);
+          this.poNotification.warning('Marca excluída!');
+          await this.load();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir marca.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }

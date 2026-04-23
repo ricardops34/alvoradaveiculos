@@ -17,8 +17,8 @@
 </po-page-list>
 
 <po-modal #modeloModal 
-  [p-title]="'Manutenção de Modelo - ' + marcaNome"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-title]="modelo.id ? 'Editar Modelo' : 'Novo Modelo'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: modeloModal.close.bind(modeloModal) }">
   
   <div class="po-row">

@@ -16,9 +16,10 @@
 </po-page-list>
 
 <po-modal #bankModal 
-  [p-title]="isEditing ? 'Editar Banco' : 'Novo Banco'"
-  p-primary-label="Salvar"
-  [p-primary-action]="{ action: save.bind(this), label: 'Salvar' }">
+  [p-title]="isEditing ? 'Editar Conta' : 'Nova Conta'"
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: bankModal.close.bind(bankModal) }">
   
   <form #bankForm="ngForm">
     <div class="po-row">

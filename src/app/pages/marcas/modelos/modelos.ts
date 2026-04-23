@@ -6,6 +6,7 @@ import {
   PoTableColumn, 
   PoModalComponent, 
   PoNotificationService,
+  PoDialogService,
   PoTableAction,
   PoPageAction
 } from '@po-ui/ng-components';
@@ -27,6 +28,7 @@ export class ModelosComponent implements OnInit {
   allModelosCache: any[] = [];
   filteredModelosCache: any[] = [];
   isLoading: boolean = true;
+  isLoadingSave: boolean = false;
   modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
   
   hasNext: boolean = false;
@@ -59,6 +61,7 @@ export class ModelosComponent implements OnInit {
   constructor(
     private db: DatabaseService, 
     private notification: PoNotificationService,
+    private poDialog: PoDialogService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -135,6 +138,7 @@ export class ModelosComponent implements OnInit {
   }
 
   async save() {
+    this.isLoadingSave = true;
     try {
       if (this.modelo.id) {
         await this.db.update('modelos', this.modelo.id, this.modelo);
@@ -144,17 +148,30 @@ export class ModelosComponent implements OnInit {
         this.notification.success('Modelo criado!');
       }
       this.modeloModal.close();
-      this.load();
+      await this.load();
     } catch (err) {
       this.notification.error('Erro ao salvar modelo.');
+    } finally {
+      this.isLoadingSave = false;
     }
   }
 
-  async delete(item: any) {
-    if (confirm(`Deseja excluir o modelo ${item.nome}?`)) {
-      await this.db.delete('modelos', item.id);
-      this.notification.warning('Modelo excluído!');
-      this.load();
-    }
+  delete(item: any) {
+    this.poDialog.confirm({
+      title: 'Excluir Modelo',
+      message: `Deseja excluir o modelo ${item.nome}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('modelos', item.id);
+          this.notification.warning('Modelo excluído!');
+          await this.load();
+        } catch (error) {
+          this.notification.error('Erro ao excluir modelo.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }

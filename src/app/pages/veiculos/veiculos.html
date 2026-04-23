@@ -20,7 +20,7 @@
 <po-modal #vehicleModal 
   [p-title]="isEditing ? 'Editar Veículo' : 'Novo Veículo'"
   p-size="xl"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: vehicleModal.close.bind(vehicleModal) }">
 
   <form #vehicleForm="ngForm">

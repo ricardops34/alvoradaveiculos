@@ -20,7 +20,7 @@
 <po-modal #personModal 
   [p-title]="isEditing ? 'Editar Pessoa' : 'Nova Pessoa'"
   p-size="xl"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: personModal.close.bind(personModal) }">
 
   <form #personForm="ngForm">

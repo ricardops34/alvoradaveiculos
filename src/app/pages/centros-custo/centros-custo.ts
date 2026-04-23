@@ -8,7 +8,8 @@ import {
   PoTableAction, 
   PoModalComponent, 
   PoNotificationService, 
-  PoSelectOption 
+  PoSelectOption,
+  PoDialogService 
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 
@@ -26,6 +27,7 @@ export class CentrosCustoComponent implements OnInit {
   allCostCenters: any[] = [];
   filteredCostCenters: any[] = [];
   isLoading: boolean = true;
+  isLoadingSave: boolean = false;
   
   hasNext: boolean = false;
   page: number = 1;
@@ -65,7 +67,8 @@ export class CentrosCustoComponent implements OnInit {
 
   constructor(
     private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    private poDialog: PoDialogService
   ) {}
 
   async ngOnInit() {
@@ -132,20 +135,40 @@ export class CentrosCustoComponent implements OnInit {
       return;
     }
 
-    if (this.isEditing) {
-      await this.db.update('centros_custo', this.cc.id, this.cc);
-      this.poNotification.success('Centro de custo atualizado!');
-    } else {
-      await this.db.insert('centros_custo', this.cc);
-      this.poNotification.success('Centro de custo cadastrado!');
+    this.isLoadingSave = true;
+    try {
+      if (this.isEditing) {
+        await this.db.update('centros_custo', this.cc.id, this.cc);
+        this.poNotification.success('Centro de custo atualizado!');
+      } else {
+        await this.db.insert('centros_custo', this.cc);
+        this.poNotification.success('Centro de custo cadastrado!');
+      }
+      await this.loadCC();
+      this.ccModal.close();
+    } catch (error) {
+      this.poNotification.error('Erro ao salvar centro de custo.');
+    } finally {
+      this.isLoadingSave = false;
     }
-    await this.loadCC();
-    this.ccModal.close();
   }
 
-  async delete(cc: any) {
-    await this.db.delete('centros_custo', cc.id);
-    this.poNotification.warning('Centro de custo excluído!');
-    await this.loadCC();
+  delete(cc: any) {
+    this.poDialog.confirm({
+      title: 'Excluir Centro de Custo',
+      message: `Tem certeza que deseja excluir ${cc.nome}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('centros_custo', cc.id);
+          this.poNotification.warning('Centro de custo excluído!');
+          await this.loadCC();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir centro de custo.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }

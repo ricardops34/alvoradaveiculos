@@ -18,7 +18,8 @@
 
 <po-modal #ccModal 
   [p-title]="isEditing ? 'Editar Centro de Custo' : 'Novo Centro de Custo'"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: ccModal.close.bind(ccModal) }">
 
   <form #ccForm="ngForm">

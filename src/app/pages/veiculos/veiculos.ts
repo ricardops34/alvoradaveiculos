@@ -10,6 +10,7 @@ import {
   PoNotificationService, 
   PoSelectOption,
   PoCheckboxGroupOption,
+  PoDialogService,
   PoUploadFile 
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
@@ -39,6 +40,7 @@ export class VeiculosComponent implements OnInit {
   isEditing: boolean = false;
   currentQuickAddField: string = '';
   isLoading: boolean = true;
+  isLoadingSave: boolean = false;
   
   cachedPeople: any[] = [];
   
@@ -146,6 +148,7 @@ export class VeiculosComponent implements OnInit {
   constructor(
     private db: DatabaseService,
     private poNotification: PoNotificationService,
+    private poDialog: PoDialogService,
     public pessoasLookup: PessoasLookupService,
     public bancosLookup: BancosLookupService,
     public centrosCustoLookup: CentrosCustoLookupService
@@ -438,21 +441,41 @@ export class VeiculosComponent implements OnInit {
       this.vehicle.centro_custo_id = undefined;
     }
 
-    if (this.isEditing) {
-      await this.db.update('veiculos', this.vehicle.id!, this.vehicle);
-      this.poNotification.success('Veículo atualizado com sucesso!');
-    } else {
-      await this.db.insert('veiculos', this.vehicle);
-      this.poNotification.success('Veículo cadastrado com sucesso!');
+    this.isLoadingSave = true;
+    try {
+      if (this.isEditing) {
+        await this.db.update('veiculos', this.vehicle.id!, this.vehicle);
+        this.poNotification.success('Veículo atualizado!');
+      } else {
+        await this.db.insert('veiculos', this.vehicle);
+        this.poNotification.success('Veículo cadastrado!');
+      }
+      await this.loadVehicles();
+      this.vehicleModal.close();
+    } catch (error) {
+      this.poNotification.error('Erro ao salvar veículo.');
+    } finally {
+      this.isLoadingSave = false;
     }
-    await this.loadVehicles();
-    this.vehicleModal.close();
   }
 
-  async delete(vehicle: Vehicle) {
-    await this.db.delete('veiculos', vehicle.id!);
-    this.poNotification.warning('Veículo excluído!');
-    await this.loadVehicles();
+  delete(vehicle: Vehicle) {
+    this.poDialog.confirm({
+      title: 'Excluir Veículo',
+      message: `Tem certeza que deseja excluir o veículo placa ${vehicle.placa}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('veiculos', vehicle.id!);
+          this.poNotification.warning('Veículo excluído!');
+          await this.loadVehicles();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir veículo.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 
   openSellModal(vehicle: Vehicle) {
