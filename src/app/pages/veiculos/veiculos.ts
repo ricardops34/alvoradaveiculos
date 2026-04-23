@@ -33,7 +33,10 @@ export class VeiculosComponent implements OnInit {
   @ViewChild('quickAdd') quickAdd!: QuickAddComponent;
 
   vehicles: any[] = [];
-  allVehicles: any[] = []; // Cópia para filtragem
+  page: number = 1;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   vehicle: Vehicle = this.getEmptyVehicle();
   isEditing: boolean = false;
   currentQuickAddField: string = '';
@@ -138,16 +141,20 @@ export class VeiculosComponent implements OnInit {
   }
 
   async loadOptions() {
-    const people = await this.db.getAll('pessoas');
-    this.peopleOptions = people.map(p => ({ label: p.nome, value: p.id }));
-    this.supplierOptions = people.filter(p => p.is_fornecedor).map(p => ({ label: p.nome, value: p.id }));
-    this.clientOptions = people.filter(p => p.is_cliente).map(p => ({ label: p.nome, value: p.id }));
+    const peopleRes = await this.db.getAll('pessoas');
+    const people = Array.isArray(peopleRes) ? peopleRes : peopleRes.items;
+    
+    this.peopleOptions = people.map((p: any) => ({ label: p.nome, value: p.id }));
+    this.supplierOptions = people.filter((p: any) => p.is_fornecedor).map((p: any) => ({ label: p.nome, value: p.id }));
+    this.clientOptions = people.filter((p: any) => p.is_cliente).map((p: any) => ({ label: p.nome, value: p.id }));
 
-    const banks = await this.db.getAll('bancos');
-    this.bankOptions = banks.map(b => ({ label: b.nome, value: b.id }));
+    const banksRes = await this.db.getAll('bancos');
+    const banks = Array.isArray(banksRes) ? banksRes : banksRes.items;
+    this.bankOptions = banks.map((b: any) => ({ label: b.nome, value: b.id }));
 
-    const centers = await this.db.getAll('centros_custo');
-    this.costCenterOptions = centers.map(c => ({ label: c.nome, value: c.id }));
+    const centersRes = await this.db.getAll('centros_custo');
+    const centers = Array.isArray(centersRes) ? centersRes : centersRes.items;
+    this.costCenterOptions = centers.map((c: any) => ({ label: c.nome, value: c.id }));
 
     this.updateMarcas();
   }
@@ -158,8 +165,9 @@ export class VeiculosComponent implements OnInit {
       return;
     }
 
-    const marcas = await this.db.getAll('marcas', { tipo_veiculo: this.vehicle.tipo_veiculo });
-    this.marcasOptions = marcas.map(m => ({ label: m.nome, value: m.id }));
+    const response = await this.db.getAll('marcas', { tipo_veiculo: this.vehicle.tipo_veiculo, limit: 1000 });
+    const marcas = Array.isArray(response) ? response : response.items;
+    this.marcasOptions = marcas.map((m: any) => ({ label: m.nome, value: m.id }));
   }
 
   onMarcaChange(marcaId: number) {
@@ -184,38 +192,67 @@ export class VeiculosComponent implements OnInit {
       return;
     }
     
-    const modelos = await this.db.getAll('modelos', { 
+    const response = await this.db.getAll('modelos', { 
       marca_id: this.vehicle.marca_id, 
-      tipo_veiculo: this.vehicle.tipo_veiculo 
+      tipo_veiculo: this.vehicle.tipo_veiculo,
+      limit: 1000
     });
+    const modelos = Array.isArray(response) ? response : response.items;
     
-    this.modelosOptions = modelos.map(m => ({ label: m.nome, value: m.id }));
+    this.modelosOptions = modelos.map((m: any) => ({ label: m.nome, value: m.id }));
   }
 
   async loadVehicles() {
-    const rawVehicles = await this.db.getAll('veiculos');
-    const people = await this.db.getAll('pessoas');
+    this.page = 1;
+    this.vehicles = [];
+    await this.fetchData();
+  }
 
-    this.allVehicles = rawVehicles.map(v => ({
-      ...v,
-      fornecedor_nome: people.find(p => p.id === v.fornecedor_id)?.nome || '-',
-      cliente_nome: people.find(p => p.id === v.cliente_id)?.nome || '-'
-    }));
-    this.vehicles = [...this.allVehicles];
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  public get statusButtons() {
+    return [
+      { label: 'Todos', action: this.filterByStatus.bind(this, 'Todos'), selected: this.currentStatus === 'Todos' },
+      { label: 'Estoque', action: this.filterByStatus.bind(this, 'Estoque'), selected: this.currentStatus === 'Estoque' },
+      { label: 'Vendido', action: this.filterByStatus.bind(this, 'Vendido'), selected: this.currentStatus === 'Vendido' },
+      { label: 'Manutenção', action: this.filterByStatus.bind(this, 'Manutenção'), selected: this.currentStatus === 'Manutenção' },
+      { label: 'Preparação', action: this.filterByStatus.bind(this, 'Preparação'), selected: this.currentStatus === 'Preparação' }
+    ];
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('veiculos', { 
+        page: this.page, 
+        limit: 20,
+        filter: this.currentFilter,
+        status: this.currentStatus
+      });
+
+      if (response && response.items) {
+        this.vehicles = [...this.vehicles, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.vehicles = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
+  }
+
+  filterByStatus(status: string) {
+    this.currentStatus = status;
+    this.loadVehicles();
   }
 
   filterVehicles(filter: string) {
-    if (!filter) {
-      this.vehicles = [...this.allVehicles];
-      return;
-    }
-    const searchTerm = filter.toLowerCase();
-    this.vehicles = this.allVehicles.filter(v => 
-      v.placa.toLowerCase().includes(searchTerm) ||
-      v.marca_nome?.toLowerCase().includes(searchTerm) ||
-      v.modelo_nome?.toLowerCase().includes(searchTerm) ||
-      v.status.toLowerCase().includes(searchTerm)
-    );
+    this.currentFilter = filter;
+    this.loadVehicles();
   }
 
   getEmptyVehicle(): Vehicle {

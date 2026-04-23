@@ -23,7 +23,10 @@ export class CentrosCustoComponent implements OnInit {
   @ViewChild('ccForm', { static: false }) ccForm!: any;
 
   costCenters: any[] = [];
-  allCostCenters: any[] = [];
+  page: number = 1;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   cc: any = { codigo: '', nome: '', tipo: 'Despesa' };
   isEditing: boolean = false;
 
@@ -68,20 +71,40 @@ export class CentrosCustoComponent implements OnInit {
   }
 
   async loadCC() {
-    this.allCostCenters = await this.db.getAll('centros_custo');
-    this.costCenters = [...this.allCostCenters];
+    this.page = 1;
+    this.costCenters = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('centros_custo', { 
+        page: this.page, 
+        limit: 20,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.costCenters = [...this.costCenters, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.costCenters = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterCC(filter: string) {
-    if (!filter) {
-      this.costCenters = [...this.allCostCenters];
-      return;
-    }
-    const searchTerm = filter.toLowerCase();
-    this.costCenters = this.allCostCenters.filter(c => 
-      c.nome.toLowerCase().includes(searchTerm) ||
-      c.codigo?.toLowerCase().includes(searchTerm)
-    );
+    this.currentFilter = filter;
+    this.loadCC();
   }
 
   openNew() {

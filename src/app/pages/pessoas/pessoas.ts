@@ -25,7 +25,10 @@ export class PessoasComponent implements OnInit {
   @ViewChild('personForm', { static: false }) personForm!: any;
 
   people: any[] = [];
-  allPeople: any[] = [];
+  page: number = 1;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   person: Person = this.getEmptyPerson();
   isEditing: boolean = false;
 
@@ -75,31 +78,50 @@ export class PessoasComponent implements OnInit {
     await this.db.init();
     this.loadPeople();
   }
+
   async loadPeople() {
-    const rawPeople = await this.db.getAll('pessoas');
-    this.allPeople = rawPeople.map(p => {
-      const papeis = [];
-      if (p.is_cliente) papeis.push('Cliente');
-      if (p.is_fornecedor) papeis.push('Fornecedor');
-      if (p.is_vendedor) papeis.push('Vendedor');
-      if (p.is_socio) papeis.push('Sócio');
-      return { ...p, papeis: papeis.join(', ') };
-    });
-    this.people = [...this.allPeople];
+    this.page = 1;
+    this.people = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('pessoas', { 
+        page: this.page, 
+        limit: 20,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        const processedItems = response.items.map((p: any) => {
+          const papeis = [];
+          if (p.is_cliente) papeis.push('Cliente');
+          if (p.is_fornecedor) papeis.push('Fornecedor');
+          if (p.is_vendedor) papeis.push('Vendedor');
+          if (p.is_socio) papeis.push('Sócio');
+          return { ...p, papeis: papeis.join(', ') };
+        });
+        this.people = [...this.people, ...processedItems];
+        this.hasNext = response.hasNext;
+      } else {
+        this.people = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterPeople(filter: string) {
-    if (!filter) {
-      this.people = [...this.allPeople];
-      return;
-    }
-    const searchTerm = filter.toLowerCase();
-    this.people = this.allPeople.filter(p => 
-      p.nome.toLowerCase().includes(searchTerm) ||
-      p.documento?.toLowerCase().includes(searchTerm) ||
-      p.cidade?.toLowerCase().includes(searchTerm) ||
-      p.email?.toLowerCase().includes(searchTerm)
-    );
+    this.currentFilter = filter;
+    this.loadPeople();
   }
 
   getEmptyPerson(): Person {

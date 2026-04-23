@@ -28,7 +28,10 @@ export class MovimentosComponent implements OnInit {
   @ViewChild('appQuickAdd') appQuickAdd!: QuickAddComponent;
 
   movements: any[] = [];
-  allMovements: any[] = [];
+  page: number = 1;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   movement: Movement = this.getEmptyMovement();
   isEditing: boolean = false;
   currentQuickAddField: string = '';
@@ -87,45 +90,82 @@ export class MovimentosComponent implements OnInit {
   }
 
   async loadOptions() {
-    const banks = await this.db.getAll('bancos');
-    const costCenters = await this.db.getAll('centros_custo');
-    const people = await this.db.getAll('pessoas');
-    const vehicles = await this.db.getAll('veiculos');
-    this.banks = banks.map(b => ({ label: b.nome, value: b.id }));
-    this.costCenters = costCenters.map(c => ({ label: c.nome, value: c.id }));
-    this.people = people.map(p => ({ label: p.nome, value: p.id }));
-    this.vehicles = vehicles.map(v => ({ label: `${v.marca} ${v.modelo} (${v.placa})`, value: v.id }));
+    const banksRes = await this.db.getAll('bancos');
+    const banks = Array.isArray(banksRes) ? banksRes : banksRes.items;
+    
+    const centersRes = await this.db.getAll('centros_custo');
+    const centers = Array.isArray(centersRes) ? centersRes : centersRes.items;
+    
+    const peopleRes = await this.db.getAll('pessoas');
+    const people = Array.isArray(peopleRes) ? peopleRes : peopleRes.items;
+    
+    const vehiclesRes = await this.db.getAll('veiculos');
+    const vehicles = Array.isArray(vehiclesRes) ? vehiclesRes : vehiclesRes.items;
+
+    this.banks = banks.map((b: any) => ({ label: b.nome, value: b.id }));
+    this.costCenters = centers.map((c: any) => ({ label: c.nome, value: c.id }));
+    this.people = people.map((p: any) => ({ label: p.nome, value: p.id }));
+    this.vehicles = vehicles.map((v: any) => ({ label: `${v.marca_nome} ${v.modelo_nome} (${v.placa})`, value: v.id }));
   }
 
   async loadMovements() {
-    const rawMovements = await this.db.getAll('movimentos');
-    const banks = await this.db.getAll('bancos');
-    const centers = await this.db.getAll('centros_custo');
-    const people = await this.db.getAll('pessoas');
-    const vehicles = await this.db.getAll('veiculos');
+    this.page = 1;
+    this.movements = [];
+    await this.fetchData();
+  }
 
-    this.allMovements = rawMovements.map(m => ({
-      ...m,
-      banco_nome: banks.find(b => b.id === m.banco_id)?.nome,
-      centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome,
-      pessoa_nome: people.find(p => p.id === m.pessoa_id)?.nome || '-',
-      veiculo_placa: vehicles.find(v => v.id === m.veiculo_id)?.placa || '-'
-    }));
-    this.movements = [...this.allMovements];
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('movimentos', { 
+        page: this.page, 
+        limit: 20,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        // Obter metadados para os nomes (banco, centro de custo, etc.)
+        // Para performance, idealmente o backend já traria os joins (como fizemos em veículos)
+        // Por enquanto, faremos o join local ou manteremos a busca rápida
+        const banksRes = await this.db.getAll('bancos');
+        const banks = Array.isArray(banksRes) ? banksRes : banksRes.items;
+        
+        const centersRes = await this.db.getAll('centros_custo');
+        const centers = Array.isArray(centersRes) ? centersRes : centersRes.items;
+        
+        const peopleRes = await this.db.getAll('pessoas');
+        const people = Array.isArray(peopleRes) ? peopleRes : peopleRes.items;
+        
+        const vehiclesRes = await this.db.getAll('veiculos');
+        const vehicles = Array.isArray(vehiclesRes) ? vehiclesRes : vehiclesRes.items;
+
+        const processedItems = response.items.map((m: any) => ({
+          ...m,
+          banco_nome: banks.find((b: any) => b.id === m.banco_id)?.nome,
+          centro_custo_nome: centers.find((c: any) => c.id === m.centro_custo_id)?.nome,
+          pessoa_nome: people.find((p: any) => p.id === m.pessoa_id)?.nome || '-',
+          veiculo_placa: vehicles.find((v: any) => v.id === m.veiculo_id)?.placa || '-'
+        }));
+
+        this.movements = [...this.movements, ...processedItems];
+        this.hasNext = response.hasNext;
+      } else {
+        this.movements = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterMovements(filter: string) {
-    if (!filter) {
-      this.movements = [...this.allMovements];
-      return;
-    }
-    const searchTerm = filter.toLowerCase();
-    this.movements = this.allMovements.filter(m => 
-      m.historico.toLowerCase().includes(searchTerm) ||
-      m.banco_nome?.toLowerCase().includes(searchTerm) ||
-      m.centro_custo_nome?.toLowerCase().includes(searchTerm) ||
-      m.tipo.toLowerCase().includes(searchTerm)
-    );
+    this.currentFilter = filter;
+    this.loadMovements();
   }
 
   getEmptyMovement(): Movement {

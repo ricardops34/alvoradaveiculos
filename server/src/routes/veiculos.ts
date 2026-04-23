@@ -3,22 +3,48 @@ import pool from '../db';
 
 const router = Router();
 
-router.get('/', async (_req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
+    const { page = 1, limit = 20, status } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    let whereClause = '';
+    const params: any[] = [];
+
+    if (status && status !== 'Todos') {
+      whereClause = 'WHERE v.status = $1';
+      params.push(status);
+    }
+
+    const queryBase = `
+      FROM veiculos v
+      LEFT JOIN marcas ma ON v.marca_id = ma.id
+      LEFT JOIN modelos mo ON v.modelo_id = mo.id
+      LEFT JOIN pessoas f ON v.fornecedor_id = f.id
+      LEFT JOIN pessoas c ON v.cliente_id = c.id
+      ${whereClause}
+    `;
+
+    // Total para paginação
+    const totalResult = await pool.query(`SELECT COUNT(*) ${queryBase}`, params);
+    const total = parseInt(totalResult.rows[0].count);
+
     const result = await pool.query(`
       SELECT v.*, 
              COALESCE(ma.nome, v.marca) as marca_nome, 
              COALESCE(mo.nome, v.modelo) as modelo_nome,
              f.nome as fornecedor_nome,
              c.nome as cliente_nome
-      FROM veiculos v
-      LEFT JOIN marcas ma ON v.marca_id = ma.id
-      LEFT JOIN modelos mo ON v.modelo_id = mo.id
-      LEFT JOIN pessoas f ON v.fornecedor_id = f.id
-      LEFT JOIN pessoas c ON v.cliente_id = c.id
-      ORDER BY v.id
-    `);
-    res.json(result.rows);
+      ${queryBase}
+      ORDER BY v.id DESC
+      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+    `, [...params, Number(limit), offset]);
+
+    res.json({
+      items: result.rows,
+      hasNext: offset + result.rows.length < total,
+      total: total
+    });
   } catch (err) {
     console.error('Erro ao listar veículos:', err);
     res.status(500).json({ error: 'Erro interno' });

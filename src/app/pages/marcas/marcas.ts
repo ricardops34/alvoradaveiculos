@@ -24,7 +24,10 @@ export class MarcasComponent implements OnInit {
   @ViewChild('marcaModal', { static: true }) marcaModal!: PoModalComponent;
 
   marcas: any[] = [];
-  allMarcas: any[] = [];
+  page: number = 1;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   marca: any = { nome: '', tipo_veiculo: 'Carro' };
   
   public readonly columns: PoTableColumn[] = [
@@ -71,21 +74,41 @@ export class MarcasComponent implements OnInit {
   }
 
   async load() {
-    this.allMarcas = await this.db.getAll('marcas');
-    this.marcas = [...this.allMarcas];
+    this.page = 1;
+    this.marcas = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('marcas', { 
+        page: this.page, 
+        limit: 20,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.marcas = [...this.marcas, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        // Fallback para caso a rota não retorne o objeto paginado
+        this.marcas = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterMarcas(filter: string) {
-    if (!filter) {
-      this.marcas = [...this.allMarcas];
-      return;
-    }
-    const searchTerm = filter.toLowerCase();
-    this.marcas = this.allMarcas.filter(m => 
-      m.nome.toLowerCase().includes(searchTerm) ||
-      m.id.toString().includes(searchTerm) ||
-      m.tipo_veiculo?.toLowerCase().includes(searchTerm)
-    );
+    this.currentFilter = filter;
+    this.load();
   }
 
   add() {

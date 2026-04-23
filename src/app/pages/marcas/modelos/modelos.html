@@ -8,7 +8,10 @@
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="modelos"
-    [p-actions]="actions">
+    [p-actions]="actions"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    (p-show-more)="showMore()">
   </po-table>
 
 </po-page-list>

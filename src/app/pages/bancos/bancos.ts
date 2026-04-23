@@ -23,7 +23,10 @@ export class BancosComponent implements OnInit {
   @ViewChild('bankForm', { static: false }) bankForm!: any;
 
   banks: any[] = [];
-  allBanks: any[] = [];
+  page: number = 1;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
   isEditing: boolean = false;
 
@@ -70,21 +73,40 @@ export class BancosComponent implements OnInit {
   }
 
   async loadBanks() {
-    this.allBanks = await this.db.getAll('bancos');
-    this.banks = [...this.allBanks];
+    this.page = 1;
+    this.banks = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('bancos', { 
+        page: this.page, 
+        limit: 20,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.banks = [...this.banks, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.banks = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterBanks(filter: string) {
-    if (!filter) {
-      this.banks = [...this.allBanks];
-      return;
-    }
-    const searchTerm = filter.toLowerCase();
-    this.banks = this.allBanks.filter(b => 
-      b.nome.toLowerCase().includes(searchTerm) ||
-      b.codigo?.toLowerCase().includes(searchTerm) ||
-      b.conta?.toLowerCase().includes(searchTerm)
-    );
+    this.currentFilter = filter;
+    this.loadBanks();
   }
 
   openNew() {

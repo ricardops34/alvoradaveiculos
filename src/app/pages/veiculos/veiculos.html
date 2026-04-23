@@ -3,11 +3,23 @@
   [p-actions]="actions"
   [p-filter]="filterSettings">
 
+  <div class="po-row po-mb-1">
+    <div class="po-md-12">
+      <po-button-group
+        [p-buttons]="statusButtons">
+      </po-button-group>
+    </div>
+  </div>
+
   <po-table 
     class="po-mt-1"
     p-sort="true"
-    [p-columns]="columns"     [p-items]="vehicles" 
-    [p-actions]="tableActions">
+    [p-columns]="columns"     
+    [p-items]="vehicles" 
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    (p-show-more)="showMore()">
   </po-table>
 </po-page-list>
 

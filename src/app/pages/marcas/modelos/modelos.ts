@@ -24,7 +24,10 @@ export class ModelosComponent implements OnInit {
   marcaId: number | null = null;
   marcaNome: string = '';
   modelos: any[] = [];
-  allModelosCache: any[] = [];
+  page: number = 1;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
   
   public readonly columns: PoTableColumn[] = [
@@ -67,22 +70,41 @@ export class ModelosComponent implements OnInit {
   }
 
   async load() {
-    // Usar query string para filtrar no backend
-    this.allModelosCache = await this.db.getAll(`modelos?marca_id=${this.marcaId}`);
-    this.modelos = [...this.allModelosCache];
+    this.page = 1;
+    this.modelos = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('modelos', { 
+        marca_id: this.marcaId,
+        page: this.page, 
+        limit: 20,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.modelos = [...this.modelos, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.modelos = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterModelos(filter: string) {
-    if (!filter) {
-      this.modelos = [...this.allModelosCache];
-      return;
-    }
-    const searchTerm = filter.toLowerCase();
-    this.modelos = this.allModelosCache.filter(m => 
-      m.nome.toLowerCase().includes(searchTerm) ||
-      m.id.toString().includes(searchTerm) ||
-      m.descricao_detalhada?.toLowerCase().includes(searchTerm)
-    );
+    this.currentFilter = filter;
+    this.load();
   }
 
   back() {
