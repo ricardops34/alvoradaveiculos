@@ -34,9 +34,19 @@ export class VeiculosComponent implements OnInit {
 
   vehicles: any[] = [];
   allVehicles: any[] = []; // Cópia para filtragem
+  filteredVehicles: any[] = [];
   vehicle: Vehicle = this.getEmptyVehicle();
   isEditing: boolean = false;
   currentQuickAddField: string = '';
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 20;
+
+  selectedTipos: string[] = [];
+  selectedStatus: string[] = [];
+  currentSearchTerm: string = '';
+  @ViewChild('advancedFilterModal', { static: true }) advancedFilterModal!: PoModalComponent;
 
   peopleOptions: PoSelectOption[] = [];
   supplierOptions: PoSelectOption[] = [];
@@ -78,8 +88,15 @@ export class VeiculosComponent implements OnInit {
     { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
+  public disclaimerGroup: any = {
+    title: 'Filtros',
+    disclaimers: [],
+    change: this.onChangeDisclaimer.bind(this)
+  };
+
   public readonly filterSettings: any = {
     action: this.filterVehicles.bind(this),
+    advancedAction: this.openAdvancedFilter.bind(this),
     placeholder: 'Pesquisar veículos...'
   };
 
@@ -201,21 +218,76 @@ export class VeiculosComponent implements OnInit {
       fornecedor_nome: people.find(p => p.id === v.fornecedor_id)?.nome || '-',
       cliente_nome: people.find(p => p.id === v.cliente_id)?.nome || '-'
     }));
-    this.vehicles = [...this.allVehicles];
+    this.filteredVehicles = [...this.allVehicles];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterVehicles(filter: string) {
-    if (!filter) {
-      this.vehicles = [...this.allVehicles];
-      return;
+    this.currentSearchTerm = filter || '';
+    this.applyAllFilters();
+  }
+
+  applyAllFilters() {
+    let filtered = [...this.allVehicles];
+
+    if (this.currentSearchTerm) {
+      const searchTerm = this.currentSearchTerm.toLowerCase();
+      filtered = filtered.filter(v => 
+        v.placa.toLowerCase().includes(searchTerm) ||
+        v.marca_nome?.toLowerCase().includes(searchTerm) ||
+        v.modelo_nome?.toLowerCase().includes(searchTerm) ||
+        v.status.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.vehicles = this.allVehicles.filter(v => 
-      v.placa.toLowerCase().includes(searchTerm) ||
-      v.marca_nome?.toLowerCase().includes(searchTerm) ||
-      v.modelo_nome?.toLowerCase().includes(searchTerm) ||
-      v.status.toLowerCase().includes(searchTerm)
-    );
+
+    if (this.selectedTipos.length > 0) {
+      filtered = filtered.filter(v => this.selectedTipos.includes(v.tipo_veiculo));
+    }
+    if (this.selectedStatus.length > 0) {
+      filtered = filtered.filter(v => this.selectedStatus.includes(v.status));
+    }
+
+    this.filteredVehicles = filtered;
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.vehicles = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredVehicles.slice(startIndex, endIndex);
+    
+    this.vehicles = [...this.vehicles, ...nextItems];
+    this.hasNext = endIndex < this.filteredVehicles.length;
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
+  }
+
+  openAdvancedFilter() {
+    this.advancedFilterModal.open();
+  }
+
+  applyFilters() {
+    const disclaimers = [
+      ...this.selectedTipos.map(tipo => ({ label: tipo, property: 'tipo_veiculo', value: tipo })),
+      ...this.selectedStatus.map(status => ({ label: status, property: 'status', value: status }))
+    ];
+    this.disclaimerGroup.disclaimers = disclaimers;
+    this.advancedFilterModal.close();
+    this.applyAllFilters();
+  }
+
+  onChangeDisclaimer(disclaimers: any[]) {
+    this.selectedTipos = disclaimers.filter(d => d.property === 'tipo_veiculo').map(d => d.value);
+    this.selectedStatus = disclaimers.filter(d => d.property === 'status').map(d => d.value);
+    this.applyAllFilters();
   }
 
   getEmptyVehicle(): Vehicle {

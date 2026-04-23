@@ -26,6 +26,16 @@ export class PessoasComponent implements OnInit {
 
   people: any[] = [];
   allPeople: any[] = [];
+  filteredPeople: any[] = [];
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 20;
+
+  selectedTipos: string[] = [];
+  selectedPapeis: string[] = [];
+  currentSearchTerm: string = '';
+  @ViewChild('advancedFilterModal', { static: true }) advancedFilterModal!: PoModalComponent;
   person: Person = this.getEmptyPerson();
   isEditing: boolean = false;
 
@@ -42,8 +52,15 @@ export class PessoasComponent implements OnInit {
     { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
+  public disclaimerGroup: any = {
+    title: 'Filtros',
+    disclaimers: [],
+    change: this.onChangeDisclaimer.bind(this)
+  };
+
   public readonly filterSettings: any = {
     action: this.filterPeople.bind(this),
+    advancedAction: this.openAdvancedFilter.bind(this),
     placeholder: 'Pesquisar pessoas...'
   };
 
@@ -85,21 +102,79 @@ export class PessoasComponent implements OnInit {
       if (p.is_socio) papeis.push('Sócio');
       return { ...p, papeis: papeis.join(', ') };
     });
-    this.people = [...this.allPeople];
+    this.filteredPeople = [...this.allPeople];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterPeople(filter: string) {
-    if (!filter) {
-      this.people = [...this.allPeople];
-      return;
+    this.currentSearchTerm = filter || '';
+    this.applyAllFilters();
+  }
+
+  applyAllFilters() {
+    let filtered = [...this.allPeople];
+
+    if (this.currentSearchTerm) {
+      const searchTerm = this.currentSearchTerm.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.nome.toLowerCase().includes(searchTerm) ||
+        p.documento?.toLowerCase().includes(searchTerm) ||
+        p.cidade?.toLowerCase().includes(searchTerm) ||
+        p.email?.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.people = this.allPeople.filter(p => 
-      p.nome.toLowerCase().includes(searchTerm) ||
-      p.documento?.toLowerCase().includes(searchTerm) ||
-      p.cidade?.toLowerCase().includes(searchTerm) ||
-      p.email?.toLowerCase().includes(searchTerm)
-    );
+
+    if (this.selectedTipos.length > 0) {
+      filtered = filtered.filter(p => this.selectedTipos.includes(p.tipo_pessoa));
+    }
+    
+    if (this.selectedPapeis.length > 0) {
+      filtered = filtered.filter(p => {
+        return this.selectedPapeis.some(papel => p.papeis.includes(papel));
+      });
+    }
+
+    this.filteredPeople = filtered;
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.people = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredPeople.slice(startIndex, endIndex);
+    
+    this.people = [...this.people, ...nextItems];
+    this.hasNext = endIndex < this.filteredPeople.length;
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
+  }
+
+  openAdvancedFilter() {
+    this.advancedFilterModal.open();
+  }
+
+  applyFilters() {
+    const disclaimers = [
+      ...this.selectedTipos.map(tipo => ({ label: tipo, property: 'tipo_pessoa', value: tipo })),
+      ...this.selectedPapeis.map(papel => ({ label: papel, property: 'papel', value: papel }))
+    ];
+    this.disclaimerGroup.disclaimers = disclaimers;
+    this.advancedFilterModal.close();
+    this.applyAllFilters();
+  }
+
+  onChangeDisclaimer(disclaimers: any[]) {
+    this.selectedTipos = disclaimers.filter(d => d.property === 'tipo_pessoa').map(d => d.value);
+    this.selectedPapeis = disclaimers.filter(d => d.property === 'papel').map(d => d.value);
+    this.applyAllFilters();
   }
 
   getEmptyPerson(): Person {

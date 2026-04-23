@@ -1,13 +1,17 @@
 <po-page-list 
   p-title="Cadastro de Veículos" 
   [p-actions]="actions"
-  [p-filter]="filterSettings">
+  [p-filter]="filterSettings"
+  [p-disclaimer-group]="disclaimerGroup">
 
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
-    [p-columns]="columns"     [p-items]="vehicles" 
-    [p-actions]="tableActions">
+    [p-columns]="columns" 
+    [p-items]="vehicles" 
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    (p-show-more)="showMore()">
   </po-table>
 </po-page-list>
 
@@ -262,3 +266,26 @@
   </form>
 </po-modal>
 <app-quick-add #appQuickAdd (onAdded)="handleQuickAdd($event, currentQuickAddField)"></app-quick-add>
+
+<po-modal #advancedFilterModal p-title="Busca avançada" [p-primary-action]="{ label: 'Aplicar filtros', action: applyFilters.bind(this) }">
+  <div class="po-row">
+    <po-checkbox-group
+      class="po-md-12"
+      name="tipo_veiculo_filter"
+      p-label="Filtrar por Tipo"
+      p-columns="2"
+      [p-options]="tipoVeiculoOptions"
+      [(ngModel)]="selectedTipos">
+    </po-checkbox-group>
+  </div>
+  <div class="po-row po-mt-2">
+    <po-checkbox-group
+      class="po-md-12"
+      name="status_filter"
+      p-label="Filtrar por Status"
+      p-columns="2"
+      [p-options]="statusOptions"
+      [(ngModel)]="selectedStatus">
+    </po-checkbox-group>
+  </div>
+</po-modal>

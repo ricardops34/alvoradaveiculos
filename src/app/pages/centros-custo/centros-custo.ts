@@ -24,6 +24,11 @@ export class CentrosCustoComponent implements OnInit {
 
   costCenters: any[] = [];
   allCostCenters: any[] = [];
+  filteredCostCenters: any[] = [];
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 20;
   cc: any = { codigo: '', nome: '', tipo: 'Despesa' };
   isEditing: boolean = false;
 
@@ -69,19 +74,40 @@ export class CentrosCustoComponent implements OnInit {
 
   async loadCC() {
     this.allCostCenters = await this.db.getAll('centros_custo');
-    this.costCenters = [...this.allCostCenters];
+    this.filteredCostCenters = [...this.allCostCenters];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterCC(filter: string) {
     if (!filter) {
-      this.costCenters = [...this.allCostCenters];
-      return;
+      this.filteredCostCenters = [...this.allCostCenters];
+    } else {
+      const searchTerm = filter.toLowerCase();
+      this.filteredCostCenters = this.allCostCenters.filter(c => 
+        c.nome.toLowerCase().includes(searchTerm) ||
+        c.codigo?.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.costCenters = this.allCostCenters.filter(c => 
-      c.nome.toLowerCase().includes(searchTerm) ||
-      c.codigo?.toLowerCase().includes(searchTerm)
-    );
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.costCenters = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredCostCenters.slice(startIndex, endIndex);
+    
+    this.costCenters = [...this.costCenters, ...nextItems];
+    this.hasNext = endIndex < this.filteredCostCenters.length;
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
   }
 
   openNew() {

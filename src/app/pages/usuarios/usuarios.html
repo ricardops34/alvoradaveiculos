@@ -4,11 +4,13 @@
   [p-filter]="filterSettings">
 
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="users" 
-    [p-actions]="tableActions">
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    (p-show-more)="showMore()">
   </po-table>
 </po-page-list>
 

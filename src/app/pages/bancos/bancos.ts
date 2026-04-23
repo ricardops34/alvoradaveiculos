@@ -24,6 +24,11 @@ export class BancosComponent implements OnInit {
 
   banks: any[] = [];
   allBanks: any[] = [];
+  filteredBanks: any[] = [];
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 20;
   bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
   isEditing: boolean = false;
 
@@ -71,20 +76,41 @@ export class BancosComponent implements OnInit {
 
   async loadBanks() {
     this.allBanks = await this.db.getAll('bancos');
-    this.banks = [...this.allBanks];
+    this.filteredBanks = [...this.allBanks];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterBanks(filter: string) {
     if (!filter) {
-      this.banks = [...this.allBanks];
-      return;
+      this.filteredBanks = [...this.allBanks];
+    } else {
+      const searchTerm = filter.toLowerCase();
+      this.filteredBanks = this.allBanks.filter(b => 
+        b.nome.toLowerCase().includes(searchTerm) ||
+        b.codigo?.toLowerCase().includes(searchTerm) ||
+        b.conta?.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.banks = this.allBanks.filter(b => 
-      b.nome.toLowerCase().includes(searchTerm) ||
-      b.codigo?.toLowerCase().includes(searchTerm) ||
-      b.conta?.toLowerCase().includes(searchTerm)
-    );
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.banks = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredBanks.slice(startIndex, endIndex);
+    
+    this.banks = [...this.banks, ...nextItems];
+    this.hasNext = endIndex < this.filteredBanks.length;
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
   }
 
   openNew() {

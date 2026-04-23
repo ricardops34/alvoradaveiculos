@@ -25,7 +25,12 @@ export class UsuariosComponent implements OnInit {
 
   users: any[] = [];
   allUsers: any[] = [];
+  filteredUsers: any[] = [];
   profiles: any[] = [];
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 20;
   user: any = { nome: '', email: '', senha: '', perfil_id: null };
   isEditing: boolean = false;
 
@@ -74,20 +79,41 @@ export class UsuariosComponent implements OnInit {
       const profile = this.profiles.find(p => p.id === u.perfil_id);
       return { ...u, perfil_nome: profile ? profile.nome : 'N/A' };
     });
-    this.users = [...this.allUsers];
+    this.filteredUsers = [...this.allUsers];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterUsers(filter: string) {
     if (!filter) {
-      this.users = [...this.allUsers];
-      return;
+      this.filteredUsers = [...this.allUsers];
+    } else {
+      const searchTerm = filter.toLowerCase();
+      this.filteredUsers = this.allUsers.filter(u => 
+        u.nome.toLowerCase().includes(searchTerm) ||
+        u.email.toLowerCase().includes(searchTerm) ||
+        u.perfil_nome?.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.users = this.allUsers.filter(u => 
-      u.nome.toLowerCase().includes(searchTerm) ||
-      u.email.toLowerCase().includes(searchTerm) ||
-      u.perfil_nome?.toLowerCase().includes(searchTerm)
-    );
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.users = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredUsers.slice(startIndex, endIndex);
+    
+    this.users = [...this.users, ...nextItems];
+    this.hasNext = endIndex < this.filteredUsers.length;
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
   }
 
   openNew() {

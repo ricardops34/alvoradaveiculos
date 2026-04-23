@@ -25,7 +25,12 @@ export class ModelosComponent implements OnInit {
   marcaNome: string = '';
   modelos: any[] = [];
   allModelosCache: any[] = [];
+  filteredModelosCache: any[] = [];
   modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 20;
   
   public readonly columns: PoTableColumn[] = [
     { property: 'id', label: 'ID', width: '80px' },
@@ -69,20 +74,41 @@ export class ModelosComponent implements OnInit {
   async load() {
     // Usar query string para filtrar no backend
     this.allModelosCache = await this.db.getAll(`modelos?marca_id=${this.marcaId}`);
-    this.modelos = [...this.allModelosCache];
+    this.filteredModelosCache = [...this.allModelosCache];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterModelos(filter: string) {
     if (!filter) {
-      this.modelos = [...this.allModelosCache];
-      return;
+      this.filteredModelosCache = [...this.allModelosCache];
+    } else {
+      const searchTerm = filter.toLowerCase();
+      this.filteredModelosCache = this.allModelosCache.filter(m => 
+        m.nome.toLowerCase().includes(searchTerm) ||
+        m.id.toString().includes(searchTerm) ||
+        m.descricao_detalhada?.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.modelos = this.allModelosCache.filter(m => 
-      m.nome.toLowerCase().includes(searchTerm) ||
-      m.id.toString().includes(searchTerm) ||
-      m.descricao_detalhada?.toLowerCase().includes(searchTerm)
-    );
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.modelos = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredModelosCache.slice(startIndex, endIndex);
+    
+    this.modelos = [...this.modelos, ...nextItems];
+    this.hasNext = endIndex < this.filteredModelosCache.length;
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
   }
 
   back() {
