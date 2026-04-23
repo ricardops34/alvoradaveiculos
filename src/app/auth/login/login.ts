@@ -39,7 +39,8 @@ export class LoginComponent implements OnInit {
       if (p) {
         this.parametros = {
           ...p,
-          empresa_nome: p.empresa_nome || 'BJ Software'
+          empresa_nome: p.empresa_nome || 'BJ Software',
+          logo_url: p.logo_url || 'iconebj.png'
         };
       }
     } catch (e) {

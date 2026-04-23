@@ -132,7 +132,7 @@ export class LayoutComponent implements OnInit {
       const p: any = await this.db.http.get('/api/config/parametros').toPromise();
       if (p) {
         this.empresaNome = p.empresa_nome || 'BJ Software';
-        this.logoUrl = p.logo_url || 'favicon.png';
+        this.logoUrl = p.logo_url || 'iconebj.png';
       }
     } catch (e) {
       console.error('Erro ao carregar parametros no layout', e);
