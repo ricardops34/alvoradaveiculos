@@ -161,6 +161,7 @@ async function seed() {
 
     const basePath = path.join(__dirname, 'base', 'marcas-e-modelos');
 
+    const globalMarcasMap = new Map<string, number>();
     for (const cat of categories) {
       console.log(`  - Processando categoria: ${cat.type}...`);
       
@@ -173,8 +174,8 @@ async function seed() {
       }
 
       // 1. Ler Marcas
-      const marcasRaw = fs.readFileSync(marcasFile, 'utf-8').split('\n');
-      const marcasMap = new Map<string, number>(); // CSV_ID -> DB_ID
+      const marcasRaw = fs.readFileSync(marcasFile, 'utf-8').replace(/\r/g, '').split('\n');
+
 
       for (let i = 1; i < marcasRaw.length; i++) {
         const line = marcasRaw[i].trim();
@@ -185,25 +186,25 @@ async function seed() {
 
         const res = await client.query(
           'INSERT INTO marcas (nome, tipo_veiculo) VALUES ($1, $2) ON CONFLICT (nome, tipo_veiculo) DO UPDATE SET nome = EXCLUDED.nome RETURNING id',
-          [nome.toUpperCase(), cat.type]
+          [nome.trim().toUpperCase(), cat.type]
         );
-        marcasMap.set(csvId, res.rows[0].id);
+        globalMarcasMap.set(csvId.trim(), res.rows[0].id);
       }
 
       // 2. Ler Modelos
-      const modelosRaw = fs.readFileSync(modelosFile, 'utf-8').split('\n');
+      const modelosRaw = fs.readFileSync(modelosFile, 'utf-8').replace(/\r/g, '').split('\n');
       for (let i = 1; i < modelosRaw.length; i++) {
         const line = modelosRaw[i].trim();
         if (!line) continue;
         const [csvId, csvMarcaId, nome] = line.split(';');
         
-        const dbMarcaId = marcasMap.get(csvMarcaId);
+        const dbMarcaId = globalMarcasMap.get(csvMarcaId.trim());
         if (dbMarcaId && nome) {
           await client.query(
             `INSERT INTO modelos (marca_id, nome, tipo_veiculo) 
              VALUES ($1, $2, $3) 
              ON CONFLICT (marca_id, nome, tipo_veiculo) DO NOTHING`,
-            [dbMarcaId, nome.toUpperCase(), cat.type]
+            [dbMarcaId, nome.trim().toUpperCase(), cat.type]
           );
         }
       }
