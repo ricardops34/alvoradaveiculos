@@ -1,41 +1,20 @@
-<po-page-list 
-  p-title="Cadastro de Marcas (Paginação Ativa)"
-  [p-actions]="pageActions"
-  [p-filter]="filterSettings">
-  
-  <po-table 
-    class="po-mt-1"
-    p-sort="true"
-    [p-columns]="columns" 
-    [p-items]="marcas"
-    [p-actions]="actions"
-    [p-show-more-disabled]="!hasNext"
-    (p-show-more)="showMore()">
+<po-page-list p-title="Cadastro de Marcas (Paginação Ativa)" [p-actions]="pageActions" [p-filter]="filterSettings">
+
+  <po-table class="po-mt-1" p-sort="true" [p-columns]="columns" [p-items]="marcas" [p-actions]="actions"
+    [p-show-more-disabled]="!hasNext" (p-show-more)="showMore()">
   </po-table>
 
 </po-page-list>
 
-<po-modal #marcaModal 
-  p-title="Manutenção de Marca"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+<po-modal #marcaModal p-title="Manutenção de Marca" [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
   [p-secondary-action]="{ label: 'Cancelar', action: marcaModal.close.bind(marcaModal) }">
-  
+
   <div class="po-row">
-    <po-input 
-      class="po-md-8" 
-      name="nome" 
-      [(ngModel)]="marca.nome" 
-      p-label="Nome da Marca" 
-      p-required>
+    <po-input class="po-md-8" name="nome" [(ngModel)]="marca.nome" p-label="Nome da Marca" p-required>
     </po-input>
 
-    <po-select 
-      class="po-md-4" 
-      name="tipo_veiculo" 
-      [(ngModel)]="marca.tipo_veiculo" 
-      p-label="Tipo" 
-      [p-options]="tipoOptions"
-      p-required>
+    <po-select class="po-md-4" name="tipo_veiculo" [(ngModel)]="marca.tipo_veiculo" p-label="Tipo"
+      [p-options]="tipoOptions" p-required>
     </po-select>
   </div>
 </po-modal>
