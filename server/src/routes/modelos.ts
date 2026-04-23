@@ -3,21 +3,31 @@ import pool from '../db';
 
 const router = Router();
 
-// GET - Listar todos (pode filtrar por marca_id)
+// GET - Listar todos (pode filtrar por marca_id e tipo_veiculo)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { marca_id } = req.query;
+    const { marca_id, tipo_veiculo } = req.query;
     let query = `
       SELECT m.*, ma.nome as marca_nome 
       FROM modelos m 
       LEFT JOIN marcas ma ON m.marca_id = ma.id 
     `;
     let params: any[] = [];
+    let conditions: string[] = [];
 
     if (marca_id) {
-      query += ' WHERE m.marca_id = $1 ';
+      conditions.push(`m.marca_id = $${params.length + 1}`);
       params.push(marca_id);
     }
+    if (tipo_veiculo) {
+      conditions.push(`m.tipo_veiculo = $${params.length + 1}`);
+      params.push(tipo_veiculo);
+    }
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
     query += ' ORDER BY m.nome';
 
     const result = await pool.query(query, params);

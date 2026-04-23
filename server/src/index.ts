@@ -15,6 +15,7 @@ import usuariosRoutes from './routes/usuarios';
 import dashboardRoutes from './routes/dashboard';
 import marcasRoutes from './routes/marcas';
 import modelosRoutes from './routes/modelos';
+import configRoutes from './routes/config';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/marcas', marcasRoutes);
 app.use('/api/modelos', modelosRoutes);
+app.use('/api/config', configRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

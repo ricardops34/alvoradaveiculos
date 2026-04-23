@@ -1,0 +1,91 @@
+import { Router, Request, Response } from 'express';
+import pool from '../db';
+import path from 'path';
+import fs from 'fs';
+import { parse } from 'csv-parse';
+
+const router = Router();
+
+router.post('/importar-marcas-modelos', async (req: Request, res: Response) => {
+  const client = await pool.connect();
+  try {
+    // 1. Verificar se já existem dados
+    const checkCount = await client.query('SELECT COUNT(*) FROM marcas');
+    if (parseInt(checkCount.rows[0].count) > 0) {
+      res.status(400).json({ error: 'Os dados de Marcas/Modelos já foram importados anteriormente.' });
+      return;
+    }
+
+    console.log('🚀 Iniciando importação manual de Marcas e Modelos...');
+    
+    const categories = [
+      { type: 'Carro', marcas: 'marcas-carros.csv', modelos: 'modelos-carro.csv' },
+      { type: 'Moto', marcas: 'marcas-motos.csv', modelos: 'modelos-moto.csv' },
+      { type: 'Caminhão', marcas: 'marcas-caminhao.csv', modelos: 'modelos-caminhao.csv' },
+      { type: 'Náutica', marcas: 'marcas-nautica.csv', modelos: 'modelos-nautica.csv' }
+    ];
+
+    const basePath = path.join(__dirname, '..', 'base', 'marcas-e-modelos');
+    const globalMarcasMap = new Map<string, number>();
+
+    await client.query('BEGIN');
+
+    for (const cat of categories) {
+      const marcasFile = path.join(basePath, cat.marcas);
+      const modelosFile = path.join(basePath, cat.modelos);
+
+      if (!fs.existsSync(marcasFile)) continue;
+
+      // Importar Marcas
+      const marcasContent = fs.readFileSync(marcasFile, 'utf-8');
+      const marcasRecords: any[] = await new Promise((resolve) => {
+        parse(marcasContent, { columns: true, skip_empty_lines: true }, (err, records) => resolve(records));
+      });
+
+      for (const record of marcasRecords) {
+        const nome = record.Marca || record.marca || record.nome;
+        if (!nome) continue;
+        
+        const resMarca = await client.query(
+          'INSERT INTO marcas (nome, tipo_veiculo) VALUES ($1, $2) ON CONFLICT (nome) DO UPDATE SET nome = EXCLUDED.nome RETURNING id',
+          [nome.trim().toUpperCase(), cat.type]
+        );
+        globalMarcasMap.set(`${cat.type}_${nome.trim().toUpperCase()}`, resMarca.rows[0].id);
+      }
+
+      // Importar Modelos
+      if (!fs.existsSync(modelosFile)) continue;
+      const modelosContent = fs.readFileSync(modelosFile, 'utf-8');
+      const modelosRecords: any[] = await new Promise((resolve) => {
+        parse(modelosContent, { columns: true, skip_empty_lines: true }, (err, records) => resolve(records));
+      });
+
+      for (const record of modelosRecords) {
+        const marcaNome = record.Marca || record.marca;
+        const nome = record.Modelo || record.modelo || record.nome;
+        if (!marcaNome || !nome) continue;
+
+        const dbMarcaId = globalMarcasMap.get(`${cat.type}_${marcaNome.trim().toUpperCase()}`);
+        if (dbMarcaId) {
+          await client.query(
+            `INSERT INTO modelos (marca_id, nome, tipo_veiculo) 
+             VALUES ($1, $2, $3) 
+             ON CONFLICT (marca_id, nome, tipo_veiculo) DO NOTHING`,
+            [dbMarcaId, nome.trim().toUpperCase(), cat.type]
+          );
+        }
+      }
+    }
+
+    await client.query('COMMIT');
+    res.json({ message: 'Importação concluída com sucesso!' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Erro na importação manual:', err);
+    res.status(500).json({ error: 'Erro durante a importação.' });
+  } finally {
+    client.release();
+  }
+});
+
+export default router;

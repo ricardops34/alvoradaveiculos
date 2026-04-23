@@ -149,28 +149,17 @@ export class VeiculosComponent implements OnInit {
     const centers = await this.db.getAll('centros_custo');
     this.costCenterOptions = centers.map(c => ({ label: c.nome, value: c.id }));
 
-    this.allMarcas = await this.db.getAll('marcas');
-    this.allModelos = await this.db.getAll('modelos');
-    
     this.updateMarcas();
   }
 
-  updateMarcas() {
+  async updateMarcas() {
     if (!this.vehicle.tipo_veiculo) {
       this.marcasOptions = [];
       return;
     }
 
-    // Filtrar marcas que possuem modelos do tipo selecionado
-    const marcasIdsComModelosDoTipo = new Set(
-      this.allModelos
-        .filter(m => m.tipo_veiculo === this.vehicle.tipo_veiculo)
-        .map(m => m.marca_id)
-    );
-
-    this.marcasOptions = this.allMarcas
-      .filter(m => marcasIdsComModelosDoTipo.has(m.id))
-      .map(m => ({ label: m.nome, value: m.id }));
+    const marcas = await this.db.getAll('marcas', { tipo_veiculo: this.vehicle.tipo_veiculo });
+    this.marcasOptions = marcas.map(m => ({ label: m.nome, value: m.id }));
   }
 
   onMarcaChange(marcaId: number) {
@@ -189,14 +178,18 @@ export class VeiculosComponent implements OnInit {
     this.updateMarcas();
   }
 
-  updateModelos() {
+  async updateModelos() {
     if (!this.vehicle.marca_id || !this.vehicle.tipo_veiculo) {
       this.modelosOptions = [];
       return;
     }
-    this.modelosOptions = this.allModelos
-      .filter(m => m.marca_id === this.vehicle.marca_id && m.tipo_veiculo === this.vehicle.tipo_veiculo)
-      .map(m => ({ label: m.nome, value: m.id }));
+    
+    const modelos = await this.db.getAll('modelos', { 
+      marca_id: this.vehicle.marca_id, 
+      tipo_veiculo: this.vehicle.tipo_veiculo 
+    });
+    
+    this.modelosOptions = modelos.map(m => ({ label: m.nome, value: m.id }));
   }
 
   async loadVehicles() {

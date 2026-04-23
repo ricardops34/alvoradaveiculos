@@ -1,0 +1,39 @@
+<po-page-default p-title="Configurações de Sistema">
+  
+  <div class="po-row">
+    <po-info class="po-md-12" p-label="Status do Banco de Dados" p-value="A importação de Marcas e Modelos é necessária para o correto funcionamento do cadastro de veículos.">
+    </po-info>
+  </div>
+
+  <po-divider></po-divider>
+
+  <div class="po-row">
+    <div class="po-md-6">
+      <po-widget p-title="Marcas e Modelos">
+        <div class="po-row">
+          <po-info class="po-md-12" p-label="Registros Atuais" [p-value]="marcasCount + ' Marcas cadastradas'"></po-info>
+        </div>
+        
+        <div class="po-row po-mt-2">
+          <po-button 
+            class="po-md-12"
+            p-label="Importar Dados Base (CSV)" 
+            p-kind="primary" 
+            p-icon="an an-download-simple"
+            [p-loading]="loading"
+            [p-disabled]="marcasCount > 0"
+            (p-click)="importarDados()">
+          </po-button>
+        </div>
+
+        <p *ngIf="marcasCount > 0" class="po-font-text-smaller po-mt-1" style="color: green;">
+          ✅ Os dados já foram importados.
+        </p>
+        <p *ngIf="marcasCount === 0" class="po-font-text-smaller po-mt-1" style="color: orange;">
+          ⚠️ Clique no botão acima para carregar as Marcas e Modelos do sistema.
+        </p>
+      </po-widget>
+    </div>
+  </div>
+
+</po-page-default>

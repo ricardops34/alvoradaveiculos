@@ -3,10 +3,20 @@ import pool from '../db';
 
 const router = Router();
 
-// GET - Listar todos
-router.get('/', async (_req: Request, res: Response) => {
+// GET - Listar todos (pode filtrar por tipo_veiculo)
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const result = await pool.query('SELECT * FROM marcas ORDER BY nome');
+    const { tipo_veiculo } = req.query;
+    let query = 'SELECT * FROM marcas';
+    let params: any[] = [];
+
+    if (tipo_veiculo) {
+      query += ' WHERE tipo_veiculo = $1';
+      params.push(tipo_veiculo);
+    }
+    query += ' ORDER BY nome';
+
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error('Erro ao listar marcas:', err);

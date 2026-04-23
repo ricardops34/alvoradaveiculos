@@ -102,6 +102,9 @@ export class LayoutComponent implements OnInit {
       const configItems = [];
       configItems.push({ label: 'Perfis de Acesso', link: '/home/perfis', icon: 'an an-shield-check' });
       configItems.push({ label: 'Usuários', link: '/home/usuarios', icon: 'an an-user' });
+      if (user.role === 'admin') {
+        configItems.push({ label: 'Configurações de Sistema', link: '/home/configuracoes', icon: 'an an-gear' });
+      }
 
       allMenus.push({
         label: 'Configurações', icon: 'an an-gear-six', shortLabel: 'Config', subItems: configItems

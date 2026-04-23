@@ -29,10 +29,10 @@ export class DatabaseService {
     return endpoints[table] || `/api/${table}`;
   }
 
-  async getAll(table: string): Promise<any[]> {
+  async getAll(table: string, params?: any): Promise<any[]> {
     try {
       const endpoint = this.getEndpoint(table);
-      return await firstValueFrom(this.http.get<any[]>(endpoint));
+      return await firstValueFrom(this.http.get<any[]>(endpoint, { params }));
     } catch (err) {
       console.error(`Erro ao buscar ${table}:`, err);
       return [];

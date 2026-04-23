@@ -101,6 +101,10 @@ async function seed() {
 
       ALTER TABLE modelos ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
       ALTER TABLE marcas ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
+
+      CREATE INDEX IF NOT EXISTS idx_marcas_tipo ON marcas(tipo_veiculo);
+      CREATE INDEX IF NOT EXISTS idx_modelos_tipo ON modelos(tipo_veiculo);
+      CREATE INDEX IF NOT EXISTS idx_modelos_marca ON modelos(marca_id);
       
       -- Garantir UNIQUE constraints para o seed robusto
       DO $$ 
@@ -159,65 +163,8 @@ async function seed() {
       `);
     }
 
-    // --- IMPORTAÇÃO DE MARCAS E MODELOS VIA CSV ---
-    console.log('🚛 Iniciando importação de Marcas e Modelos (CSV)...');
+    // A importação de Marcas e Modelos agora é feita manualmente via painel administrativo (Rota: /api/config/importar-marcas-modelos)
 
-    const categories = [
-      { type: 'Carro', marcas: 'marcas-carros.csv', modelos: 'modelos-carro.csv' },
-      { type: 'Moto', marcas: 'marcas-motos.csv', modelos: 'modelos-moto.csv' },
-      { type: 'Caminhão', marcas: 'marcas-caminhao.csv', modelos: 'modelos-caminhao.csv' },
-      { type: 'Náutica', marcas: 'marcas-nautica.csv', modelos: 'modelos-nautica.csv' }
-    ];
-
-    const basePath = path.join(__dirname, 'base', 'marcas-e-modelos');
-    const globalMarcasMap = new Map<string, number>();
-
-    for (const cat of categories) {
-      console.log(`  - Processando categoria: ${cat.type}...`);
-      
-      const marcasFile = path.join(basePath, cat.marcas);
-      const modelosFile = path.join(basePath, cat.modelos);
-
-      if (!fs.existsSync(marcasFile) || !fs.existsSync(modelosFile)) {
-        console.warn(`    ⚠️ Arquivos para ${cat.type} não encontrados. Pulando.`);
-        continue;
-      }
-
-      // 1. Ler Marcas
-      const marcasRaw = fs.readFileSync(marcasFile, 'utf-8').replace(/\r/g, '').split('\n');
-
-      for (let i = 1; i < marcasRaw.length; i++) {
-        const line = marcasRaw[i].trim();
-        if (!line) continue;
-        const [csvId, nome] = line.split(';');
-        
-        if (!nome) continue;
-
-        const res = await client.query(
-          'INSERT INTO marcas (nome, tipo_veiculo) VALUES ($1, $2) ON CONFLICT (nome) DO UPDATE SET nome = EXCLUDED.nome RETURNING id',
-          [nome.trim().toUpperCase(), cat.type]
-        );
-        globalMarcasMap.set(csvId.trim(), res.rows[0].id);
-      }
-
-      // 2. Ler Modelos
-      const modelosRaw = fs.readFileSync(modelosFile, 'utf-8').replace(/\r/g, '').split('\n');
-      for (let i = 1; i < modelosRaw.length; i++) {
-        const line = modelosRaw[i].trim();
-        if (!line) continue;
-        const [csvId, csvMarcaId, nome] = line.split(';');
-        
-        const dbMarcaId = globalMarcasMap.get(csvMarcaId.trim());
-        if (dbMarcaId && nome) {
-          await client.query(
-            `INSERT INTO modelos (marca_id, nome, tipo_veiculo) 
-             VALUES ($1, $2, $3) 
-             ON CONFLICT (marca_id, nome, tipo_veiculo) DO NOTHING`,
-            [dbMarcaId, nome.trim().toUpperCase(), cat.type]
-          );
-        }
-      }
-    }
 
     console.log('✅ Importação concluída com sucesso!');
 
