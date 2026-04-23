@@ -62,7 +62,7 @@ async function seed() {
       CREATE TABLE IF NOT EXISTS marcas (
         id SERIAL PRIMARY KEY,
         nome VARCHAR(100) NOT NULL UNIQUE,
-        tipo_veiculo VARCHAR(20) DEFAULT 'Carro',
+        tipo_veiculo VARCHAR(20) DEFAULT 'Carro'
 
       );
 
