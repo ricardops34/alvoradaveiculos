@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { PoModule, PoNotificationService } from '@po-ui/ng-components';
 import { AuthService, User } from '../../services/auth';
+import { DatabaseService } from '../../services/database';
+import { OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-login',
@@ -12,17 +14,33 @@ import { AuthService, User } from '../../services/auth';
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email = '';
   password = '';
   rememberMe = false;
   loading = false;
 
+  parametros: any = {
+    empresa_nome: 'Alvorada Veículos',
+    logo_url: 'icone.png',
+    background_url: 'fundologin.png'
+  };
+
   constructor(
     private authService: AuthService,
     private router: Router,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    private db: DatabaseService
   ) {}
+
+  async ngOnInit() {
+    try {
+      const p = await this.db.http.get('/api/config/parametros').toPromise();
+      if (p) this.parametros = p;
+    } catch (e) {
+      console.error('Erro ao carregar parametros no login', e);
+    }
+  }
 
   onLogin(form: any): void {
     if (!this.email || !this.password) {

@@ -9,7 +9,35 @@
 
   <div class="po-row">
     <div class="po-md-6">
-      <po-widget p-title="Marcas e Modelos">
+      <po-widget p-title="Identidade Visual">
+        <form #formParametros="ngForm">
+          <div class="po-row">
+            <po-input class="po-md-12" name="empresa_nome" [(ngModel)]="parametros.empresa_nome" p-label="Nome da Empresa" p-required></po-input>
+          </div>
+          <div class="po-row">
+            <po-input class="po-md-6" name="logo_url" [(ngModel)]="parametros.logo_url" p-label="Logo da Empresa (URL/Arquivo)" p-required></po-input>
+            <po-input class="po-md-6" name="favicon_url" [(ngModel)]="parametros.favicon_url" p-label="Favicon (URL/Arquivo)" p-required></po-input>
+          </div>
+          <div class="po-row">
+            <po-input class="po-md-12" name="background_url" [(ngModel)]="parametros.background_url" p-label="Imagem de Fundo (URL/Arquivo)" p-required></po-input>
+          </div>
+          
+          <div class="po-row po-mt-2">
+            <po-button 
+              class="po-md-12"
+              p-label="Salvar Alterações" 
+              p-kind="primary" 
+              p-icon="an an-floppy-disk"
+              [p-loading]="loading"
+              (p-click)="salvarParametros()">
+            </po-button>
+          </div>
+        </form>
+      </po-widget>
+    </div>
+
+    <div class="po-md-6">
+      <po-widget p-title="Importação de Dados Base">
         <div class="po-row">
           <po-info class="po-md-12" p-label="Registros Atuais" [p-value]="marcasCount + ' Marcas cadastradas'"></po-info>
         </div>
@@ -17,8 +45,8 @@
         <div class="po-row po-mt-2">
           <po-button 
             class="po-md-12"
-            p-label="Importar Dados Base (CSV)" 
-            p-kind="primary" 
+            p-label="Importar Marcas e Modelos (CSV)" 
+            p-kind="secondary" 
             p-icon="an an-download-simple"
             [p-loading]="loading"
             [p-disabled]="marcasCount > 0"
@@ -30,7 +58,7 @@
           ✅ Os dados já foram importados.
         </p>
         <p *ngIf="marcasCount === 0" class="po-font-text-smaller po-mt-1" style="color: orange;">
-          ⚠️ Clique no botão acima para carregar as Marcas e Modelos do sistema.
+          ⚠️ Clique no botão acima para carregar as Marcas e Modelos.
         </p>
       </po-widget>
     </div>

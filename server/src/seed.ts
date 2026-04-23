@@ -99,6 +99,19 @@ async function seed() {
         fotos TEXT[] DEFAULT '{}'
       );
 
+      CREATE TABLE IF NOT EXISTS parametros (
+        id SERIAL PRIMARY KEY,
+        empresa_nome VARCHAR(255) DEFAULT 'Alvorada Veículos',
+        favicon_url VARCHAR(255) DEFAULT 'favicon.ico',
+        logo_url VARCHAR(255) DEFAULT 'icone.png',
+        background_url VARCHAR(255) DEFAULT 'fundologin.png',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      INSERT INTO parametros (id, empresa_nome, favicon_url, logo_url, background_url)
+      VALUES (1, 'Alvorada Veículos', 'favicon.ico', 'icone.png', 'fundologin.png')
+      ON CONFLICT (id) DO NOTHING;
+
       ALTER TABLE modelos ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
       ALTER TABLE marcas ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
 

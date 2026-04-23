@@ -1,8 +1,8 @@
-<div class="login-page">
+<div class="login-page" [style.background-image]="'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(' + parametros.background_url + ')'">
   <div class="login-card">
     <div class="logo-section">
-      <img src="/favicon.png" alt="Alvorada Veículos" class="logo-img">
-      <h1 class="title">Alvorada Veículos</h1>
+      <img [src]="parametros.logo_url" [alt]="parametros.empresa_nome" class="logo-img">
+      <h1 class="title">{{ parametros.empresa_nome }}</h1>
     </div>
 
     <form #formLogin="ngForm" class="login-form">

@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PoModule, PoNotificationService } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 
 @Component({
   selector: 'app-configuracoes',
   standalone: true,
-  imports: [CommonModule, PoModule],
+  imports: [CommonModule, FormsModule, PoModule],
   templateUrl: './configuracoes.html'
 })
 export class ConfiguracoesComponent implements OnInit {
@@ -18,8 +19,36 @@ export class ConfiguracoesComponent implements OnInit {
     private poNotification: PoNotificationService
   ) {}
 
+  parametros: any = {
+    empresa_nome: '',
+    favicon_url: '',
+    logo_url: '',
+    background_url: ''
+  };
+
   async ngOnInit() {
     await this.checkData();
+    await this.carregarParametros();
+  }
+
+  async carregarParametros() {
+    try {
+      this.parametros = await this.db.http.get('/api/config/parametros').toPromise();
+    } catch (e) {
+      console.error('Erro ao carregar parâmetros', e);
+    }
+  }
+
+  async salvarParametros() {
+    this.loading = true;
+    try {
+      await this.db.http.put('/api/config/parametros', this.parametros).toPromise();
+      this.poNotification.success('Configurações salvas com sucesso!');
+    } catch (e) {
+      this.poNotification.error('Erro ao salvar configurações.');
+    } finally {
+      this.loading = false;
+    }
   }
 
   async checkData() {

@@ -88,4 +88,33 @@ router.post('/importar-marcas-modelos', async (req: Request, res: Response) => {
   }
 });
 
+// GET - Buscar parâmetros atuais
+router.get('/parametros', async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query('SELECT * FROM parametros WHERE id = 1');
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar parâmetros:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// PUT - Atualizar parâmetros
+router.put('/parametros', async (req: Request, res: Response) => {
+  try {
+    const { empresa_nome, favicon_url, logo_url, background_url } = req.body;
+    const result = await pool.query(
+      `UPDATE parametros 
+       SET empresa_nome = $1, favicon_url = $2, logo_url = $3, background_url = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE id = 1 
+       RETURNING *`,
+      [empresa_nome, favicon_url, logo_url, background_url]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao atualizar parâmetros:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 export default router;
