@@ -34,6 +34,13 @@ export class LoginComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    // Load remember me data
+    const savedEmail = localStorage.getItem('remembered_email');
+    if (savedEmail) {
+      this.email = savedEmail;
+      this.rememberMe = true;
+    }
+
     try {
       const p: any = await this.db.http.get('/api/config/parametros').toPromise();
       if (p) {
@@ -68,6 +75,13 @@ export class LoginComponent implements OnInit {
       next: (user: User | null) => {
         this.loading = false;
         if (user) {
+          // Handle Remember Me
+          if (this.rememberMe) {
+            localStorage.setItem('remembered_email', this.email);
+          } else {
+            localStorage.removeItem('remembered_email');
+          }
+
           this.router.navigate(['/home']);
         } else {
           this.poNotification.error('Usuário ou senha inválidos!');
