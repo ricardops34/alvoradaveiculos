@@ -6,7 +6,7 @@ services:
     container_name: alvorada-api
     restart: always
     environment:
-      DATABASE_URL: postgres://alvorada:alvorada2026@alvorada-db:5432/alvorada_db
+      DATABASE_URL: postgres://alvorada_db:alvorada202@postgres:5432/alvorada_db
       PORT: "3000"
     networks:
       - network_db
