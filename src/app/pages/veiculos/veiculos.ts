@@ -178,7 +178,10 @@ export class VeiculosComponent implements OnInit {
     this.updateModelos();
   }
 
-  onTipoChange() {
+  onTipoChange(tipo?: string) {
+    if (tipo) {
+      this.vehicle.tipo_veiculo = tipo;
+    }
     this.vehicle.marca_id = undefined;
     this.vehicle.modelo_id = undefined;
     this.marcasOptions = [];

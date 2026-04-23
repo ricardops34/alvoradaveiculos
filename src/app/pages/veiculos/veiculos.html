@@ -20,8 +20,7 @@
 
   <form #vehicleForm="ngForm">
     <div class="po-row">
-      <po-select class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions" (p-change)="onTipoChange()"></po-select>
-      <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
+      <po-select class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions" (p-change)="onTipoChange($event)"></po-select>
       
       <div class="po-md-3" style="display: flex; gap: 8px;">
         <po-select style="flex: 1" name="marca_id" [(ngModel)]="vehicle.marca_id" p-label="Marca" p-required [p-options]="marcasOptions" (p-change)="onMarcaChange($event)"></po-select>
@@ -38,6 +37,7 @@
       </div>
 
       <po-input class="po-md-2" name="cor" [(ngModel)]="vehicle.cor" p-label="Cor"></po-input>
+      <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
     </div>
 
     <div class="po-row">
