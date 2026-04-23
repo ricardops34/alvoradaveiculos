@@ -40,11 +40,20 @@ export class LoginComponent implements OnInit {
         this.parametros = {
           ...p,
           empresa_nome: p.empresa_nome || 'BJ Software',
-          logo_url: p.logo_url || 'iconebj.png'
+          logo_url: p.logo_url || 'iconebj.png',
+          favicon_url: p.favicon_url || 'faviconbj.ico'
         };
+        this.atualizarFavicon(this.parametros.favicon_url);
       }
     } catch (e) {
       console.error('Erro ao carregar parametros no login', e);
+    }
+  }
+
+  atualizarFavicon(url: string) {
+    const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+    if (link) {
+      link.href = url;
     }
   }
 

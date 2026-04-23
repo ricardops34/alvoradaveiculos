@@ -133,9 +133,17 @@ export class LayoutComponent implements OnInit {
       if (p) {
         this.empresaNome = p.empresa_nome || 'BJ Software';
         this.logoUrl = p.logo_url || 'iconebj.png';
+        this.atualizarFavicon(p.favicon_url || 'faviconbj.ico');
       }
     } catch (e) {
       console.error('Erro ao carregar parametros no layout', e);
+    }
+  }
+
+  atualizarFavicon(url: string) {
+    const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+    if (link) {
+      link.href = url;
     }
   }
 
