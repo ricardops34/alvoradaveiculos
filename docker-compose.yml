@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   alvorada-api:
-    image: bjsoftware/alvorada-api:latest
+    image: ghcr.io/ricardops34/alvorada-api:latest
     container_name: alvorada-api
     restart: always
     environment:
@@ -13,7 +13,7 @@ services:
       - network_public
 
   alvorada-crm:
-    image: bjsoftware/alvorada-crm:latest
+    image: ghcr.io/ricardops34/alvorada-crm:latest
     container_name: alvorada-crm-app
     restart: always
     depends_on:
