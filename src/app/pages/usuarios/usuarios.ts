@@ -26,6 +26,7 @@ export class UsuariosComponent implements OnInit {
   users: any[] = [];
   allUsers: any[] = [];
   filteredUsers: any[] = [];
+  isLoading: boolean = true;
   profiles: any[] = [];
   
   hasNext: boolean = false;
@@ -63,9 +64,11 @@ export class UsuariosComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    this.loadProfiles();
-    this.loadUsers();
+    await this.loadProfiles();
+    await this.loadUsers();
+    this.isLoading = false;
   }
 
   async loadProfiles() {

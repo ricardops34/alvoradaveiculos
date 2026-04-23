@@ -38,6 +38,9 @@ export class VeiculosComponent implements OnInit {
   vehicle: Vehicle = this.getEmptyVehicle();
   isEditing: boolean = false;
   currentQuickAddField: string = '';
+  isLoading: boolean = true;
+  
+  cachedPeople: any[] = [];
   
   hasNext: boolean = false;
   page: number = 1;
@@ -149,13 +152,44 @@ export class VeiculosComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    await this.loadOptions();
-    await this.loadVehicles();
+    
+    // Otimização: carregar tudo em paralelo
+    const [rawVehicles, people, banks, centers] = await Promise.all([
+      this.db.getAll('veiculos'),
+      this.db.getAll('pessoas'),
+      this.db.getAll('bancos'),
+      this.db.getAll('centros_custo')
+    ]);
+
+    this.cachedPeople = people;
+
+    // Load Options
+    this.peopleOptions = people.map(p => ({ label: p.nome, value: p.id }));
+    this.supplierOptions = people.filter(p => p.is_fornecedor).map(p => ({ label: p.nome, value: p.id }));
+    this.clientOptions = people.filter(p => p.is_cliente).map(p => ({ label: p.nome, value: p.id }));
+    this.bankOptions = banks.map(b => ({ label: b.nome, value: b.id }));
+    this.costCenterOptions = centers.map(c => ({ label: c.nome, value: c.id }));
+    this.updateMarcas();
+
+    // Load Vehicles
+    this.allVehicles = rawVehicles.map(v => ({
+      ...v,
+      fornecedor_nome: people.find(p => p.id === v.fornecedor_id)?.nome || '-',
+      cliente_nome: people.find(p => p.id === v.cliente_id)?.nome || '-'
+    }));
+    this.filteredVehicles = [...this.allVehicles];
+    this.page = 1;
+    this.applyPagination(true);
+    
+    this.isLoading = false;
   }
 
   async loadOptions() {
+    // Mantido apenas por retrocompatibilidade se for chamado em outro lugar
     const people = await this.db.getAll('pessoas');
+    this.cachedPeople = people;
     this.peopleOptions = people.map(p => ({ label: p.nome, value: p.id }));
     this.supplierOptions = people.filter(p => p.is_fornecedor).map(p => ({ label: p.nome, value: p.id }));
     this.clientOptions = people.filter(p => p.is_cliente).map(p => ({ label: p.nome, value: p.id }));
@@ -210,17 +244,23 @@ export class VeiculosComponent implements OnInit {
   }
 
   async loadVehicles() {
+    this.isLoading = true;
     const rawVehicles = await this.db.getAll('veiculos');
-    const people = await this.db.getAll('pessoas');
+    
+    // Se o cache de pessoas estiver vazio, busca novamente (fallback)
+    if (!this.cachedPeople || this.cachedPeople.length === 0) {
+      this.cachedPeople = await this.db.getAll('pessoas');
+    }
 
     this.allVehicles = rawVehicles.map(v => ({
       ...v,
-      fornecedor_nome: people.find(p => p.id === v.fornecedor_id)?.nome || '-',
-      cliente_nome: people.find(p => p.id === v.cliente_id)?.nome || '-'
+      fornecedor_nome: this.cachedPeople.find(p => p.id === v.fornecedor_id)?.nome || '-',
+      cliente_nome: this.cachedPeople.find(p => p.id === v.cliente_id)?.nome || '-'
     }));
     this.filteredVehicles = [...this.allVehicles];
     this.page = 1;
     this.applyPagination(true);
+    this.isLoading = false;
   }
 
   filterVehicles(filter: string) {

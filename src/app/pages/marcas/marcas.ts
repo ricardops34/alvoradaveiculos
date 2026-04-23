@@ -26,6 +26,7 @@ export class MarcasComponent implements OnInit {
   marcas: any[] = [];
   allMarcas: any[] = [];
   filteredMarcas: any[] = [];
+  isLoading: boolean = true;
   marca: any = { nome: '', tipo_veiculo: 'Carro' };
   
   selectedTipos: string[] = [];
@@ -83,7 +84,10 @@ export class MarcasComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
-    this.load();
+    this.isLoading = true;
+    await this.db.init();
+    await this.load();
+    this.isLoading = false;
   }
 
   async load() {

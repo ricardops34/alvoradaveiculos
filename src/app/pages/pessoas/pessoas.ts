@@ -27,6 +27,7 @@ export class PessoasComponent implements OnInit {
   people: any[] = [];
   allPeople: any[] = [];
   filteredPeople: any[] = [];
+  isLoading: boolean = true;
   
   hasNext: boolean = false;
   page: number = 1;
@@ -89,8 +90,10 @@ export class PessoasComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    this.loadPeople();
+    await this.loadPeople();
+    this.isLoading = false;
   }
   async loadPeople() {
     const rawPeople = await this.db.getAll('pessoas');

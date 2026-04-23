@@ -25,6 +25,7 @@ export class CentrosCustoComponent implements OnInit {
   costCenters: any[] = [];
   allCostCenters: any[] = [];
   filteredCostCenters: any[] = [];
+  isLoading: boolean = true;
   
   hasNext: boolean = false;
   page: number = 1;
@@ -68,8 +69,10 @@ export class CentrosCustoComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    this.loadCC();
+    await this.loadCC();
+    this.isLoading = false;
   }
 
   async loadCC() {

@@ -25,6 +25,7 @@ export class BancosComponent implements OnInit {
   banks: any[] = [];
   allBanks: any[] = [];
   filteredBanks: any[] = [];
+  isLoading: boolean = true;
   
   hasNext: boolean = false;
   page: number = 1;
@@ -70,8 +71,10 @@ export class BancosComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    this.loadBanks();
+    await this.loadBanks();
+    this.isLoading = false;
   }
 
   async loadBanks() {

@@ -10,7 +10,8 @@
     [p-items]="banks" 
     [p-actions]="tableActions"
     [p-show-more-disabled]="!hasNext"
-    (p-show-more)="showMore()">
+    (p-show-more)="showMore()"
+    [p-loading]="isLoading">
   </po-table>
 </po-page-list>
 

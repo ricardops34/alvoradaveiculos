@@ -26,6 +26,7 @@ export class ModelosComponent implements OnInit {
   modelos: any[] = [];
   allModelosCache: any[] = [];
   filteredModelosCache: any[] = [];
+  isLoading: boolean = true;
   modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
   
   hasNext: boolean = false;
@@ -63,12 +64,14 @@ export class ModelosComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     this.marcaId = Number(this.route.snapshot.paramMap.get('id'));
     if (this.marcaId) {
       const marca = await this.db.getById('marcas', this.marcaId);
       this.marcaNome = marca?.nome || 'Marca';
-      this.load();
+      await this.load();
     }
+    this.isLoading = false;
   }
 
   async load() {
