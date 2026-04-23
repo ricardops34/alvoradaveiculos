@@ -5,15 +5,34 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, status } = req.query;
+    const { page = 1, limit = 20, status, marca_id, tipo_veiculo } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    let whereClause = '';
+    let whereClause = 'WHERE 1=1';
     const params: any[] = [];
 
     if (status && status !== 'Todos') {
-      whereClause = 'WHERE v.status = $1';
-      params.push(status);
+      const statusList = (status as string).split(',');
+      if (statusList.length === 1) {
+        params.push(statusList[0]);
+        whereClause += ` AND v.status = $${params.length}`;
+      } else {
+        const placeholders = statusList.map((_, i) => {
+          params.push(statusList[i]);
+          return `$${params.length}`;
+        }).join(',');
+        whereClause += ` AND v.status IN (${placeholders})`;
+      }
+    }
+
+    if (marca_id) {
+      params.push(marca_id);
+      whereClause += ` AND v.marca_id = $${params.length}`;
+    }
+
+    if (tipo_veiculo) {
+      params.push(tipo_veiculo);
+      whereClause += ` AND v.tipo_veiculo = $${params.length}`;
     }
 
     const queryBase = `

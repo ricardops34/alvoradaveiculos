@@ -77,12 +77,13 @@ export class VeiculosComponent implements OnInit {
     centro_custo_id: null
   };
 
-  public readonly actions: PoPageAction[] = [
+  public readonly pageActions: PoPageAction[] = [
     { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
   public readonly filterSettings: any = {
     action: this.filterVehicles.bind(this),
+    advancedAction: this.openAdvancedFilter.bind(this),
     placeholder: 'Pesquisar veículos...'
   };
 
@@ -126,6 +127,20 @@ export class VeiculosComponent implements OnInit {
     { label: 'Preparação', value: 'Preparação' }
   ];
 
+  advancedFilters: any = {
+    status: [],
+    marca_id: null,
+    tipo_veiculo: null
+  };
+
+  public readonly disclaimerGroup: any = {
+    change: this.onDisclaimerChange.bind(this),
+    disclaimers: [],
+    title: 'Filtros aplicados'
+  };
+
+  @ViewChild('advancedFilterModal') advancedFilterModal!: PoModalComponent;
+
   constructor(
     private db: DatabaseService,
     private poNotification: PoNotificationService,
@@ -138,6 +153,36 @@ export class VeiculosComponent implements OnInit {
     await this.db.init();
     await this.loadOptions();
     await this.loadVehicles();
+  }
+
+  onDisclaimerChange(disclaimers: any[]) {
+    // Sincronizar filtros com os disclaimers (tags)
+    this.advancedFilters.status = disclaimers.filter(d => d.property === 'status').map(d => d.value);
+    this.advancedFilters.marca_id = disclaimers.find(d => d.property === 'marca_id')?.value || null;
+    this.advancedFilters.tipo_veiculo = disclaimers.find(d => d.property === 'tipo_veiculo')?.value || null;
+    
+    this.loadVehicles();
+  }
+
+  private updateDisclaimers() {
+    const disclaimers = [];
+    
+    if (this.advancedFilters.status?.length > 0) {
+      this.advancedFilters.status.forEach((s: string) => {
+        disclaimers.push({ property: 'status', value: s, label: `Status: ${s}` });
+      });
+    }
+
+    if (this.advancedFilters.marca_id) {
+      const marca = this.marcasOptions.find(m => m.value === this.advancedFilters.marca_id);
+      disclaimers.push({ property: 'marca_id', value: this.advancedFilters.marca_id, label: `Marca: ${marca?.label || '...'}` });
+    }
+
+    if (this.advancedFilters.tipo_veiculo) {
+      disclaimers.push({ property: 'tipo_veiculo', value: this.advancedFilters.tipo_veiculo, label: `Tipo: ${this.advancedFilters.tipo_veiculo}` });
+    }
+
+    this.disclaimerGroup.disclaimers = disclaimers;
   }
 
   async loadOptions() {
@@ -223,14 +268,42 @@ export class VeiculosComponent implements OnInit {
     ];
   }
 
+  filterVehicles(filter: string) {
+    this.currentFilter = filter;
+    this.loadVehicles();
+  }
+
+  openAdvancedFilter() {
+    this.advancedFilterModal.open();
+  }
+
+  applyAdvancedFilter() {
+    this.loadVehicles();
+    this.advancedFilterModal.close();
+  }
+
+  clearAdvancedFilter() {
+    this.advancedFilters = {
+      status: [],
+      marca_id: null,
+      tipo_veiculo: null
+    };
+    this.loadVehicles();
+  }
+
   private async fetchData() {
     this.loadingShowMore = true;
     try {
+      // Se tiver múltiplos status selecionados na busca avançada, passamos como string separada por vírgula ou tratamos no backend
+      // Para simplificar, vou adaptar o backend para aceitar múltiplos status se necessário, ou filtrar o primeiro por enquanto.
+      // Mas o ideal é passar o objeto de filtros.
       const response = await this.db.getAll('veiculos', { 
         page: this.page, 
         limit: 20,
         filter: this.currentFilter,
-        status: this.currentStatus
+        status: this.advancedFilters.status.length > 0 ? this.advancedFilters.status.join(',') : this.currentStatus,
+        marca_id: this.advancedFilters.marca_id,
+        tipo_veiculo: this.advancedFilters.tipo_veiculo
       });
 
       if (response && response.items) {

@@ -1,15 +1,8 @@
 <po-page-list 
   p-title="Cadastro de Veículos" 
-  [p-actions]="actions"
-  [p-filter]="filterSettings">
-
-  <div class="po-row po-mb-1">
-    <div class="po-md-12">
-      <po-button-group
-        [p-buttons]="statusButtons">
-      </po-button-group>
-    </div>
-  </div>
+  [p-actions]="pageActions"
+  [p-filter]="filterSettings"
+  [p-disclaimer-group]="disclaimerGroup">
 
   <po-table 
     class="po-mt-1"
@@ -22,6 +15,45 @@
     (p-show-more)="showMore()">
   </po-table>
 </po-page-list>
+
+<!-- Modal de Busca Avançada -->
+<po-modal #advancedFilterModal 
+  p-title="Busca Avançada"
+  [p-primary-action]="{ label: 'Aplicar filtros', action: applyAdvancedFilter.bind(this) }"
+  [p-secondary-action]="{ label: 'Limpar', action: clearAdvancedFilter.bind(this) }">
+  
+  <div class="po-row">
+    <po-checkbox-group
+      class="po-md-12"
+      name="status_filter"
+      [(ngModel)]="advancedFilters.status"
+      p-label="Situação"
+      [p-options]="[
+        { label: 'Estoque', value: 'Estoque' },
+        { label: 'Vendido', value: 'Vendido' },
+        { label: 'Manutenção', value: 'Manutenção' },
+        { label: 'Preparação', value: 'Preparação' }
+      ]">
+    </po-checkbox-group>
+
+    <po-select 
+      class="po-md-6" 
+      name="tipo_filter" 
+      [(ngModel)]="advancedFilters.tipo_veiculo" 
+      p-label="Tipo" 
+      [p-options]="tipoVeiculoOptions"
+      (p-change)="updateMarcas()">
+    </po-select>
+
+    <po-combo 
+      class="po-md-6" 
+      name="marca_filter" 
+      [(ngModel)]="advancedFilters.marca_id" 
+      p-label="Marca" 
+      [p-options]="marcasOptions">
+    </po-combo>
+  </div>
+</po-modal>
 
 <!-- Modal de Cadastro/Edição -->
 <po-modal #vehicleModal 
