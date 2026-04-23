@@ -35,8 +35,13 @@ export class LoginComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      const p = await this.db.http.get('/api/config/parametros').toPromise();
-      if (p) this.parametros = p;
+      const p: any = await this.db.http.get('/api/config/parametros').toPromise();
+      if (p) {
+        this.parametros = {
+          ...p,
+          empresa_nome: p.empresa_nome || 'BJ Software'
+        };
+      }
     } catch (e) {
       console.error('Erro ao carregar parametros no login', e);
     }

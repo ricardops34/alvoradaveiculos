@@ -9,6 +9,7 @@ import {
 } from '@po-ui/ng-components';
 import { AuthService } from '../services/auth';
 import { ThemeService } from '../services/theme.service';
+import { DatabaseService } from '../services/database';
 
 @Component({
   selector: 'app-layout',
@@ -19,6 +20,8 @@ import { ThemeService } from '../services/theme.service';
 export class LayoutComponent implements OnInit {
   menus: Array<PoMenuItem> = [];
   isDarkMode: boolean = false;
+  empresaNome: string = 'BJ Software';
+  logoUrl: string = 'favicon.png';
 
   profile: PoToolbarProfile = {
     avatar: '',
@@ -33,12 +36,14 @@ export class LayoutComponent implements OnInit {
   constructor(
     private authService: AuthService, 
     private router: Router,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private db: DatabaseService
   ) {
     this.isDarkMode = this.themeService.getTheme() === 'dark';
   }
 
-  ngOnInit() {
+  async ngOnInit() {
+    this.carregarParametros();
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.profile.title = user.name;
@@ -120,6 +125,18 @@ export class LayoutComponent implements OnInit {
     
     // Salvar no perfil do usuário
     this.authService.updateUserTheme(this.themeService.getTheme());
+  }
+
+  async carregarParametros() {
+    try {
+      const p: any = await this.db.http.get('/api/config/parametros').toPromise();
+      if (p) {
+        this.empresaNome = p.empresa_nome || 'BJ Software';
+        this.logoUrl = p.logo_url || 'favicon.png';
+      }
+    } catch (e) {
+      console.error('Erro ao carregar parametros no layout', e);
+    }
   }
 
   logout() {
