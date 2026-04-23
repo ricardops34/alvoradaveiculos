@@ -25,6 +25,7 @@ export class MovimentosComponent implements OnInit {
   @ViewChild('movementForm', { static: false }) movementForm!: any;
 
   movements: any[] = [];
+  allMovements: any[] = [];
   movement: Movement = this.getEmptyMovement();
   isEditing: boolean = false;
 
@@ -34,8 +35,13 @@ export class MovimentosComponent implements OnInit {
   vehicles: PoSelectOption[] = [];
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Lançamento', action: this.openNew.bind(this), icon: 'po-icon-plus' }
+    { label: 'Novo Lançamento', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterMovements.bind(this),
+    placeholder: 'Pesquisar movimentos...'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
@@ -87,20 +93,28 @@ export class MovimentosComponent implements OnInit {
     this.vehicles = vehicles.map(v => ({ label: `${v.marca} ${v.modelo} (${v.placa})`, value: v.id }));
   }
 
-  async loadMovements() {
-    const rawMovements = await this.db.getAll('movimentos');
-    const banks = await this.db.getAll('bancos');
-    const centers = await this.db.getAll('centros_custo');
-    const people = await this.db.getAll('pessoas');
-    const vehicles = await this.db.getAll('veiculos');
-
-    this.movements = rawMovements.map(m => ({
+    this.allMovements = rawMovements.map(m => ({
       ...m,
       banco_nome: banks.find(b => b.id === m.banco_id)?.nome,
       centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome,
       pessoa_nome: people.find(p => p.id === m.pessoa_id)?.nome || '-',
       veiculo_placa: vehicles.find(v => v.id === m.veiculo_id)?.placa || '-'
     }));
+    this.movements = [...this.allMovements];
+  }
+
+  filterMovements(filter: string) {
+    if (!filter) {
+      this.movements = [...this.allMovements];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.movements = this.allMovements.filter(m => 
+      m.historico.toLowerCase().includes(searchTerm) ||
+      m.banco_nome?.toLowerCase().includes(searchTerm) ||
+      m.centro_custo_nome?.toLowerCase().includes(searchTerm) ||
+      m.tipo.toLowerCase().includes(searchTerm)
+    );
   }
 
   getEmptyMovement(): Movement {

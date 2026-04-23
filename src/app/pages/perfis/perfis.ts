@@ -23,6 +23,7 @@ export class PerfisComponent implements OnInit {
   @ViewChild('profileForm', { static: false }) profileForm!: any;
 
   profiles: any[] = [];
+  allProfiles: any[] = [];
   profile: any = { nome: '', rotinas: [] };
   isEditing: boolean = false;
 
@@ -43,6 +44,11 @@ export class PerfisComponent implements OnInit {
   public readonly actions: PoPageAction[] = [
     { label: 'Novo Perfil', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterProfiles.bind(this),
+    placeholder: 'Pesquisar perfis...'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'an an-pencil-simple' },
@@ -65,11 +71,23 @@ export class PerfisComponent implements OnInit {
   }
 
   async loadProfiles() {
-    const perfis = await this.db.getAll('perfis');
-    this.profiles = perfis.map(p => ({
+    const rawPerfis = await this.db.getAll('perfis');
+    this.allProfiles = rawPerfis.map(p => ({
       ...p,
       qtd_rotinas: p.rotinas?.length || 0
     }));
+    this.profiles = [...this.allProfiles];
+  }
+
+  filterProfiles(filter: string) {
+    if (!filter) {
+      this.profiles = [...this.allProfiles];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.profiles = this.allProfiles.filter(p => 
+      p.nome.toLowerCase().includes(searchTerm)
+    );
   }
 
   openNew() {

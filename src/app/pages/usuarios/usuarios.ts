@@ -24,6 +24,7 @@ export class UsuariosComponent implements OnInit {
   @ViewChild('userForm', { static: false }) userForm!: any;
 
   users: any[] = [];
+  allUsers: any[] = [];
   profiles: any[] = [];
   user: any = { nome: '', email: '', senha: '', perfil_id: null };
   isEditing: boolean = false;
@@ -31,8 +32,13 @@ export class UsuariosComponent implements OnInit {
   public profileOptions: PoSelectOption[] = [];
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Usuário', action: this.openNew.bind(this), icon: 'an an-user-plus' }
+    { label: 'Novo Usuário', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterUsers.bind(this),
+    placeholder: 'Pesquisar usuários...'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'an an-pencil-simple' },
@@ -64,10 +70,24 @@ export class UsuariosComponent implements OnInit {
 
   async loadUsers() {
     const rawUsers = await this.db.getAll('usuarios');
-    this.users = rawUsers.map(u => {
+    this.allUsers = rawUsers.map(u => {
       const profile = this.profiles.find(p => p.id === u.perfil_id);
       return { ...u, perfil_nome: profile ? profile.nome : 'N/A' };
     });
+    this.users = [...this.allUsers];
+  }
+
+  filterUsers(filter: string) {
+    if (!filter) {
+      this.users = [...this.allUsers];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.users = this.allUsers.filter(u => 
+      u.nome.toLowerCase().includes(searchTerm) ||
+      u.email.toLowerCase().includes(searchTerm) ||
+      u.perfil_nome?.toLowerCase().includes(searchTerm)
+    );
   }
 
   openNew() {

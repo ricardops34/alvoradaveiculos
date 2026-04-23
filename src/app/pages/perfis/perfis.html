@@ -1,21 +1,16 @@
-<po-page-default p-title="Gestão de Perfis de Acesso">
-  <div class="po-row">
-    <po-button 
-      class="po-md-1" 
-      p-label="Novo" 
-      p-kind="primary" 
-      p-icon="an an-plus"
-      (p-click)="openNew()">
-    </po-button>
-  </div>
+<po-page-list 
+  p-title="Gestão de Perfis de Acesso" 
+  [p-actions]="actions"
+  [p-filter]="filterSettings">
 
   <po-table 
-    class="po-mt-2"
+    class="po-mt-1"
+    p-sort="true"
     [p-columns]="columns" 
     [p-items]="profiles" 
     [p-actions]="tableActions">
   </po-table>
-</po-page-default>
+</po-page-list>
 
 <po-modal #profileModal 
   [p-title]="isEditing ? 'Editar Perfil' : 'Novo Perfil'"

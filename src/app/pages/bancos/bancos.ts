@@ -23,12 +23,18 @@ export class BancosComponent implements OnInit {
   @ViewChild('bankForm', { static: false }) bankForm!: any;
 
   banks: any[] = [];
+  allBanks: any[] = [];
   bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
   isEditing: boolean = false;
 
   public readonly actions: PoPageAction[] = [
     { label: 'Novo Banco', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterBanks.bind(this),
+    placeholder: 'Pesquisar bancos...'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'an an-pencil-simple' },
@@ -64,7 +70,21 @@ export class BancosComponent implements OnInit {
   }
 
   async loadBanks() {
-    this.banks = await this.db.getAll('bancos');
+    this.allBanks = await this.db.getAll('bancos');
+    this.banks = [...this.allBanks];
+  }
+
+  filterBanks(filter: string) {
+    if (!filter) {
+      this.banks = [...this.allBanks];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.banks = this.allBanks.filter(b => 
+      b.nome.toLowerCase().includes(searchTerm) ||
+      b.codigo?.toLowerCase().includes(searchTerm) ||
+      b.conta?.toLowerCase().includes(searchTerm)
+    );
   }
 
   openNew() {

@@ -24,7 +24,8 @@ export class PessoasComponent implements OnInit {
   @ViewChild('personModal', { static: true }) personModal!: PoModalComponent;
   @ViewChild('personForm', { static: false }) personForm!: any;
 
-  people: Person[] = [];
+  people: any[] = [];
+  allPeople: any[] = [];
   person: Person = this.getEmptyPerson();
   isEditing: boolean = false;
 
@@ -38,8 +39,13 @@ export class PessoasComponent implements OnInit {
   ];
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Nova Pessoa', action: this.openNew.bind(this), icon: 'po-icon-plus' }
+    { label: 'Nova Pessoa', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterPeople.bind(this),
+    placeholder: 'Pesquisar pessoas...'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
@@ -70,9 +76,7 @@ export class PessoasComponent implements OnInit {
     this.loadPeople();
   }
 
-  async loadPeople() {
-    const rawPeople = await this.db.getAll('pessoas');
-    this.people = rawPeople.map(p => {
+    this.allPeople = rawPeople.map(p => {
       const papeis = [];
       if (p.is_cliente) papeis.push('Cliente');
       if (p.is_fornecedor) papeis.push('Fornecedor');
@@ -80,6 +84,21 @@ export class PessoasComponent implements OnInit {
       if (p.is_socio) papeis.push('Sócio');
       return { ...p, papeis: papeis.join(', ') };
     });
+    this.people = [...this.allPeople];
+  }
+
+  filterPeople(filter: string) {
+    if (!filter) {
+      this.people = [...this.allPeople];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.people = this.allPeople.filter(p => 
+      p.nome.toLowerCase().includes(searchTerm) ||
+      p.documento?.toLowerCase().includes(searchTerm) ||
+      p.cidade?.toLowerCase().includes(searchTerm) ||
+      p.email?.toLowerCase().includes(searchTerm)
+    );
   }
 
   getEmptyPerson(): Person {

@@ -1,23 +1,17 @@
-<po-page-default p-title="Centros de Custo">
-  
-  <div class="po-row">
-    <po-button 
-      class="po-md-1" 
-      p-label="Novo" 
-      p-kind="primary" 
-      p-icon="an an-plus"
-      (p-click)="openNew()">
-    </po-button>
-  </div>
+<po-page-list 
+  p-title="Centros de Custo" 
+  [p-actions]="actions"
+  [p-filter]="filterSettings">
 
   <po-table 
-    class="po-mt-2"
+    class="po-mt-1"
+    p-sort="true"
     [p-columns]="columns" 
     [p-items]="costCenters" 
     [p-actions]="tableActions">
   </po-table>
 
-</po-page-default>
+</po-page-list>
 
 <po-modal #ccModal 
   [p-title]="isEditing ? 'Editar Centro de Custo' : 'Novo Centro de Custo'"

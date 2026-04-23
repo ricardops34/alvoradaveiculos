@@ -23,12 +23,18 @@ export class CentrosCustoComponent implements OnInit {
   @ViewChild('ccForm', { static: false }) ccForm!: any;
 
   costCenters: any[] = [];
+  allCostCenters: any[] = [];
   cc: any = { codigo: '', nome: '', tipo: 'Despesa' };
   isEditing: boolean = false;
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Centro de Custo', action: this.openNew.bind(this), icon: 'po-icon-plus' }
+    { label: 'Novo Centro de Custo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterCC.bind(this),
+    placeholder: 'Pesquisar centros de custo...'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
@@ -62,7 +68,20 @@ export class CentrosCustoComponent implements OnInit {
   }
 
   async loadCC() {
-    this.costCenters = await this.db.getAll('centros_custo');
+    this.allCostCenters = await this.db.getAll('centros_custo');
+    this.costCenters = [...this.allCostCenters];
+  }
+
+  filterCC(filter: string) {
+    if (!filter) {
+      this.costCenters = [...this.allCostCenters];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.costCenters = this.allCostCenters.filter(c => 
+      c.nome.toLowerCase().includes(searchTerm) ||
+      c.codigo?.toLowerCase().includes(searchTerm)
+    );
   }
 
   openNew() {

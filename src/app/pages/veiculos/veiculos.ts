@@ -33,6 +33,7 @@ export class VeiculosComponent implements OnInit {
   @ViewChild('quickAdd') quickAdd!: QuickAddComponent;
 
   vehicles: any[] = [];
+  allVehicles: any[] = []; // Cópia para filtragem
   vehicle: Vehicle = this.getEmptyVehicle();
   isEditing: boolean = false;
   currentQuickAddField: string = '';
@@ -73,8 +74,13 @@ export class VeiculosComponent implements OnInit {
   };
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Veículo', action: this.openNew.bind(this), icon: 'po-icon-plus' }
+    { label: 'Novo Veículo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterVehicles.bind(this),
+    placeholder: 'Pesquisar veículos...'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
@@ -173,11 +179,26 @@ export class VeiculosComponent implements OnInit {
     const rawVehicles = await this.db.getAll('veiculos');
     const people = await this.db.getAll('pessoas');
 
-    this.vehicles = rawVehicles.map(v => ({
+    this.allVehicles = rawVehicles.map(v => ({
       ...v,
       fornecedor_nome: people.find(p => p.id === v.fornecedor_id)?.nome || '-',
       cliente_nome: people.find(p => p.id === v.cliente_id)?.nome || '-'
     }));
+    this.vehicles = [...this.allVehicles];
+  }
+
+  filterVehicles(filter: string) {
+    if (!filter) {
+      this.vehicles = [...this.allVehicles];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.vehicles = this.allVehicles.filter(v => 
+      v.placa.toLowerCase().includes(searchTerm) ||
+      v.marca_nome?.toLowerCase().includes(searchTerm) ||
+      v.modelo_nome?.toLowerCase().includes(searchTerm) ||
+      v.status.toLowerCase().includes(searchTerm)
+    );
   }
 
   getEmptyVehicle(): Vehicle {
