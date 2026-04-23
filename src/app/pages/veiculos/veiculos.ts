@@ -45,6 +45,7 @@ export class VeiculosComponent implements OnInit {
   costCenterOptions: PoSelectOption[] = [];
   
   marcasOptions: PoSelectOption[] = [];
+  allMarcas: any[] = [];
   modelosOptions: PoSelectOption[] = [];
   allModelos: any[] = []; // armazena todos os modelos para filtrar localmente
 
@@ -148,10 +149,28 @@ export class VeiculosComponent implements OnInit {
     const centers = await this.db.getAll('centros_custo');
     this.costCenterOptions = centers.map(c => ({ label: c.nome, value: c.id }));
 
-    const marcas = await this.db.getAll('marcas');
-    this.marcasOptions = marcas.map(m => ({ label: m.nome, value: m.id }));
-
+    this.allMarcas = await this.db.getAll('marcas');
     this.allModelos = await this.db.getAll('modelos');
+    
+    this.updateMarcas();
+  }
+
+  updateMarcas() {
+    if (!this.vehicle.tipo_veiculo) {
+      this.marcasOptions = [];
+      return;
+    }
+
+    // Filtrar marcas que possuem modelos do tipo selecionado
+    const marcasIdsComModelosDoTipo = new Set(
+      this.allModelos
+        .filter(m => m.tipo_veiculo === this.vehicle.tipo_veiculo)
+        .map(m => m.marca_id)
+    );
+
+    this.marcasOptions = this.allMarcas
+      .filter(m => marcasIdsComModelosDoTipo.has(m.id))
+      .map(m => ({ label: m.nome, value: m.id }));
   }
 
   onMarcaChange(marcaId: number) {
@@ -162,7 +181,9 @@ export class VeiculosComponent implements OnInit {
   onTipoChange() {
     this.vehicle.marca_id = undefined;
     this.vehicle.modelo_id = undefined;
+    this.marcasOptions = [];
     this.modelosOptions = [];
+    this.updateMarcas();
   }
 
   updateModelos() {

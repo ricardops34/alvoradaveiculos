@@ -20,18 +20,18 @@
 
   <form #vehicleForm="ngForm">
     <div class="po-row">
-      <po-combo class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions" (p-change)="onTipoChange()"></po-combo>
+      <po-select class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions" (p-change)="onTipoChange()"></po-select>
       <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
       
       <div class="po-md-3" style="display: flex; gap: 8px;">
-        <po-combo style="flex: 1" name="marca_id" [(ngModel)]="vehicle.marca_id" p-label="Marca" p-required [p-options]="marcasOptions" (p-change)="onMarcaChange($event)"></po-combo>
+        <po-select style="flex: 1" name="marca_id" [(ngModel)]="vehicle.marca_id" p-label="Marca" p-required [p-options]="marcasOptions" (p-change)="onMarcaChange($event)"></po-select>
         <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
           <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='marca_id'; appQuickAdd.open('marcas')"></po-button>
         </div>
       </div>
 
       <div class="po-md-3" style="display: flex; gap: 8px;">
-        <po-combo style="flex: 1" name="modelo_id" [(ngModel)]="vehicle.modelo_id" p-label="Modelo" p-required [p-options]="modelosOptions" [p-disabled]="!vehicle.marca_id"></po-combo>
+        <po-select style="flex: 1" name="modelo_id" [(ngModel)]="vehicle.modelo_id" p-label="Modelo" p-required [p-options]="modelosOptions" [p-disabled]="!vehicle.marca_id"></po-select>
         <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
           <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='modelo_id'; appQuickAdd.open('modelos')" [p-disabled]="!vehicle.marca_id"></po-button>
         </div>
