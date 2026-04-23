@@ -6,7 +6,8 @@ import {
   PoTableColumn, 
   PoModalComponent, 
   PoNotificationService,
-  PoTableAction
+  PoTableAction,
+  PoPageAction
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Router } from '@angular/router';
@@ -21,6 +22,7 @@ export class MarcasComponent implements OnInit {
   @ViewChild('marcaModal', { static: true }) marcaModal!: PoModalComponent;
 
   marcas: any[] = [];
+  allMarcas: any[] = [];
   marca: any = { nome: '' };
   
   public readonly columns: PoTableColumn[] = [
@@ -34,6 +36,15 @@ export class MarcasComponent implements OnInit {
     { label: 'Excluir', action: this.delete.bind(this), type: 'danger', icon: 'an an-trash' }
   ];
 
+  public readonly pageActions: PoPageAction[] = [
+    { label: 'Novo', action: this.add.bind(this), icon: 'an an-plus' }
+  ];
+
+  public readonly filterSettings: any = {
+    action: this.filterMarcas.bind(this),
+    placeholder: 'Pesquisar marcas...'
+  };
+
   constructor(
     private db: DatabaseService, 
     private notification: PoNotificationService,
@@ -45,7 +56,20 @@ export class MarcasComponent implements OnInit {
   }
 
   async load() {
-    this.marcas = await this.db.getAll('marcas');
+    this.allMarcas = await this.db.getAll('marcas');
+    this.marcas = [...this.allMarcas];
+  }
+
+  filterMarcas(filter: string) {
+    if (!filter) {
+      this.marcas = [...this.allMarcas];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.marcas = this.allMarcas.filter(m => 
+      m.nome.toLowerCase().includes(searchTerm) ||
+      m.id.toString().includes(searchTerm)
+    );
   }
 
   add() {

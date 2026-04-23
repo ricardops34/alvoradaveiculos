@@ -1,23 +1,17 @@
-<po-page-default p-title="Cadastro de Marcas">
+<po-page-list 
+  p-title="Cadastro de Marcas"
+  [p-actions]="pageActions"
+  [p-filter]="filterSettings">
   
-  <div class="po-row">
-    <po-button 
-      class="po-md-2" 
-      p-label="Nova Marca" 
-      p-type="primary" 
-      p-icon="an an-plus"
-      (p-click)="add()">
-    </po-button>
-  </div>
-
   <po-table 
-    class="po-mt-2"
+    class="po-mt-1"
+    p-sort="true"
     [p-columns]="columns" 
     [p-items]="marcas"
     [p-actions]="actions">
   </po-table>
 
-</po-page-default>
+</po-page-list>
 
 <po-modal #marcaModal 
   p-title="Manutenção de Marca"

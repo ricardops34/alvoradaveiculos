@@ -6,7 +6,8 @@ import {
   PoTableColumn, 
   PoModalComponent, 
   PoNotificationService,
-  PoTableAction
+  PoTableAction,
+  PoPageAction
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../../services/database';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,6 +24,7 @@ export class ModelosComponent implements OnInit {
   marcaId: number | null = null;
   marcaNome: string = '';
   modelos: any[] = [];
+  allModelosCache: any[] = [];
   modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
   
   public readonly columns: PoTableColumn[] = [
@@ -37,6 +39,16 @@ export class ModelosComponent implements OnInit {
     { label: 'Editar', action: this.edit.bind(this), icon: 'an an-pencil' },
     { label: 'Excluir', action: this.delete.bind(this), type: 'danger', icon: 'an an-trash' }
   ];
+
+  public readonly pageActions: PoPageAction[] = [
+    { label: 'Novo', action: this.add.bind(this), icon: 'an an-plus' },
+    { label: 'Voltar', action: this.back.bind(this), icon: 'an an-arrow-left' }
+  ];
+
+  public readonly filterSettings: any = {
+    action: this.filterModelos.bind(this),
+    placeholder: 'Pesquisar modelos...'
+  };
 
   constructor(
     private db: DatabaseService, 
@@ -56,7 +68,21 @@ export class ModelosComponent implements OnInit {
 
   async load() {
     // Usar query string para filtrar no backend
-    this.modelos = await this.db.getAll(`modelos?marca_id=${this.marcaId}`);
+    this.allModelosCache = await this.db.getAll(`modelos?marca_id=${this.marcaId}`);
+    this.modelos = [...this.allModelosCache];
+  }
+
+  filterModelos(filter: string) {
+    if (!filter) {
+      this.modelos = [...this.allModelosCache];
+      return;
+    }
+    const searchTerm = filter.toLowerCase();
+    this.modelos = this.allModelosCache.filter(m => 
+      m.nome.toLowerCase().includes(searchTerm) ||
+      m.id.toString().includes(searchTerm) ||
+      m.descricao_detalhada?.toLowerCase().includes(searchTerm)
+    );
   }
 
   back() {

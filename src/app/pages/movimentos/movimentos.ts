@@ -35,7 +35,7 @@ export class MovimentosComponent implements OnInit {
   vehicles: PoSelectOption[] = [];
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Lançamento', action: this.openNew.bind(this), icon: 'an an-plus' }
+    { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
   public readonly filterSettings: any = {

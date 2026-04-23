@@ -39,7 +39,7 @@ export class PessoasComponent implements OnInit {
   ];
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Nova Pessoa', action: this.openNew.bind(this), icon: 'an an-plus' }
+    { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
   public readonly filterSettings: any = {

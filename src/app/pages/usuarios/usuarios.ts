@@ -32,7 +32,7 @@ export class UsuariosComponent implements OnInit {
   public profileOptions: PoSelectOption[] = [];
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Usuário', action: this.openNew.bind(this), icon: 'an an-plus' }
+    { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
   public readonly filterSettings: any = {

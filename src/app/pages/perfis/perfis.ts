@@ -42,7 +42,7 @@ export class PerfisComponent implements OnInit {
   ];
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Perfil', action: this.openNew.bind(this), icon: 'an an-plus' }
+    { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
   public readonly filterSettings: any = {

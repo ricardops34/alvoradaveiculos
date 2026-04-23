@@ -74,7 +74,7 @@ export class VeiculosComponent implements OnInit {
   };
 
   public readonly actions: PoPageAction[] = [
-    { label: 'Novo Veículo', action: this.openNew.bind(this), icon: 'an an-plus' }
+    { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
 
   public readonly filterSettings: any = {
