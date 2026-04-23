@@ -1,5 +1,5 @@
 <div class="po-wrapper">
-  <po-toolbar [p-title]="empresaNome" [p-logo]="logoUrl" [p-profile]="profile" [p-profile-actions]="profileActions">
+  <po-toolbar [p-title]="empresaNome" [p-profile]="profile" [p-profile-actions]="profileActions">
   </po-toolbar>
 
   <!-- Toggle de tema direto na toolbar (sol/lua) -->
@@ -10,7 +10,7 @@
     <span class="theme-icon" [class]="isDarkMode ? 'an an-sun' : 'an an-moon'"></span>
   </button>
 
-  <po-menu [p-collapsed]="true" p-filter [p-menus]="menus" [p-automatic-toggle]="true"></po-menu>
+  <po-menu [p-collapsed]="true" p-filter [p-menus]="menus" [p-automatic-toggle]="true" [p-logo]="logoUrl"></po-menu>
 
   <router-outlet></router-outlet>
 </div>
