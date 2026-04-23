@@ -27,7 +27,16 @@
   <form #movementForm="ngForm">
     <div class="po-row">
       <po-datepicker class="po-md-4" name="data" [(ngModel)]="movement.data" p-label="Data" p-required></po-datepicker>
-      <po-select class="po-md-4" name="banco" [(ngModel)]="movement.banco_id" p-label="Banco" [p-options]="banks" p-required></po-select>
+      <po-lookup 
+        class="po-md-4" 
+        name="banco" 
+        [(ngModel)]="movement.banco_id" 
+        p-label="Banco" 
+        [p-filter-service]="bancosLookup" 
+        p-field-label="nome"
+        p-field-value="id"
+        p-required>
+      </po-lookup>
       <po-select class="po-md-4" name="tipo" [(ngModel)]="movement.tipo" p-label="Tipo" [p-options]="typeOptions" p-required></po-select>
     </div>
 
@@ -37,14 +46,39 @@
     </div>
 
     <div class="po-row">
-      <po-select class="po-md-6" name="centro_custo" [(ngModel)]="movement.centro_custo_id" p-label="Centro de Custo" [p-options]="costCenters" p-required></po-select>
+      <po-lookup 
+        class="po-md-6" 
+        name="centro_custo" 
+        [(ngModel)]="movement.centro_custo_id" 
+        p-label="Centro de Custo" 
+        [p-filter-service]="centrosCustoLookup" 
+        p-field-label="nome"
+        p-field-value="id"
+        p-required>
+      </po-lookup>
     </div>
 
     <po-divider p-label="Vínculos Opcionais"></po-divider>
 
     <div class="po-row">
-      <po-select class="po-md-6" name="pessoa" [(ngModel)]="movement.pessoa_id" p-label="Pessoa (Opcional)" [p-options]="people"></po-select>
-      <po-select class="po-md-6" name="veiculo" [(ngModel)]="movement.veiculo_id" p-label="Veículo (Opcional)" [p-options]="vehicles"></po-select>
+      <po-lookup 
+        class="po-md-6" 
+        name="pessoa" 
+        [(ngModel)]="movement.pessoa_id" 
+        p-label="Pessoa (Opcional)" 
+        [p-filter-service]="pessoasLookup" 
+        p-field-label="nome"
+        p-field-value="id">
+      </po-lookup>
+      <po-lookup 
+        class="po-md-6" 
+        name="veiculo" 
+        [(ngModel)]="movement.veiculo_id" 
+        p-label="Veículo (Opcional)" 
+        [p-filter-service]="veiculosLookup" 
+        p-field-label="placa"
+        p-field-value="id">
+      </po-lookup>
     </div>
   </form>
 </po-modal>

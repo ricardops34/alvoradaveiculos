@@ -11,6 +11,7 @@ import {
   PoSelectOption
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
+import { PerfisLookupService } from '../../services/lookups';
 
 @Component({
   selector: 'app-usuarios',
@@ -46,7 +47,8 @@ export class UsuariosComponent implements OnInit {
 
   constructor(
     private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    public perfisLookup: PerfisLookupService
   ) {}
 
   async ngOnInit() {

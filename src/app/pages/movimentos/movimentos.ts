@@ -12,6 +12,7 @@ import {
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Movement } from '../../types/movement';
+import { PessoasLookupService, BancosLookupService, CentrosCustoLookupService, VeiculosLookupService } from '../../services/lookups';
 
 @Component({
   selector: 'app-movimentos',
@@ -62,7 +63,11 @@ export class MovimentosComponent implements OnInit {
 
   constructor(
     private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    public pessoasLookup: PessoasLookupService,
+    public bancosLookup: BancosLookupService,
+    public centrosCustoLookup: CentrosCustoLookupService,
+    public veiculosLookup: VeiculosLookupService
   ) {}
 
   async ngOnInit() {

@@ -58,15 +58,61 @@
     <po-divider p-label="Vínculos e Financeiro"></po-divider>
 
     <div class="po-row">
-      <po-select class="po-md-6" name="fornecedor" [(ngModel)]="vehicle.fornecedor_id" p-label="Fornecedor (Origem)" [p-options]="supplierOptions" p-required></po-select>
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="fornecedor" 
+          [(ngModel)]="vehicle.fornecedor_id" 
+          p-label="Fornecedor (Origem)" 
+          [p-filter-service]="pessoasLookup" 
+          [p-filter-params]="{ is_fornecedor: true }"
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-icon="po-icon-plus" (p-click)="currentQuickAddField='fornecedor_id'; appQuickAdd.open('pessoas')"></po-button>
+        </div>
+      </div>
       <po-datepicker class="po-md-3" name="data_compra" [(ngModel)]="vehicle.data_compra" p-label="Data Compra"></po-datepicker>
       <po-decimal class="po-md-3" name="valor_compra" [(ngModel)]="vehicle.valor_compra" p-label="Valor de Compra" p-decimals="2" p-required></po-decimal>
     </div>
 
     <div class="po-row po-mt-2">
       <po-radio-group class="po-md-3" name="forma_compra" [(ngModel)]="vehicle.forma_compra" p-label="Forma de Compra" [p-options]="formaCompraOptions" p-required></po-radio-group>
-      <po-select class="po-md-4" name="banco_id" [(ngModel)]="vehicle.banco_id" p-label="Conta Bancária (Saída)" [p-options]="bankOptions" *ngIf="vehicle.forma_compra === 'Banco'" p-required></po-select>
-      <po-select class="po-md-5" name="centro_custo_id" [(ngModel)]="vehicle.centro_custo_id" p-label="Centro de Custo (Banco)" [p-options]="costCenterOptions" *ngIf="vehicle.forma_compra === 'Banco'" p-required></po-select>
+      
+      <div class="po-md-4" *ngIf="vehicle.forma_compra === 'Banco'" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="banco_id" 
+          [(ngModel)]="vehicle.banco_id" 
+          p-label="Conta Bancária (Saída)" 
+          [p-filter-service]="bancosLookup" 
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-icon="po-icon-plus" (p-click)="currentQuickAddField='banco_id'; appQuickAdd.open('bancos')"></po-button>
+        </div>
+      </div>
+
+      <div class="po-md-5" *ngIf="vehicle.forma_compra === 'Banco'" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="centro_custo_id" 
+          [(ngModel)]="vehicle.centro_custo_id" 
+          p-label="Centro de Custo (Banco)" 
+          [p-filter-service]="centrosCustoLookup" 
+          [p-filter-params]="{ tipo: 'Saída' }"
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-icon="po-icon-plus" (p-click)="currentQuickAddField='centro_custo_id'; appQuickAdd.open('centros-custo')"></po-button>
+        </div>
+      </div>
     </div>
 
     <div class="po-row">
@@ -148,15 +194,61 @@
     <po-divider p-label="Dados da Venda"></po-divider>
 
     <div class="po-row">
-      <po-select class="po-md-6" name="cliente_venda" [(ngModel)]="sellData.cliente_id" p-label="Cliente (Comprador)" [p-options]="clientOptions" p-required></po-select>
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="cliente_venda" 
+          [(ngModel)]="sellData.cliente_id" 
+          p-label="Cliente (Comprador)" 
+          [p-filter-service]="pessoasLookup" 
+          [p-filter-params]="{ is_cliente: true }"
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-icon="po-icon-plus" (p-click)="currentQuickAddField='venda_cliente_id'; appQuickAdd.open('pessoas')"></po-button>
+        </div>
+      </div>
       <po-datepicker class="po-md-3" name="data_venda" [(ngModel)]="sellData.data_venda" p-label="Data da Venda" p-required></po-datepicker>
       <po-decimal class="po-md-3" name="valor_venda" [(ngModel)]="sellData.valor_venda" p-label="Valor da Venda" p-decimals="2" p-required></po-decimal>
     </div>
 
     <div class="po-row po-mt-2">
       <po-radio-group class="po-md-3" name="forma_venda" [(ngModel)]="sellData.forma_venda" p-label="Forma de Recebimento" [p-options]="formaCompraOptions" p-required></po-radio-group>
-      <po-select class="po-md-4" name="banco_venda" [(ngModel)]="sellData.banco_id" p-label="Conta Bancária (Entrada)" [p-options]="bankOptions" *ngIf="sellData.forma_venda === 'Banco'" p-required></po-select>
-      <po-select class="po-md-5" name="centro_venda" [(ngModel)]="sellData.centro_custo_id" p-label="Centro de Custo (Receita)" [p-options]="costCenterOptions" *ngIf="sellData.forma_venda === 'Banco'" p-required></po-select>
+      
+      <div class="po-md-4" *ngIf="sellData.forma_venda === 'Banco'" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="banco_venda" 
+          [(ngModel)]="sellData.banco_id" 
+          p-label="Conta Bancária (Entrada)" 
+          [p-filter-service]="bancosLookup" 
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-icon="po-icon-plus" (p-click)="currentQuickAddField='venda_banco_id'; appQuickAdd.open('bancos')"></po-button>
+        </div>
+      </div>
+
+      <div class="po-md-5" *ngIf="sellData.forma_venda === 'Banco'" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="centro_venda" 
+          [(ngModel)]="sellData.centro_custo_id" 
+          p-label="Centro de Custo (Receita)" 
+          [p-filter-service]="centrosCustoLookup" 
+          [p-filter-params]="{ tipo: 'Entrada' }"
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-icon="po-icon-plus" (p-click)="currentQuickAddField='venda_centro_custo_id'; appQuickAdd.open('centros-custo')"></po-button>
+        </div>
+      </div>
     </div>
 
     <div class="po-row po-mt-2" *ngIf="sellData.forma_venda === 'Troca'">

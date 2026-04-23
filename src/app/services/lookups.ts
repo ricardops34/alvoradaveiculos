@@ -9,9 +9,20 @@ export class GenericLookupService implements PoLookupFilter {
   getFilteredItems(filteredParams: PoLookupFilteredItemsParams): Observable<any> {
     return from(this.db.getAll(this.table).then(all => {
       const filter = filteredParams.filter ? filteredParams.filter.toLowerCase() : '';
+      const params = filteredParams.params || {};
+
       const filtered = all.filter((item: any) => {
+         // Filtro por texto
          const val = item[this.searchField] || '';
-         return val.toString().toLowerCase().includes(filter);
+         const matchesSearch = val.toString().toLowerCase().includes(filter);
+         
+         // Filtro por parâmetros extras (ex: is_fornecedor: true)
+         let matchesParams = true;
+         Object.keys(params).forEach(key => {
+           if (item[key] !== params[key]) matchesParams = false;
+         });
+
+         return matchesSearch && matchesParams;
       });
       return {
         items: filtered.map((i: any) => ({ ...i, value: i.id, label: i[this.searchField] })),

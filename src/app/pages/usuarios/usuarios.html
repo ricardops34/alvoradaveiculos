@@ -30,7 +30,16 @@
 
     <div class="po-row">
       <po-password class="po-md-6" name="senha" [(ngModel)]="user.senha" p-label="Senha" p-required></po-password>
-      <po-select class="po-md-6" name="perfil_id" [(ngModel)]="user.perfil_id" p-label="Perfil de Acesso" [p-options]="profileOptions" p-required></po-select>
+      <po-lookup 
+        class="po-md-6" 
+        name="perfil_id" 
+        [(ngModel)]="user.perfil_id" 
+        p-label="Perfil de Acesso" 
+        [p-filter-service]="perfisLookup" 
+        p-field-label="nome"
+        p-field-value="id"
+        p-required>
+      </po-lookup>
     </div>
 
     <div class="po-row">
