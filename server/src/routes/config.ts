@@ -62,7 +62,7 @@ router.post('/importar-marcas-modelos', async (req: Request, res: Response) => {
       // Importar Marcas
       const marcasContent = fs.readFileSync(marcasFile, 'utf-8');
       const marcasRecords: any[] = await new Promise((resolve) => {
-        parse(marcasContent, { columns: true, skip_empty_lines: true }, (err, records) => resolve(records));
+        parse(marcasContent, { columns: true, skip_empty_lines: true }, (err: Error | undefined, records: any[]) => resolve(records));
       });
 
       for (const record of marcasRecords) {
@@ -80,7 +80,7 @@ router.post('/importar-marcas-modelos', async (req: Request, res: Response) => {
       if (!fs.existsSync(modelosFile)) continue;
       const modelosContent = fs.readFileSync(modelosFile, 'utf-8');
       const modelosRecords: any[] = await new Promise((resolve) => {
-        parse(modelosContent, { columns: true, skip_empty_lines: true }, (err, records) => resolve(records));
+        parse(modelosContent, { columns: true, skip_empty_lines: true }, (err: Error | undefined, records: any[]) => resolve(records));
       });
 
       for (const record of modelosRecords) {
