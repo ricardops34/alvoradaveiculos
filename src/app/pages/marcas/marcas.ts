@@ -30,7 +30,7 @@ export class MarcasComponent implements OnInit {
   
   hasNext: boolean = false;
   page: number = 1;
-  pageSize: number = 10;
+  pageSize: number = 20;
   
   public readonly columns: PoTableColumn[] = [
     { property: 'id', label: 'ID', width: '80px' },
