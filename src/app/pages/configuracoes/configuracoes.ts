@@ -24,7 +24,12 @@ export class ConfiguracoesComponent implements OnInit {
     empresa_nome: '',
     favicon_url: '',
     logo_url: '',
-    background_url: ''
+    background_url: '',
+    smtp_host: '',
+    smtp_port: null,
+    smtp_user: '',
+    smtp_pass: '',
+    smtp_from: ''
   };
 
   async ngOnInit() {
