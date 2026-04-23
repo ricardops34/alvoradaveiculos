@@ -7,7 +7,8 @@ import {
   PoModalComponent, 
   PoNotificationService,
   PoTableAction,
-  PoPageAction
+  PoPageAction,
+  PoSelectOption
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Router } from '@angular/router';
@@ -23,11 +24,24 @@ export class MarcasComponent implements OnInit {
 
   marcas: any[] = [];
   allMarcas: any[] = [];
-  marca: any = { nome: '' };
+  marca: any = { nome: '', tipo_veiculo: 'Carro' };
   
   public readonly columns: PoTableColumn[] = [
     { property: 'id', label: 'ID', width: '80px' },
-    { property: 'nome', label: 'Marca' }
+    { property: 'nome', label: 'Marca' },
+    { property: 'tipo_veiculo', label: 'Tipo', type: 'label', labels: [
+      { value: 'Carro', color: 'color-11', label: 'Carro' },
+      { value: 'Moto', color: 'color-01', label: 'Moto' },
+      { value: 'Caminhão', color: 'color-08', label: 'Caminhão' },
+      { value: 'Náutica', color: 'color-05', label: 'Náutica' }
+    ]}
+  ];
+
+  public readonly tipoOptions: PoSelectOption[] = [
+    { label: 'Carro', value: 'Carro' },
+    { label: 'Moto', value: 'Moto' },
+    { label: 'Caminhão', value: 'Caminhão' },
+    { label: 'Náutica', value: 'Náutica' }
   ];
 
   public readonly actions: PoTableAction[] = [
@@ -68,12 +82,13 @@ export class MarcasComponent implements OnInit {
     const searchTerm = filter.toLowerCase();
     this.marcas = this.allMarcas.filter(m => 
       m.nome.toLowerCase().includes(searchTerm) ||
-      m.id.toString().includes(searchTerm)
+      m.id.toString().includes(searchTerm) ||
+      m.tipo_veiculo?.toLowerCase().includes(searchTerm)
     );
   }
 
   add() {
-    this.marca = { nome: '' };
+    this.marca = { nome: '', tipo_veiculo: 'Carro' };
     this.marcaModal.open();
   }
 

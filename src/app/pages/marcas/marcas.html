@@ -20,11 +20,20 @@
   
   <div class="po-row">
     <po-input 
-      class="po-md-12" 
+      class="po-md-8" 
       name="nome" 
       [(ngModel)]="marca.nome" 
       p-label="Nome da Marca" 
       p-required>
     </po-input>
+
+    <po-select 
+      class="po-md-4" 
+      name="tipo_veiculo" 
+      [(ngModel)]="marca.tipo_veiculo" 
+      p-label="Tipo" 
+      [p-options]="tipoOptions"
+      p-required>
+    </po-select>
   </div>
 </po-modal>
