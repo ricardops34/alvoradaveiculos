@@ -6,8 +6,8 @@ services:
     container_name: alvorada-api
     restart: always
     environment:
-      DATABASE_URL: "postgres://alvorada:alvorada202@postgres:5432/alvorada-db"
-      PORT: "3000"
+      DATABASE_URL: "postgres://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+      PORT: "${PORT}"
     networks:
       - network_db
       - network_public
@@ -28,7 +28,7 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.swarm.network=network_public"
-        - "traefik.http.routers.alvorada-crm.rule=Host(`alvorada.bjsoft.com.br`)"
+        - "traefik.http.routers.alvorada-crm.rule=Host(`${HOST_URL}`)"
         - "traefik.http.routers.alvorada-crm.entrypoints=websecure"
         - "traefik.http.routers.alvorada-crm.tls.certresolver=letsencryptresolver"
         - "traefik.http.services.alvorada-crm.loadbalancer.server.port=80"
