@@ -63,7 +63,6 @@ async function seed() {
         id SERIAL PRIMARY KEY,
         nome VARCHAR(100) NOT NULL UNIQUE,
         tipo_veiculo VARCHAR(20) DEFAULT 'Carro'
-
       );
 
       CREATE TABLE IF NOT EXISTS modelos (
@@ -106,18 +105,24 @@ async function seed() {
       -- Garantir UNIQUE constraints para o seed robusto
       DO $$ 
       BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'modelos_marca_id_nome_tipo_veiculo_key') THEN
-          ALTER TABLE modelos DROP CONSTRAINT IF EXISTS modelos_marca_id_nome_key;
-          ALTER TABLE modelos ADD CONSTRAINT modelos_marca_id_nome_tipo_veiculo_key UNIQUE (marca_id, nome, tipo_veiculo);
-        END IF;
-        -- Limpeza de duplicatas em marcas (mantendo apenas a primeira ocorrência por nome)
-        DELETE FROM marcas a USING marcas b 
-        WHERE a.id > b.id AND a.nome = b.nome;
+        -- Limpeza de duplicatas em marcas
+        DELETE FROM marcas WHERE id IN (
+          SELECT id FROM (
+            SELECT id, ROW_NUMBER() OVER (PARTITION BY nome ORDER BY id) as row_num 
+            FROM marcas
+          ) t WHERE t.row_num > 1
+        );
 
         -- Ajuste de constraint para marcas (Unicidade por NOME)
         IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'marcas_nome_key') THEN
           ALTER TABLE marcas DROP CONSTRAINT IF EXISTS marcas_nome_tipo_veiculo_key;
           ALTER TABLE marcas ADD CONSTRAINT marcas_nome_key UNIQUE (nome);
+        END IF;
+
+        -- Constraint para modelos
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'modelos_marca_id_nome_tipo_veiculo_key') THEN
+          ALTER TABLE modelos DROP CONSTRAINT IF EXISTS modelos_marca_id_nome_key;
+          ALTER TABLE modelos ADD CONSTRAINT modelos_marca_id_nome_tipo_veiculo_key UNIQUE (marca_id, nome, tipo_veiculo);
         END IF;
       END $$;
     `);
@@ -165,8 +170,8 @@ async function seed() {
     ];
 
     const basePath = path.join(__dirname, 'base', 'marcas-e-modelos');
-
     const globalMarcasMap = new Map<string, number>();
+
     for (const cat of categories) {
       console.log(`  - Processando categoria: ${cat.type}...`);
       
@@ -180,7 +185,6 @@ async function seed() {
 
       // 1. Ler Marcas
       const marcasRaw = fs.readFileSync(marcasFile, 'utf-8').replace(/\r/g, '').split('\n');
-
 
       for (let i = 1; i < marcasRaw.length; i++) {
         const line = marcasRaw[i].trim();
