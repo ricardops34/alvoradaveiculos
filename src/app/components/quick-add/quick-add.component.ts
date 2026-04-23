@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PoModule, PoModalComponent, PoNotificationService } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 
-export type QuickAddType = 'pessoa' | 'banco' | 'centro_custo' | 'perfil' | 'marcas' | 'modelos';
+export type QuickAddType = 'pessoa' | 'banco' | 'centro_custo' | 'perfil' | 'marcas' | 'modelos' | 'pessoas' | 'bancos' | 'centros-custo';
 
 @Component({
   selector: 'app-quick-add',
@@ -20,6 +20,14 @@ export class QuickAddComponent {
   type: QuickAddType = 'pessoa';
   title: string = '';
   data: any = {};
+  marcasOptions: any[] = [];
+  
+  tipoVeiculoOptions = [
+    { label: 'Carro', value: 'Carro' },
+    { label: 'Moto', value: 'Moto' },
+    { label: 'Caminhão', value: 'Caminhão' },
+    { label: 'Náutica', value: 'Náutica' }
+  ];
 
   constructor(private db: DatabaseService, private poNotification: PoNotificationService) {}
 
@@ -27,13 +35,13 @@ export class QuickAddComponent {
     this.type = type;
     this.data = {};
     
-    if (type === 'pessoa') {
+    if (type === 'pessoa' || type === 'pessoas') {
       this.title = 'Novo Fornecedor / Cliente';
       this.data = { nome: '', cpf_cnpj: '', is_cliente: true, is_fornecedor: true };
-    } else if (type === 'banco') {
+    } else if (type === 'banco' || type === 'bancos') {
       this.title = 'Nova Conta Bancária';
       this.data = { nome: '', codigo: '', agencia: '', conta: '', tipo: 'Corrente', saldo_inicial: 0 };
-    } else if (type === 'centro_custo') {
+    } else if (type === 'centro_custo' || type === 'centros-custo') {
       this.title = 'Novo Centro de Custo';
       this.data = { nome: '', codigo: '', tipo: 'Despesa' };
     } else if (type === 'perfil') {
@@ -41,10 +49,13 @@ export class QuickAddComponent {
       this.data = { nome: '', rotinas: [] };
     } else if (type === 'marcas') {
       this.title = 'Nova Marca';
-      this.data = { nome: '' };
+      this.data = { nome: '', tipo_veiculo: 'Carro' };
     } else if (type === 'modelos') {
       this.title = 'Novo Modelo';
-      this.data = { nome: '', marca_id: null };
+      this.data = { nome: '', marca_id: null, tipo_veiculo: 'Carro' };
+      this.db.getAll('marcas').then(m => {
+        this.marcasOptions = m.map((i: any) => ({ label: i.nome, value: i.id }));
+      });
     }
 
     this.quickAddModal.open();
@@ -62,9 +73,9 @@ export class QuickAddComponent {
 
     try {
       let table = '';
-      if (this.type === 'pessoa') table = 'pessoas';
-      if (this.type === 'banco') table = 'bancos';
-      if (this.type === 'centro_custo') table = 'centros_custo';
+      if (this.type === 'pessoa' || this.type === 'pessoas') table = 'pessoas';
+      if (this.type === 'banco' || this.type === 'bancos') table = 'bancos';
+      if (this.type === 'centro_custo' || this.type === 'centros-custo') table = 'centros_custo';
       if (this.type === 'perfil') table = 'perfis';
       if (this.type === 'marcas') table = 'marcas';
       if (this.type === 'modelos') table = 'modelos';

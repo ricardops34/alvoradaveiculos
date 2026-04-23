@@ -6,7 +6,7 @@
 
   <form #quickAddForm="ngForm">
     <!-- PESSOA -->
-    <ng-container *ngIf="type === 'pessoa'">
+    <ng-container *ngIf="type === 'pessoa' || type === 'pessoas'">
       <div class="po-row">
         <po-input class="po-md-8" name="nome" [(ngModel)]="data.nome" p-label="Nome / Razão Social" p-required></po-input>
         <po-input class="po-md-4" name="cpf_cnpj" [(ngModel)]="data.cpf_cnpj" p-label="CPF / CNPJ"></po-input>
@@ -14,7 +14,7 @@
     </ng-container>
 
     <!-- BANCO -->
-    <ng-container *ngIf="type === 'banco'">
+    <ng-container *ngIf="type === 'banco' || type === 'bancos'">
       <div class="po-row">
         <po-input class="po-md-8" name="nome" [(ngModel)]="data.nome" p-label="Nome do Banco" p-required></po-input>
         <po-input class="po-md-4" name="codigo" [(ngModel)]="data.codigo" p-label="Código do Banco" p-required></po-input>
@@ -27,10 +27,27 @@
     </ng-container>
 
     <!-- CENTRO DE CUSTO -->
-    <ng-container *ngIf="type === 'centro_custo'">
+    <ng-container *ngIf="type === 'centro_custo' || type === 'centros-custo'">
       <div class="po-row">
         <po-input class="po-md-8" name="nome" [(ngModel)]="data.nome" p-label="Nome do Centro de Custo" p-required></po-input>
         <po-select class="po-md-4" name="tipo" [(ngModel)]="data.tipo" p-label="Tipo" p-required [p-options]="[{label: 'Despesa', value: 'Despesa'}, {label: 'Receita', value: 'Receita'}]"></po-select>
+      </div>
+    </ng-container>
+
+    <!-- MARCAS -->
+    <ng-container *ngIf="type === 'marcas'">
+      <div class="po-row">
+        <po-input class="po-md-8" name="nome" [(ngModel)]="data.nome" p-label="Nome da Marca" p-required></po-input>
+        <po-select class="po-md-4" name="tipo_veiculo" [(ngModel)]="data.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions"></po-select>
+      </div>
+    </ng-container>
+
+    <!-- MODELOS -->
+    <ng-container *ngIf="type === 'modelos'">
+      <div class="po-row">
+        <po-select class="po-md-4" name="marca_id" [(ngModel)]="data.marca_id" p-label="Marca" p-required [p-options]="marcasOptions"></po-select>
+        <po-input class="po-md-4" name="nome" [(ngModel)]="data.nome" p-label="Nome do Modelo" p-required></po-input>
+        <po-select class="po-md-4" name="tipo_veiculo" [(ngModel)]="data.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions"></po-select>
       </div>
     </ng-container>
 
