@@ -227,7 +227,7 @@ export class VeiculosComponent implements OnInit {
 
   getEmptyVehicle(): Vehicle {
     return {
-      tipo_veiculo: 'Carro',
+      tipo_veiculo: undefined,
       placa: '',
       marca_id: undefined,
       modelo_id: undefined,
