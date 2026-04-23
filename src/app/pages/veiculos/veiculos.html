@@ -1,14 +1,23 @@
-<po-page-list 
-  p-title="Cadastro de Veículos" 
-  [p-actions]="actions">
+<po-page-default p-title="Cadastro de Veículos">
+  
+  <div class="po-row">
+    <po-button 
+      class="po-md-2" 
+      p-label="Novo" 
+      p-type="primary" 
+      p-icon="an an-plus"
+      (p-click)="openNew()">
+    </po-button>
+  </div>
 
   <po-table 
+    class="po-mt-2"
     [p-columns]="columns" 
     [p-items]="vehicles" 
     [p-actions]="tableActions">
   </po-table>
 
-</po-page-list>
+</po-page-default>
 
 <!-- Modal de Cadastro/Edição -->
 <po-modal #vehicleModal 

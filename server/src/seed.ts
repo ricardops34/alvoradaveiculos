@@ -249,9 +249,6 @@ async function seed() {
 
     console.log('✅ Dados de teste inseridos com sucesso!');
     
-    // Seed de Marcas e Modelos
-    const marcasCount = await client.query('SELECT COUNT(*) FROM marcas');
-    if (parseInt(marcasCount.rows[0].count) === 0) {
       const marcasSeed = [
         { 
           nome: 'Toyota', 
@@ -280,11 +277,20 @@ async function seed() {
       ];
 
       for (const marca of marcasSeed) {
-        const insertMarca = await client.query('INSERT INTO marcas (nome) VALUES ($1) RETURNING id', [marca.nome]);
+        // Usar ON CONFLICT para não dar erro se já existir, mas pegar o ID
+        const insertMarca = await client.query(
+          'INSERT INTO marcas (nome) VALUES ($1) ON CONFLICT (nome) DO UPDATE SET nome = EXCLUDED.nome RETURNING id', 
+          [marca.nome]
+        );
         const marcaId = insertMarca.rows[0].id;
         for (const modelo of marca.modelos) {
           await client.query(
-            'INSERT INTO modelos (marca_id, nome, ano_inicial, ano_final, descricao_detalhada) VALUES ($1, $2, $3, $4, $5)', 
+            `INSERT INTO modelos (marca_id, nome, ano_inicial, ano_final, descricao_detalhada) 
+             VALUES ($1, $2, $3, $4, $5) 
+             ON CONFLICT (marca_id, nome) DO UPDATE SET 
+                ano_inicial = EXCLUDED.ano_inicial, 
+                ano_final = EXCLUDED.ano_final, 
+                descricao_detalhada = EXCLUDED.descricao_detalhada`, 
             [marcaId, modelo.nome, (modelo as any).ano_ini || null, (modelo as any).ano_fim || null, (modelo as any).desc || null]
           );
         }
