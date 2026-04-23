@@ -21,16 +21,21 @@
   <form #movementForm="ngForm">
     <div class="po-row">
       <po-datepicker class="po-md-4" name="data" [(ngModel)]="movement.data" p-label="Data" p-required></po-datepicker>
-      <po-lookup 
-        class="po-md-4" 
-        name="banco" 
-        [(ngModel)]="movement.banco_id" 
-        p-label="Banco" 
-        [p-filter-service]="bancosLookup" 
-        p-field-label="nome"
-        p-field-value="id"
-        p-required>
-      </po-lookup>
+      <div class="po-md-4" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="banco" 
+          [(ngModel)]="movement.banco_id" 
+          p-label="Banco" 
+          [p-filter-service]="bancosLookup" 
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='banco_id'; appQuickAdd.open('bancos')"></po-button>
+        </div>
+      </div>
       <po-select class="po-md-4" name="tipo" [(ngModel)]="movement.tipo" p-label="Tipo" [p-options]="typeOptions" p-required></po-select>
     </div>
 
@@ -40,39 +45,56 @@
     </div>
 
     <div class="po-row">
-      <po-lookup 
-        class="po-md-6" 
-        name="centro_custo" 
-        [(ngModel)]="movement.centro_custo_id" 
-        p-label="Centro de Custo" 
-        [p-filter-service]="centrosCustoLookup" 
-        p-field-label="nome"
-        p-field-value="id"
-        p-required>
-      </po-lookup>
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="centro_custo" 
+          [(ngModel)]="movement.centro_custo_id" 
+          p-label="Centro de Custo" 
+          [p-filter-service]="centrosCustoLookup" 
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='centro_custo_id'; appQuickAdd.open('centros-custo')"></po-button>
+        </div>
+      </div>
     </div>
 
     <po-divider p-label="Vínculos Opcionais"></po-divider>
 
     <div class="po-row">
-      <po-lookup 
-        class="po-md-6" 
-        name="pessoa" 
-        [(ngModel)]="movement.pessoa_id" 
-        p-label="Pessoa (Opcional)" 
-        [p-filter-service]="pessoasLookup" 
-        p-field-label="nome"
-        p-field-value="id">
-      </po-lookup>
-      <po-lookup 
-        class="po-md-6" 
-        name="veiculo" 
-        [(ngModel)]="movement.veiculo_id" 
-        p-label="Veículo (Opcional)" 
-        [p-filter-service]="veiculosLookup" 
-        p-field-label="placa"
-        p-field-value="id">
-      </po-lookup>
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="pessoa" 
+          [(ngModel)]="movement.pessoa_id" 
+          p-label="Pessoa (Opcional)" 
+          [p-filter-service]="pessoasLookup" 
+          p-field-label="nome"
+          p-field-value="id">
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='pessoa_id'; appQuickAdd.open('pessoas')"></po-button>
+        </div>
+      </div>
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup 
+          style="flex: 1" 
+          name="veiculo" 
+          [(ngModel)]="movement.veiculo_id" 
+          p-label="Veículo (Opcional)" 
+          [p-filter-service]="veiculosLookup" 
+          p-field-label="placa"
+          p-field-value="id">
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='veiculo_id'; appQuickAdd.open('veiculos')"></po-button>
+        </div>
+      </div>
     </div>
   </form>
 </po-modal>
+
+<app-quick-add #appQuickAdd (onAdded)="handleQuickAdd($event, currentQuickAddField)"></app-quick-add>

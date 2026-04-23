@@ -19,6 +19,7 @@ import { Router } from '@angular/router';
   imports: [CommonModule, FormsModule, PoModule],
   templateUrl: './marcas.html',
 })
+// v1.0.2 - Adicionado campo Tipo de Veículo
 export class MarcasComponent implements OnInit {
   @ViewChild('marcaModal', { static: true }) marcaModal!: PoModalComponent;
 

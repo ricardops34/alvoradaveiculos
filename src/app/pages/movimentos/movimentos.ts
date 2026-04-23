@@ -12,22 +12,25 @@ import {
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Movement } from '../../types/movement';
+import { QuickAddComponent } from '../../components/quick-add/quick-add.component';
 import { PessoasLookupService, BancosLookupService, CentrosCustoLookupService, VeiculosLookupService } from '../../services/lookups';
 
 @Component({
   selector: 'app-movimentos',
   standalone: true,
-  imports: [CommonModule, FormsModule, PoModule],
+  imports: [CommonModule, FormsModule, PoModule, QuickAddComponent],
   templateUrl: './movimentos.html',
 })
 export class MovimentosComponent implements OnInit {
   @ViewChild('movementModal', { static: true }) movementModal!: PoModalComponent;
   @ViewChild('movementForm', { static: false }) movementForm!: any;
+  @ViewChild('appQuickAdd') appQuickAdd!: QuickAddComponent;
 
   movements: any[] = [];
   allMovements: any[] = [];
   movement: Movement = this.getEmptyMovement();
   isEditing: boolean = false;
+  currentQuickAddField: string = '';
 
   banks: PoSelectOption[] = [];
   costCenters: PoSelectOption[] = [];
@@ -176,5 +179,12 @@ export class MovimentosComponent implements OnInit {
     await this.db.delete('movimentos', movement.id!);
     this.poNotification.warning('Lançamento excluído!');
     await this.loadMovements();
+  }
+
+  handleQuickAdd(event: any, field: string) {
+    if (field === 'banco_id') this.movement.banco_id = event.id;
+    if (field === 'centro_custo_id') this.movement.centro_custo_id = event.id;
+    if (field === 'pessoa_id') this.movement.pessoa_id = event.id;
+    if (field === 'veiculo_id') this.movement.veiculo_id = event.id;
   }
 }
