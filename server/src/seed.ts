@@ -61,7 +61,9 @@ async function seed() {
 
       CREATE TABLE IF NOT EXISTS marcas (
         id SERIAL PRIMARY KEY,
-        nome VARCHAR(100) NOT NULL UNIQUE
+        nome VARCHAR(100) NOT NULL,
+        tipo_veiculo VARCHAR(20) DEFAULT 'Carro',
+        UNIQUE (nome, tipo_veiculo)
       );
 
       CREATE TABLE IF NOT EXISTS modelos (
@@ -99,6 +101,7 @@ async function seed() {
       );
 
       ALTER TABLE modelos ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
+      ALTER TABLE marcas ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
       
       -- Garantir UNIQUE constraints para o seed robusto
       DO $$ 
@@ -106,6 +109,10 @@ async function seed() {
         IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'modelos_marca_id_nome_tipo_veiculo_key') THEN
           ALTER TABLE modelos DROP CONSTRAINT IF EXISTS modelos_marca_id_nome_key;
           ALTER TABLE modelos ADD CONSTRAINT modelos_marca_id_nome_tipo_veiculo_key UNIQUE (marca_id, nome, tipo_veiculo);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'marcas_nome_tipo_veiculo_key') THEN
+          ALTER TABLE marcas DROP CONSTRAINT IF EXISTS marcas_nome_key;
+          ALTER TABLE marcas ADD CONSTRAINT marcas_nome_tipo_veiculo_key UNIQUE (nome, tipo_veiculo);
         END IF;
       END $$;
     `);
@@ -177,8 +184,8 @@ async function seed() {
         if (!nome) continue;
 
         const res = await client.query(
-          'INSERT INTO marcas (nome) VALUES ($1) ON CONFLICT (nome) DO UPDATE SET nome = EXCLUDED.nome RETURNING id',
-          [nome.toUpperCase()]
+          'INSERT INTO marcas (nome, tipo_veiculo) VALUES ($1, $2) ON CONFLICT (nome, tipo_veiculo) DO UPDATE SET nome = EXCLUDED.nome RETURNING id',
+          [nome.toUpperCase(), cat.type]
         );
         marcasMap.set(csvId, res.rows[0].id);
       }
