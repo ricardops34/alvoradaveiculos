@@ -21,7 +21,8 @@ export class RelatorioDespesasComponent implements OnInit {
   
   filter = {
     data_inicio: '',
-    data_fim: ''
+    data_fim: '',
+    ignoreVehiclePurchase: true
   };
 
   movements: any[] = [];
@@ -62,13 +63,25 @@ export class RelatorioDespesasComponent implements OnInit {
         return (!this.filter.data_inicio || d >= this.filter.data_inicio) &&
                (!this.filter.data_fim || d <= this.filter.data_fim);
       })
-      .map(m => ({
-        ...m,
-        centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome || 'Outros',
-        veiculo_placa: vehicles.find(v => v.id === m.veiculo_id)?.placa || 'N/A'
-      }));
+      .map(m => {
+        const center = centers.find(c => c.id === m.centro_custo_id);
+        return {
+          ...m,
+          centro_custo_nome: center?.nome || 'Outros',
+          veiculo_placa: vehicles.find(v => v.id === m.veiculo_id)?.placa || 'N/A'
+        };
+      });
 
-    this.totalExpenses = this.movements.reduce((sum, m) => sum + Math.abs(m.valor), 0);
+    // Apply vehicle purchase filter if enabled
+    if (this.filter.ignoreVehiclePurchase) {
+      this.movements = this.movements.filter(m => 
+        !m.centro_custo_nome.toLowerCase().includes('venda') && 
+        !m.centro_custo_nome.toLowerCase().includes('estoque') &&
+        !m.centro_custo_nome.toLowerCase().includes('aquisição')
+      );
+    }
+
+    this.totalExpenses = this.movements.reduce((sum, m) => sum + Math.abs(Number(m.valor || 0)), 0);
 
     const grouped: { [key: number]: any } = {};
     this.movements.forEach(m => {
@@ -76,15 +89,16 @@ export class RelatorioDespesasComponent implements OnInit {
         grouped[m.centro_custo_id] = {
           centro_custo_nome: m.centro_custo_nome,
           valor_total: 0,
-          quantidade: 0
+          quantidade: 0,
+          centro_custo_id: m.centro_custo_id
         };
       }
-      grouped[m.centro_custo_id].valor_total += Math.abs(m.valor);
+      grouped[m.centro_custo_id].valor_total += Math.abs(Number(m.valor || 0));
       grouped[m.centro_custo_id].quantidade++;
     });
 
     this.expensesData = Object.values(grouped).map(item => {
-      const pct = (item.valor_total / this.totalExpenses) * 100;
+      const pct = this.totalExpenses > 0 ? (item.valor_total / this.totalExpenses) * 100 : 0;
       let status = 'baixo';
       if (pct > 50) status = 'alto';
       else if (pct > 20) status = 'medio';
