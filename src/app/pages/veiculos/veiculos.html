@@ -28,7 +28,7 @@
 
   <form #vehicleForm="ngForm">
     <div class="po-row">
-      <po-combo class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions"></po-combo>
+      <po-combo class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions" (p-change)="onTipoChange()"></po-combo>
       <po-input class="po-md-2" name="placa" [(ngModel)]="vehicle.placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
       
       <div class="po-md-3" style="display: flex; gap: 8px;">

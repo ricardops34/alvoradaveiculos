@@ -51,8 +51,7 @@ export class VeiculosComponent implements OnInit {
     { label: 'Carro', value: 'Carro' },
     { label: 'Moto', value: 'Moto' },
     { label: 'Caminhão', value: 'Caminhão' },
-    { label: 'Ônibus', value: 'Ônibus' },
-    { label: 'Vans', value: 'Vans' }
+    { label: 'Náutica', value: 'Náutica' }
   ];
 
   public formaCompraOptions: PoCheckboxGroupOption[] = [
@@ -151,8 +150,22 @@ export class VeiculosComponent implements OnInit {
 
   onMarcaChange(marcaId: number) {
     this.vehicle.modelo_id = undefined;
+    this.updateModelos();
+  }
+
+  onTipoChange() {
+    this.vehicle.marca_id = undefined;
+    this.vehicle.modelo_id = undefined;
+    this.modelosOptions = [];
+  }
+
+  updateModelos() {
+    if (!this.vehicle.marca_id || !this.vehicle.tipo_veiculo) {
+      this.modelosOptions = [];
+      return;
+    }
     this.modelosOptions = this.allModelos
-      .filter(m => m.marca_id === marcaId)
+      .filter(m => m.marca_id === this.vehicle.marca_id && m.tipo_veiculo === this.vehicle.tipo_veiculo)
       .map(m => ({ label: m.nome, value: m.id }));
   }
 
@@ -218,7 +231,7 @@ export class VeiculosComponent implements OnInit {
     this.isEditing = true;
     this.vehicle = { ...vehicle };
     if (this.vehicle.marca_id) {
-      this.onMarcaChange(this.vehicle.marca_id);
+      this.updateModelos();
     }
     this.vehicleModal.open();
   }
