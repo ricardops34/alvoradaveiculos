@@ -91,7 +91,12 @@ export class MovimentosComponent implements OnInit {
     this.costCenters = costCenters.map(c => ({ label: c.nome, value: c.id }));
     this.people = people.map(p => ({ label: p.nome, value: p.id }));
     this.vehicles = vehicles.map(v => ({ label: `${v.marca} ${v.modelo} (${v.placa})`, value: v.id }));
-  }
+  async loadMovements() {
+    const rawMovements = await this.db.getAll('movimentos');
+    const banks = await this.db.getAll('bancos');
+    const centers = await this.db.getAll('centros_custo');
+    const people = await this.db.getAll('pessoas');
+    const vehicles = await this.db.getAll('veiculos');
 
     this.allMovements = rawMovements.map(m => ({
       ...m,

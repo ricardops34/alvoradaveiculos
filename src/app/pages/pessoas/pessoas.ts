@@ -75,7 +75,8 @@ export class PessoasComponent implements OnInit {
     await this.db.init();
     this.loadPeople();
   }
-
+  async loadPeople() {
+    const rawPeople = await this.db.getAll('pessoas');
     this.allPeople = rawPeople.map(p => {
       const papeis = [];
       if (p.is_cliente) papeis.push('Cliente');
