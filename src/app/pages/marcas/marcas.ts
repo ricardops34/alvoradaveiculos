@@ -28,6 +28,10 @@ export class MarcasComponent implements OnInit {
   filteredMarcas: any[] = [];
   marca: any = { nome: '', tipo_veiculo: 'Carro' };
   
+  selectedTipos: string[] = [];
+  currentSearchTerm: string = '';
+  @ViewChild('advancedFilterModal', { static: true }) advancedFilterModal!: PoModalComponent;
+  
   hasNext: boolean = false;
   page: number = 1;
   pageSize: number = 20;
@@ -60,8 +64,15 @@ export class MarcasComponent implements OnInit {
     { label: 'Novo', action: this.add.bind(this), icon: 'an an-plus' }
   ];
 
+  public disclaimerGroup: any = {
+    title: 'Filtros',
+    disclaimers: [],
+    change: this.onChangeDisclaimer.bind(this)
+  };
+
   public readonly filterSettings: any = {
     action: this.filterMarcas.bind(this),
+    advancedAction: this.openAdvancedFilter.bind(this),
     placeholder: 'Pesquisar marcas...'
   };
 
@@ -83,16 +94,27 @@ export class MarcasComponent implements OnInit {
   }
 
   filterMarcas(filter: string) {
-    if (!filter) {
-      this.filteredMarcas = [...this.allMarcas];
-    } else {
-      const searchTerm = filter.toLowerCase();
-      this.filteredMarcas = this.allMarcas.filter(m => 
+    this.currentSearchTerm = filter || '';
+    this.applyAllFilters();
+  }
+
+  applyAllFilters() {
+    let filtered = [...this.allMarcas];
+
+    if (this.currentSearchTerm) {
+      const searchTerm = this.currentSearchTerm.toLowerCase();
+      filtered = filtered.filter(m => 
         m.nome.toLowerCase().includes(searchTerm) ||
         m.id.toString().includes(searchTerm) ||
         m.tipo_veiculo?.toLowerCase().includes(searchTerm)
       );
     }
+
+    if (this.selectedTipos.length > 0) {
+      filtered = filtered.filter(m => this.selectedTipos.includes(m.tipo_veiculo));
+    }
+
+    this.filteredMarcas = filtered;
     this.page = 1;
     this.applyPagination(true);
   }
@@ -107,14 +129,31 @@ export class MarcasComponent implements OnInit {
     
     this.marcas = [...this.marcas, ...nextItems];
     this.hasNext = endIndex < this.filteredMarcas.length;
-    console.log(`[Pagination] Page: ${this.page}, Size: ${this.pageSize}, Reset: ${reset}`);
-    console.log(`[Pagination] Start: ${startIndex}, End: ${endIndex}, FilteredTotal: ${this.filteredMarcas.length}`);
-    console.log(`[Pagination] nextItems length: ${nextItems.length}, Marcas length: ${this.marcas.length}, HasNext: ${this.hasNext}`);
   }
 
   showMore() {
     this.page++;
     this.applyPagination(false);
+  }
+
+  openAdvancedFilter() {
+    this.advancedFilterModal.open();
+  }
+
+  applyFilters() {
+    const disclaimers = this.selectedTipos.map(tipo => ({
+      label: tipo,
+      property: 'tipo_veiculo',
+      value: tipo
+    }));
+    this.disclaimerGroup.disclaimers = disclaimers;
+    this.advancedFilterModal.close();
+    this.applyAllFilters();
+  }
+
+  onChangeDisclaimer(disclaimers: any[]) {
+    this.selectedTipos = disclaimers.map(d => d.value);
+    this.applyAllFilters();
   }
 
   add() {
