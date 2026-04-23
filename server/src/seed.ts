@@ -301,7 +301,6 @@ async function seed() {
         SELECT setval('modelos_id_seq', (SELECT MAX(id) FROM modelos));
       `);
       console.log('✅ Marcas e Modelos inseridos com sucesso!');
-    }
   } catch (err) {
     console.error('❌ Erro no seed:', err);
     throw err;
