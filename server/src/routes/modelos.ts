@@ -31,10 +31,10 @@ router.get('/', async (req: Request, res: Response) => {
 // POST - Criar
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { marca_id, nome, ano_inicial, ano_final, descricao_detalhada } = req.body;
+    const { marca_id, nome, tipo_veiculo, ano_inicial, ano_final, descricao_detalhada } = req.body;
     const result = await pool.query(
-      'INSERT INTO modelos (marca_id, nome, ano_inicial, ano_final, descricao_detalhada) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [marca_id, nome, ano_inicial, ano_final, descricao_detalhada]
+      'INSERT INTO modelos (marca_id, nome, tipo_veiculo, ano_inicial, ano_final, descricao_detalhada) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [marca_id, nome, tipo_veiculo || 'Carro', ano_inicial, ano_final, descricao_detalhada]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -47,10 +47,10 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { marca_id, nome, ano_inicial, ano_final, descricao_detalhada } = req.body;
+    const { marca_id, nome, tipo_veiculo, ano_inicial, ano_final, descricao_detalhada } = req.body;
     const result = await pool.query(
-      'UPDATE modelos SET marca_id = $1, nome = $2, ano_inicial = $3, ano_final = $4, descricao_detalhada = $5 WHERE id = $6 RETURNING *',
-      [marca_id, nome, ano_inicial, ano_final, descricao_detalhada, id]
+      'UPDATE modelos SET marca_id = $1, nome = $2, tipo_veiculo = $3, ano_inicial = $4, ano_final = $5, descricao_detalhada = $6 WHERE id = $7 RETURNING *',
+      [marca_id, nome, tipo_veiculo, ano_inicial, ano_final, descricao_detalhada, id]
     );
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Modelo não encontrado' });
