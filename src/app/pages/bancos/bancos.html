@@ -4,21 +4,23 @@
   [p-filter]="filterSettings">
 
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="banks" 
     [p-actions]="tableActions"
     [p-show-more-disabled]="!hasNext"
     [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
     (p-show-more)="showMore()">
   </po-table>
 </po-page-list>
 
 <po-modal #bankModal 
-  [p-title]="isEditing ? 'Editar Banco' : 'Novo Banco'"
-  p-primary-label="Salvar"
-  [p-primary-action]="{ action: save.bind(this), label: 'Salvar' }">
+  [p-title]="isEditing ? 'Editar Conta' : 'Nova Conta'"
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: bankModal.close.bind(bankModal) }">
   
   <form #bankForm="ngForm">
     <div class="po-row">

@@ -41,7 +41,7 @@ router.get('/modelos-csv/:tipo', (req: Request, res: Response) => {
     'modelos-moto': 'modelos-moto.csv'
   };
 
-  const fileName = files[tipo];
+  const fileName = files[tipo as string];
   if (!fileName) return res.status(404).send('Modelo não encontrado');
 
   const filePath = path.join(basePath, fileName);

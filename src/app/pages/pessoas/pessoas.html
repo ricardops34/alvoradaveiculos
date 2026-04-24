@@ -1,16 +1,18 @@
 <po-page-list 
   p-title="Cadastro de Pessoas" 
   [p-actions]="actions"
-  [p-filter]="filterSettings">
+  [p-filter]="filterSettings"
+  [p-disclaimer-group]="disclaimerGroup">
 
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="people" 
     [p-actions]="tableActions"
     [p-show-more-disabled]="!hasNext"
     [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
     (p-show-more)="showMore()">
   </po-table>
 
@@ -19,7 +21,7 @@
 <po-modal #personModal 
   [p-title]="isEditing ? 'Editar Pessoa' : 'Nova Pessoa'"
   p-size="xl"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: personModal.close.bind(personModal) }">
 
   <form #personForm="ngForm">
@@ -53,4 +55,27 @@
       <po-input class="po-md-4" name="cidade" [(ngModel)]="person.cidade" p-label="Cidade"></po-input>
     </div>
   </form>
+</po-modal>
+
+<po-modal #advancedFilterModal p-title="Busca avançada" [p-primary-action]="{ label: 'Aplicar filtros', action: applyFilters.bind(this) }">
+  <div class="po-row">
+    <po-checkbox-group
+      class="po-md-12"
+      name="tipo_pessoa_filter"
+      p-label="Filtrar por Tipo de Pessoa"
+      p-columns="2"
+      [p-options]="typeOptions"
+      [(ngModel)]="selectedTipos">
+    </po-checkbox-group>
+  </div>
+  <div class="po-row po-mt-2">
+    <po-checkbox-group
+      class="po-md-12"
+      name="papel_filter"
+      p-label="Filtrar por Papel"
+      p-columns="2"
+      [p-options]="roleOptions"
+      [(ngModel)]="selectedPapeis">
+    </po-checkbox-group>
+  </div>
 </po-modal>

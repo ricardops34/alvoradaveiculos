@@ -9,7 +9,8 @@ import {
   PoModalComponent, 
   PoNotificationService, 
   PoSelectOption,
-  PoCheckboxGroupOption
+  PoCheckboxGroupOption,
+  PoDialogService
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Person } from '../../types/person';
@@ -25,10 +26,16 @@ export class PessoasComponent implements OnInit {
   @ViewChild('personForm', { static: false }) personForm!: any;
 
   people: any[] = [];
+  
+  // Paginação no servidor (HEAD Priorizado)
   page: number = 1;
+  pageSize: number = 20;
   hasNext: boolean = false;
   loadingShowMore: boolean = false;
   currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
+
   person: Person = this.getEmptyPerson();
   isEditing: boolean = false;
 
@@ -44,6 +51,12 @@ export class PessoasComponent implements OnInit {
   public readonly actions: PoPageAction[] = [
     { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public disclaimerGroup: any = {
+    title: 'Filtros',
+    disclaimers: [],
+    change: this.onChangeDisclaimer.bind(this)
+  };
 
   public readonly filterSettings: any = {
     action: this.filterPeople.bind(this),
@@ -71,12 +84,15 @@ export class PessoasComponent implements OnInit {
 
   constructor(
     private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    private poDialog: PoDialogService
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    this.loadPeople();
+    await this.loadPeople();
+    this.isLoading = false;
   }
 
   async loadPeople() {
@@ -95,7 +111,7 @@ export class PessoasComponent implements OnInit {
     try {
       const response = await this.db.getAll('pessoas', { 
         page: this.page, 
-        limit: 20,
+        limit: this.pageSize,
         filter: this.currentFilter 
       });
 
@@ -111,6 +127,7 @@ export class PessoasComponent implements OnInit {
         this.people = [...this.people, ...processedItems];
         this.hasNext = response.hasNext;
       } else {
+        // Fallback
         this.people = response;
         this.hasNext = false;
       }
@@ -120,7 +137,12 @@ export class PessoasComponent implements OnInit {
   }
 
   filterPeople(filter: string) {
-    this.currentFilter = filter;
+    this.currentFilter = filter || '';
+    this.loadPeople();
+  }
+
+  onChangeDisclaimer(disclaimers: any[]) {
+    this.currentFilter = disclaimers.find(d => d.property === 'filter')?.value || '';
     this.loadPeople();
   }
 
@@ -162,13 +184,11 @@ export class PessoasComponent implements OnInit {
       return;
     }
 
-    // Sync roles to person object
     this.person.is_cliente = this.roles.includes('cliente');
     this.person.is_fornecedor = this.roles.includes('fornecedor');
     this.person.is_vendedor = this.roles.includes('vendedor');
     this.person.is_socio = this.roles.includes('socio');
 
-    // Convert boolean to number for PostgreSQL
     const dataToSave = {
       ...this.person,
       is_cliente: this.person.is_cliente ? 1 : 0,
@@ -178,21 +198,41 @@ export class PessoasComponent implements OnInit {
     };
     delete (dataToSave as any).papeis;
 
-    if (this.isEditing) {
-      await this.db.update('pessoas', this.person.id!, dataToSave);
-      this.poNotification.success('Pessoa atualizada!');
-    } else {
-      await this.db.insert('pessoas', dataToSave);
-      this.poNotification.success('Pessoa cadastrada!');
+    this.isLoadingSave = true;
+    try {
+      if (this.isEditing) {
+        await this.db.update('pessoas', this.person.id!, dataToSave);
+        this.poNotification.success('Pessoa atualizada!');
+      } else {
+        await this.db.insert('pessoas', dataToSave);
+        this.poNotification.success('Pessoa cadastrada!');
+      }
+      await this.loadPeople();
+      this.personModal.close();
+    } catch (error) {
+      this.poNotification.error('Erro ao salvar pessoa.');
+    } finally {
+      this.isLoadingSave = false;
     }
-    await this.loadPeople();
-    this.personModal.close();
   }
 
-  async delete(person: Person) {
-    await this.db.delete('pessoas', person.id!);
-    this.poNotification.warning('Pessoa excluída!');
-    await this.loadPeople();
+  delete(person: Person) {
+    this.poDialog.confirm({
+      title: 'Excluir Pessoa',
+      message: `Tem certeza que deseja excluir ${person.nome}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('pessoas', person.id!);
+          this.poNotification.warning('Pessoa excluída!');
+          await this.loadPeople();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir pessoa.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 
   get documentMask(): string {

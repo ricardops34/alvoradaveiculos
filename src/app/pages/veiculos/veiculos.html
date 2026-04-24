@@ -5,13 +5,14 @@
   [p-disclaimer-group]="disclaimerGroup">
 
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
     [p-columns]="columns"     
     [p-items]="vehicles" 
     [p-actions]="tableActions"
     [p-show-more-disabled]="!hasNext"
     [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
     (p-show-more)="showMore()">
   </po-table>
 </po-page-list>
@@ -19,39 +20,27 @@
 <!-- Modal de Busca Avançada -->
 <po-modal #advancedFilterModal 
   p-title="Busca Avançada"
-  [p-primary-action]="{ label: 'Aplicar filtros', action: applyAdvancedFilter.bind(this) }"
-  [p-secondary-action]="{ label: 'Limpar', action: clearAdvancedFilter.bind(this) }">
+  [p-primary-action]="{ label: 'Aplicar filtros', action: applyFilters.bind(this) }">
   
   <div class="po-row">
     <po-checkbox-group
       class="po-md-12"
-      name="status_filter"
-      [(ngModel)]="advancedFilters.status"
-      p-label="Situação"
-      [p-options]="[
-        { label: 'Estoque', value: 'Estoque' },
-        { label: 'Vendido', value: 'Vendido' },
-        { label: 'Manutenção', value: 'Manutenção' },
-        { label: 'Preparação', value: 'Preparação' }
-      ]">
-    </po-checkbox-group>
-
-    <po-select 
-      class="po-md-6" 
-      name="tipo_filter" 
-      [(ngModel)]="advancedFilters.tipo_veiculo" 
-      p-label="Tipo" 
+      name="tipo_veiculo_filter"
+      p-label="Filtrar por Tipo"
+      p-columns="2"
       [p-options]="tipoVeiculoOptions"
-      (p-change)="updateMarcas()">
-    </po-select>
-
-    <po-combo 
-      class="po-md-6" 
-      name="marca_filter" 
-      [(ngModel)]="advancedFilters.marca_id" 
-      p-label="Marca" 
-      [p-options]="marcasOptions">
-    </po-combo>
+      [(ngModel)]="selectedTipos">
+    </po-checkbox-group>
+  </div>
+  <div class="po-row po-mt-2">
+    <po-checkbox-group
+      class="po-md-12"
+      name="status_filter"
+      p-label="Filtrar por Status"
+      p-columns="2"
+      [p-options]="statusOptions"
+      [(ngModel)]="selectedStatus">
+    </po-checkbox-group>
   </div>
 </po-modal>
 
@@ -59,15 +48,15 @@
 <po-modal #vehicleModal 
   [p-title]="isEditing ? 'Editar Veículo' : 'Novo Veículo'"
   p-size="xl"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: vehicleModal.close.bind(vehicleModal) }">
 
   <form #vehicleForm="ngForm">
     <div class="po-row">
-      <po-select class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions" (p-change)="onTipoChange($event)"></po-select>
+      <po-select class="po-md-2" name="tipo_veiculo" [(ngModel)]="vehicle.tipo_veiculo" p-label="Tipo" p-required [p-options]="tipoVeiculoOptions"></po-select>
       
       <div class="po-md-3" style="display: flex; gap: 8px;">
-        <po-combo style="flex: 1" name="marca_id" [(ngModel)]="vehicle.marca_id" p-label="Marca" p-required [p-options]="marcasOptions" (p-change)="onMarcaChange($event)"></po-combo>
+        <po-combo style="flex: 1" name="marca_id" [(ngModel)]="vehicle.marca_id" p-label="Marca" p-required [p-options]="marcasOptions" (p-change)="updateModelos()"></po-combo>
         <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
           <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='marca_id'; appQuickAdd.open('marcas')"></po-button>
         </div>
@@ -156,30 +145,6 @@
       <po-decimal class="po-md-3" name="valor_avaliacao" [(ngModel)]="vehicle.valor_avaliacao" p-label="Valor de Avaliação" p-decimals="2"></po-decimal>
     </div>
 
-    <po-divider p-label="Fotos do Veículo"></po-divider>
-
-    <div class="po-row">
-      <po-upload
-        class="po-md-12"
-        name="fotos_upload"
-        p-label="Adicionar Fotos"
-        [p-hide-send-button]="true"
-        [p-multiple]="true"
-        (p-on-change)="onUpload($event)">
-      </po-upload>
-    </div>
-
-    <!-- Galeria de Fotos -->
-    <div class="po-row" *ngIf="vehicle.fotos && vehicle.fotos.length > 0">
-      <div *ngFor="let foto of vehicle.fotos; let i = index" class="po-md-2 po-mt-1" style="position: relative;">
-        <img [src]="foto" style="width: 100%; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
-        <button 
-          class="po-icon po-icon-delete" 
-          style="position: absolute; top: 5px; right: 20px; background: rgba(255,0,0,0.7); color: white; border: none; border-radius: 50%; cursor: pointer; padding: 5px;"
-          (click)="removeFoto(i)">
-        </button>
-      </div>
-    </div>
   </form>
 </po-modal>
 
@@ -285,23 +250,6 @@
           <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='venda_centro_custo_id'; appQuickAdd.open('centros-custo')"></po-button>
         </div>
       </div>
-    </div>
-
-    <div class="po-row po-mt-2" *ngIf="sellData.forma_venda === 'Troca'">
-      <po-divider p-label="Dados do Veículo de Entrada (Troca)"></po-divider>
-    </div>
-    
-    <div class="po-row" *ngIf="sellData.forma_venda === 'Troca'">
-      <po-input class="po-md-2" name="troca_placa" [(ngModel)]="sellData.troca_placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
-      <po-input class="po-md-3" name="troca_marca" [(ngModel)]="sellData.troca_marca" p-label="Marca" p-required></po-input>
-      <po-input class="po-md-4" name="troca_modelo" [(ngModel)]="sellData.troca_modelo" p-label="Modelo" p-required></po-input>
-      <po-input class="po-md-3" name="troca_cor" [(ngModel)]="sellData.troca_cor" p-label="Cor"></po-input>
-    </div>
-
-    <div class="po-row" *ngIf="sellData.forma_venda === 'Troca'">
-      <po-number class="po-md-3" name="troca_ano_fab" [(ngModel)]="sellData.troca_ano_fab" p-label="Ano Fabricação"></po-number>
-      <po-number class="po-md-3" name="troca_ano_mod" [(ngModel)]="sellData.troca_ano_mod" p-label="Ano Modelo"></po-number>
-      <po-decimal class="po-md-6" name="troca_valor" [(ngModel)]="sellData.troca_valor" p-label="Valor de Avaliação na Troca (Compra)" p-decimals="2" p-required></po-decimal>
     </div>
   </form>
 </po-modal>

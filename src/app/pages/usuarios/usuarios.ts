@@ -8,7 +8,8 @@ import {
   PoTableAction, 
   PoModalComponent, 
   PoNotificationService, 
-  PoSelectOption
+  PoSelectOption,
+  PoDialogService
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { PerfisLookupService } from '../../services/lookups';
@@ -25,7 +26,14 @@ export class UsuariosComponent implements OnInit {
 
   users: any[] = [];
   allUsers: any[] = [];
+  filteredUsers: any[] = [];
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
   profiles: any[] = [];
+  
+  hasNext: boolean = false;
+  page: number = 1;
+  pageSize: number = 20;
   user: any = { nome: '', email: '', senha: '', perfil_id: null };
   isEditing: boolean = false;
 
@@ -54,13 +62,16 @@ export class UsuariosComponent implements OnInit {
   constructor(
     private db: DatabaseService,
     private poNotification: PoNotificationService,
+    private poDialog: PoDialogService,
     public perfisLookup: PerfisLookupService
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    this.loadProfiles();
-    this.loadUsers();
+    await this.loadProfiles();
+    await this.loadUsers();
+    this.isLoading = false;
   }
 
   async loadProfiles() {
@@ -74,20 +85,41 @@ export class UsuariosComponent implements OnInit {
       const profile = this.profiles.find(p => p.id === u.perfil_id);
       return { ...u, perfil_nome: profile ? profile.nome : 'N/A' };
     });
-    this.users = [...this.allUsers];
+    this.filteredUsers = [...this.allUsers];
+    this.page = 1;
+    this.applyPagination(true);
   }
 
   filterUsers(filter: string) {
     if (!filter) {
-      this.users = [...this.allUsers];
-      return;
+      this.filteredUsers = [...this.allUsers];
+    } else {
+      const searchTerm = filter.toLowerCase();
+      this.filteredUsers = this.allUsers.filter(u => 
+        u.nome.toLowerCase().includes(searchTerm) ||
+        u.email.toLowerCase().includes(searchTerm) ||
+        u.perfil_nome?.toLowerCase().includes(searchTerm)
+      );
     }
-    const searchTerm = filter.toLowerCase();
-    this.users = this.allUsers.filter(u => 
-      u.nome.toLowerCase().includes(searchTerm) ||
-      u.email.toLowerCase().includes(searchTerm) ||
-      u.perfil_nome?.toLowerCase().includes(searchTerm)
-    );
+    this.page = 1;
+    this.applyPagination(true);
+  }
+
+  applyPagination(reset: boolean = true) {
+    if (reset) {
+      this.users = [];
+    }
+    const startIndex = (this.page - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    const nextItems = this.filteredUsers.slice(startIndex, endIndex);
+    
+    this.users = [...this.users, ...nextItems];
+    this.hasNext = endIndex < this.filteredUsers.length;
+  }
+
+  showMore() {
+    this.page++;
+    this.applyPagination(false);
   }
 
   openNew() {
@@ -109,24 +141,45 @@ export class UsuariosComponent implements OnInit {
       return;
     }
 
-    if (this.isEditing) {
-      await this.db.update('usuarios', this.user.id, this.user);
-      this.poNotification.success('Usuário atualizado!');
-    } else {
-      await this.db.insert('usuarios', this.user);
-      this.poNotification.success('Usuário criado!');
+    this.isLoadingSave = true;
+    try {
+      if (this.isEditing) {
+        await this.db.update('usuarios', this.user.id, this.user);
+        this.poNotification.success('Usuário atualizado!');
+      } else {
+        await this.db.insert('usuarios', this.user);
+        this.poNotification.success('Usuário cadastrado!');
+      }
+      this.userModal.close();
+      await this.loadUsers();
+    } catch (error) {
+      this.poNotification.error('Erro ao salvar usuário.');
+    } finally {
+      this.isLoadingSave = false;
     }
-    await this.loadUsers();
-    this.userModal.close();
   }
 
-  async delete(user: any) {
+  delete(user: any) {
     if (user.email === 'admin@alvorada.com') {
       this.poNotification.error('O administrador principal não pode ser excluído.');
       return;
     }
-    await this.db.delete('usuarios', user.id);
-    this.poNotification.warning('Usuário excluído!');
-    await this.loadUsers();
+
+    this.poDialog.confirm({
+      title: 'Excluir Usuário',
+      message: `Deseja excluir o usuário ${user.nome}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('usuarios', user.id);
+          this.poNotification.warning('Usuário excluído!');
+          await this.loadUsers();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir usuário.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }

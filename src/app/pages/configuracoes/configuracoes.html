@@ -133,4 +133,33 @@
     </div>
   </div>
 
+  <div class="po-row po-mt-2">
+    <div class="po-md-12">
+      <po-widget p-title="Configurações de E-mail (SMTP)">
+        <form #formSmtp="ngForm">
+          <div class="po-row">
+            <po-input class="po-md-4" name="smtp_host" [(ngModel)]="parametros.smtp_host" p-label="Servidor SMTP (Host)" p-placeholder="smtp.exemplo.com"></po-input>
+            <po-number class="po-md-2" name="smtp_port" [(ngModel)]="parametros.smtp_port" p-label="Porta" p-placeholder="587"></po-number>
+            <po-input class="po-md-6" name="smtp_from" [(ngModel)]="parametros.smtp_from" p-label="E-mail de Origem (From)" p-placeholder="sistema@alvorada.com"></po-input>
+          </div>
+          <div class="po-row">
+            <po-input class="po-md-6" name="smtp_user" [(ngModel)]="parametros.smtp_user" p-label="Usuário SMTP" p-placeholder="usuario@provedor.com"></po-input>
+            <po-password class="po-md-6" name="smtp_pass" [(ngModel)]="parametros.smtp_pass" p-label="Senha SMTP"></po-password>
+          </div>
+          
+          <div class="po-row po-mt-2">
+            <po-button 
+              class="po-md-12"
+              p-label="Salvar Configurações de E-mail" 
+              p-kind="primary" 
+              p-icon="an an-floppy-disk"
+              [p-loading]="loading"
+              (p-click)="salvarParametros()">
+            </po-button>
+          </div>
+        </form>
+      </po-widget>
+    </div>
+  </div>
+
 </po-page-default>

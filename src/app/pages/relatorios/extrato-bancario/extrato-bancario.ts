@@ -76,7 +76,7 @@ export class ExtratoBancarioComponent implements OnInit {
     const bancos = await this.db.getAll('bancos');
     const bank = bancos.find(b => b.id === this.filter.banco_id);
     
-    this.creditLimit = bank ? (bank.limite_credito || 0) : 0;
+    this.creditLimit = bank ? Number(bank.limite_credito || 0) : 0;
 
     this.movements = allMovements
       .filter(m => m.banco_id === this.filter.banco_id)
@@ -93,8 +93,8 @@ export class ExtratoBancarioComponent implements OnInit {
 
     // Calculate total balance for this bank considering ALL movements up to date_fim
     const totalMovementsUntilNow = allMovements.filter(m => m.banco_id === this.filter.banco_id);
-    this.totalBalance = totalMovementsUntilNow.reduce((sum, m) => sum + parseFloat(m.valor), 0);
-    this.availableBalance = this.totalBalance + this.creditLimit;
+    this.totalBalance = totalMovementsUntilNow.reduce((sum, m) => sum + Number(m.valor || 0), 0);
+    this.availableBalance = Number(this.totalBalance) + Number(this.creditLimit);
   }
 
   exportXLS() {

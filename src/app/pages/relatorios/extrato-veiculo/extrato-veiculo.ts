@@ -60,20 +60,53 @@ export class ExtratoVeiculoComponent implements OnInit {
     const allMovements = await this.db.getAll('movimentos');
     const centers = await this.db.getAll('centros_custo');
 
-    this.movements = allMovements
+    // Get vehicle movements
+    let vehicleMovements = allMovements
       .filter(m => m.veiculo_id === this.veiculo_id)
       .map(m => ({
         ...m,
         centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome
       }));
 
-    const exp = this.movements.filter(m => m.tipo === 'Débito').reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
-    const rev = this.movements.filter(m => m.tipo === 'Crédito').reduce((sum, m) => sum + parseFloat(m.valor), 0);
+    // Add Purchase as a Debit entry
+    const compraEntry = {
+      data: this.vehicleData.data_compra,
+      historico: 'VALOR DE COMPRA (AQUISIÇÃO)',
+      tipo: 'Débito',
+      valor: -Math.abs(this.vehicleData.valor_compra),
+      centro_custo_nome: 'Investimento'
+    };
+    
+    vehicleMovements.push(compraEntry);
+
+    // Add Sale as a Credit entry if available
+    if (this.vehicleData.valor_venda) {
+      const vendaEntry = {
+        data: this.vehicleData.data_venda,
+        historico: 'VALOR DE VENDA',
+        tipo: 'Crédito',
+        valor: Math.abs(this.vehicleData.valor_venda),
+        centro_custo_nome: 'Venda'
+      };
+      vehicleMovements.push(vendaEntry);
+    }
+
+    // Sort by date
+    this.movements = vehicleMovements.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime());
+
+    // Calculate Summary based on ALL entries in the table
+    const exp = this.movements
+      .filter(m => m.tipo === 'Débito')
+      .reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
+      
+    const rev = this.movements
+      .filter(m => m.tipo === 'Crédito')
+      .reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
 
     this.summary = {
       expenses: exp,
       revenue: rev,
-      profit: (this.vehicleData.valor_venda || 0) - this.vehicleData.valor_compra - exp + rev
+      profit: rev - exp
     };
   }
 

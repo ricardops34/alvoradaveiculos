@@ -4,13 +4,14 @@
   [p-filter]="filterSettings">
 
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="costCenters" 
     [p-actions]="tableActions"
     [p-show-more-disabled]="!hasNext"
     [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
     (p-show-more)="showMore()">
   </po-table>
 
@@ -18,7 +19,8 @@
 
 <po-modal #ccModal 
   [p-title]="isEditing ? 'Editar Centro de Custo' : 'Novo Centro de Custo'"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: ccModal.close.bind(ccModal) }">
 
   <form #ccForm="ngForm">

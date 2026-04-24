@@ -4,21 +4,26 @@
   [p-filter]="filterSettings">
   
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="modelos"
     [p-actions]="actions"
     [p-show-more-disabled]="!hasNext"
+<<<<<<< HEAD
     [p-loading-show-more]="loadingShowMore"
     (p-show-more)="showMore()">
+=======
+    (p-show-more)="showMore()"
+    [p-loading]="isLoading">
+>>>>>>> 99a63ce83e88ffefc03429f478c90ead5322f01b
   </po-table>
 
 </po-page-list>
 
 <po-modal #modeloModal 
-  [p-title]="'Manutenção de Modelo - ' + marcaNome"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-title]="modelo.id ? 'Editar Modelo' : 'Novo Modelo'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: modeloModal.close.bind(modeloModal) }">
   
   <div class="po-row">

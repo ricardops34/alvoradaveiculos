@@ -2,8 +2,9 @@
 
   <po-container>
     <div class="po-row">
-    <po-datepicker class="po-md-4" name="inicio" [(ngModel)]="filter.data_inicio" p-label="Data Início" (p-change)="search()"></po-datepicker>
-    <po-datepicker class="po-md-4" name="fim" [(ngModel)]="filter.data_fim" p-label="Data Fim" (p-change)="search()"></po-datepicker>
+    <po-datepicker class="po-md-3" name="inicio" [(ngModel)]="filter.data_inicio" p-label="Data Início" (p-change)="search()"></po-datepicker>
+    <po-datepicker class="po-md-3" name="fim" [(ngModel)]="filter.data_fim" p-label="Data Fim" (p-change)="search()"></po-datepicker>
+    <po-switch class="po-md-3 po-mt-4" name="ignore" [(ngModel)]="filter.ignoreVehiclePurchase" p-label="Ignorar Custos de Estoque" (p-change)="search()"></po-switch>
     <div class="po-md-2 po-mt-4 po-p-0 po-row">
       <po-button class="po-md-6" p-icon="an an-file-xls" (p-click)="exportXLS()" p-tooltip="Excel"></po-button>
       <po-button class="po-md-6" p-icon="an an-file-pdf" (p-click)="exportPDF()" p-tooltip="PDF"></po-button>

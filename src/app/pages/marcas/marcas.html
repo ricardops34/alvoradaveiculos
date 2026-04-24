@@ -1,42 +1,44 @@
 <po-page-list 
-  p-title="Cadastro de Marcas"
-  [p-actions]="pageActions"
-  [p-filter]="filterSettings">
-  
+  p-title="Cadastro de Marcas" 
+  [p-actions]="pageActions" 
+  [p-filter]="filterSettings" 
+  [p-disclaimer-group]="disclaimerGroup">
+
   <po-table 
-    class="po-mt-1"
-    p-sort="true"
+    class="po-mt-1 po-mb-5" 
+    p-sort="true" 
     [p-columns]="columns" 
-    [p-items]="marcas"
+    [p-items]="marcas" 
     [p-actions]="actions"
-    [p-show-more-disabled]="!hasNext"
+    [p-show-more-disabled]="!hasNext" 
     [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
     (p-show-more)="showMore()">
   </po-table>
 
 </po-page-list>
 
 <po-modal #marcaModal 
-  p-title="Manutenção de Marca"
-  [p-primary-action]="{ label: 'Salvar', action: save.bind(this) }"
+  [p-title]="marca.id ? 'Editar Marca' : 'Nova Marca'"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
   [p-secondary-action]="{ label: 'Cancelar', action: marcaModal.close.bind(marcaModal) }">
-  
+
   <div class="po-row">
-    <po-input 
-      class="po-md-8" 
-      name="nome" 
-      [(ngModel)]="marca.nome" 
-      p-label="Nome da Marca" 
-      p-required>
+    <po-input class="po-md-8" name="nome" [(ngModel)]="marca.nome" p-label="Nome da Marca" p-required>
     </po-input>
 
-    <po-select 
-      class="po-md-4" 
-      name="tipo_veiculo" 
-      [(ngModel)]="marca.tipo_veiculo" 
-      p-label="Tipo" 
-      [p-options]="tipoOptions"
-      p-required>
+    <po-select class="po-md-4" name="tipo_veiculo" [(ngModel)]="marca.tipo_veiculo" p-label="Tipo"
+      [p-options]="tipoOptions" p-required>
     </po-select>
   </div>
+</po-modal>
+
+<po-modal #advancedFilterModal p-title="Busca avançada" [p-primary-action]="{ label: 'Aplicar filtros', action: applyFilters.bind(this) }">
+  <po-checkbox-group
+    name="tipo_veiculo_filter"
+    p-label="Filtrar por Tipo"
+    p-columns="2"
+    [p-options]="tipoOptions"
+    [(ngModel)]="selectedTipos">
+  </po-checkbox-group>
 </po-modal>

@@ -4,18 +4,22 @@
   [p-filter]="filterSettings">
 
   <po-table 
-    class="po-mt-1"
+    class="po-mt-1 po-mb-5"
     p-sort="true"
     [p-columns]="columns" 
     [p-items]="users" 
-    [p-actions]="tableActions">
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    (p-show-more)="showMore()"
+    [p-loading]="isLoading">
   </po-table>
 </po-page-list>
 
 <po-modal #userModal 
   [p-title]="isEditing ? 'Editar Usuário' : 'Novo Usuário'"
-  p-primary-label="Salvar"
-  [p-primary-action]="{ action: save.bind(this), label: 'Salvar' }">
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: userModal.close.bind(userModal) }">
   
   <form #userForm="ngForm">
     <div class="po-row">

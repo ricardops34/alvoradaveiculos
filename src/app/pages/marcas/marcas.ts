@@ -8,7 +8,8 @@ import {
   PoNotificationService,
   PoTableAction,
   PoPageAction,
-  PoSelectOption
+  PoSelectOption,
+  PoDialogService
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 import { Router } from '@angular/router';
@@ -24,11 +25,21 @@ export class MarcasComponent implements OnInit {
   @ViewChild('marcaModal', { static: true }) marcaModal!: PoModalComponent;
 
   marcas: any[] = [];
+  
+  // Paginação no servidor (Priorizado)
   page: number = 1;
+  pageSize: number = 20;
   hasNext: boolean = false;
   loadingShowMore: boolean = false;
   currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
+
   marca: any = { nome: '', tipo_veiculo: 'Carro' };
+  
+  selectedTipos: string[] = [];
+  currentSearchTerm: string = '';
+  @ViewChild('advancedFilterModal', { static: true }) advancedFilterModal!: PoModalComponent;
   
   public readonly columns: PoTableColumn[] = [
     { property: 'id', label: 'ID', width: '80px' },
@@ -58,19 +69,30 @@ export class MarcasComponent implements OnInit {
     { label: 'Novo', action: this.add.bind(this), icon: 'an an-plus' }
   ];
 
+  public disclaimerGroup: any = {
+    title: 'Filtros',
+    disclaimers: [],
+    change: this.onChangeDisclaimer.bind(this)
+  };
+
   public readonly filterSettings: any = {
     action: this.filterMarcas.bind(this),
+    advancedAction: this.openAdvancedFilter.bind(this),
     placeholder: 'Pesquisar marcas...'
   };
 
   constructor(
     private db: DatabaseService, 
-    private notification: PoNotificationService,
-    private router: Router
+    private poNotification: PoNotificationService,
+    private router: Router,
+    private poDialog: PoDialogService
   ) {}
 
   async ngOnInit() {
-    this.load();
+    this.isLoading = true;
+    await this.db.init();
+    await this.load();
+    this.isLoading = false;
   }
 
   async load() {
@@ -89,7 +111,7 @@ export class MarcasComponent implements OnInit {
     try {
       const response = await this.db.getAll('marcas', { 
         page: this.page, 
-        limit: 20,
+        limit: this.pageSize,
         filter: this.currentFilter 
       });
 
@@ -97,7 +119,6 @@ export class MarcasComponent implements OnInit {
         this.marcas = [...this.marcas, ...response.items];
         this.hasNext = response.hasNext;
       } else {
-        // Fallback para caso a rota não retorne o objeto paginado
         this.marcas = response;
         this.hasNext = false;
       }
@@ -107,7 +128,26 @@ export class MarcasComponent implements OnInit {
   }
 
   filterMarcas(filter: string) {
-    this.currentFilter = filter;
+    this.currentFilter = filter || '';
+    this.load();
+  }
+
+  openAdvancedFilter() {
+    this.advancedFilterModal.open();
+  }
+
+  applyFilters() {
+    this.disclaimerGroup.disclaimers = this.selectedTipos.map(tipo => ({
+      label: tipo,
+      property: 'tipo_veiculo',
+      value: tipo
+    }));
+    this.advancedFilterModal.close();
+    this.load();
+  }
+
+  onChangeDisclaimer(disclaimers: any[]) {
+    this.selectedTipos = disclaimers.map(d => d.value);
     this.load();
   }
 
@@ -126,26 +166,40 @@ export class MarcasComponent implements OnInit {
   }
 
   async save() {
+    this.isLoadingSave = true;
     try {
       if (this.marca.id) {
         await this.db.update('marcas', this.marca.id, this.marca);
-        this.notification.success('Marca atualizada!');
+        this.poNotification.success('Marca atualizada!');
       } else {
         await this.db.insert('marcas', this.marca);
-        this.notification.success('Marca criada!');
+        this.poNotification.success('Marca criada!');
       }
       this.marcaModal.close();
-      this.load();
+      await this.load();
     } catch (err) {
-      this.notification.error('Erro ao salvar marca.');
+      this.poNotification.error('Erro ao salvar marca.');
+    } finally {
+      this.isLoadingSave = false;
     }
   }
 
-  async delete(item: any) {
-    if (confirm(`Deseja excluir a marca ${item.nome}? Todos os modelos vinculados serão apagados.`)) {
-      await this.db.delete('marcas', item.id);
-      this.notification.warning('Marca excluída!');
-      this.load();
-    }
+  delete(item: any) {
+    this.poDialog.confirm({
+      title: 'Excluir Marca',
+      message: `Deseja excluir a marca ${item.nome}? Todos os modelos vinculados serão apagados.`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('marcas', item.id);
+          this.poNotification.warning('Marca excluída!');
+          await this.load();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir marca.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }

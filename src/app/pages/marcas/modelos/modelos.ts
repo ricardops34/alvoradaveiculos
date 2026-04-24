@@ -6,6 +6,7 @@ import {
   PoTableColumn, 
   PoModalComponent, 
   PoNotificationService,
+  PoDialogService,
   PoTableAction,
   PoPageAction
 } from '@po-ui/ng-components';
@@ -24,10 +25,16 @@ export class ModelosComponent implements OnInit {
   marcaId: number | null = null;
   marcaNome: string = '';
   modelos: any[] = [];
+  
+  // Paginação no servidor (Priorizado)
   page: number = 1;
+  pageSize: number = 20;
   hasNext: boolean = false;
   loadingShowMore: boolean = false;
   currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
+
   modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
   
   public readonly columns: PoTableColumn[] = [
@@ -56,17 +63,20 @@ export class ModelosComponent implements OnInit {
   constructor(
     private db: DatabaseService, 
     private notification: PoNotificationService,
+    private poDialog: PoDialogService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     this.marcaId = Number(this.route.snapshot.paramMap.get('id'));
     if (this.marcaId) {
       const marca = await this.db.getById('marcas', this.marcaId);
       this.marcaNome = marca?.nome || 'Marca';
-      this.load();
+      await this.load();
     }
+    this.isLoading = false;
   }
 
   async load() {
@@ -86,7 +96,7 @@ export class ModelosComponent implements OnInit {
       const response = await this.db.getAll('modelos', { 
         marca_id: this.marcaId,
         page: this.page, 
-        limit: 20,
+        limit: this.pageSize,
         filter: this.currentFilter 
       });
 
@@ -103,7 +113,7 @@ export class ModelosComponent implements OnInit {
   }
 
   filterModelos(filter: string) {
-    this.currentFilter = filter;
+    this.currentFilter = filter || '';
     this.load();
   }
 
@@ -128,6 +138,7 @@ export class ModelosComponent implements OnInit {
   }
 
   async save() {
+    this.isLoadingSave = true;
     try {
       if (this.modelo.id) {
         await this.db.update('modelos', this.modelo.id, this.modelo);
@@ -137,17 +148,30 @@ export class ModelosComponent implements OnInit {
         this.notification.success('Modelo criado!');
       }
       this.modeloModal.close();
-      this.load();
+      await this.load();
     } catch (err) {
       this.notification.error('Erro ao salvar modelo.');
+    } finally {
+      this.isLoadingSave = false;
     }
   }
 
-  async delete(item: any) {
-    if (confirm(`Deseja excluir o modelo ${item.nome}?`)) {
-      await this.db.delete('modelos', item.id);
-      this.notification.warning('Modelo excluído!');
-      this.load();
-    }
+  delete(item: any) {
+    this.poDialog.confirm({
+      title: 'Excluir Modelo',
+      message: `Deseja excluir o modelo ${item.nome}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('modelos', item.id);
+          this.notification.warning('Modelo excluído!');
+          await this.load();
+        } catch (error) {
+          this.notification.error('Erro ao excluir modelo.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }

@@ -69,8 +69,11 @@
   color: #0f3460;
   font-size: 14px;
   text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s;
 
   &:hover {
+    color: #16213e;
     text-decoration: underline;
   }
 }

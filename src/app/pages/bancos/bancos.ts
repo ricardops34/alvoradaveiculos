@@ -8,7 +8,8 @@ import {
   PoTableAction, 
   PoModalComponent, 
   PoNotificationService, 
-  PoSelectOption 
+  PoSelectOption,
+  PoDialogService
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
 
@@ -23,10 +24,16 @@ export class BancosComponent implements OnInit {
   @ViewChild('bankForm', { static: false }) bankForm!: any;
 
   banks: any[] = [];
+  
+  // Paginação no servidor (Priorizado)
   page: number = 1;
+  pageSize: number = 20;
   hasNext: boolean = false;
   loadingShowMore: boolean = false;
   currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
+
   bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
   isEditing: boolean = false;
 
@@ -64,12 +71,15 @@ export class BancosComponent implements OnInit {
 
   constructor(
     private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    private poDialog: PoDialogService
   ) {}
 
   async ngOnInit() {
+    this.isLoading = true;
     await this.db.init();
-    this.loadBanks();
+    await this.loadBanks();
+    this.isLoading = false;
   }
 
   async loadBanks() {
@@ -88,7 +98,7 @@ export class BancosComponent implements OnInit {
     try {
       const response = await this.db.getAll('bancos', { 
         page: this.page, 
-        limit: 20,
+        limit: this.pageSize,
         filter: this.currentFilter 
       });
 
@@ -105,7 +115,7 @@ export class BancosComponent implements OnInit {
   }
 
   filterBanks(filter: string) {
-    this.currentFilter = filter;
+    this.currentFilter = filter || '';
     this.loadBanks();
   }
 
@@ -128,20 +138,40 @@ export class BancosComponent implements OnInit {
       return;
     }
 
-    if (this.isEditing) {
-      await this.db.update('bancos', this.bank.id, this.bank);
-      this.poNotification.success('Banco atualizado com sucesso!');
-    } else {
-      await this.db.insert('bancos', this.bank);
-      this.poNotification.success('Banco cadastrado com sucesso!');
+    this.isLoadingSave = true;
+    try {
+      if (this.isEditing) {
+        await this.db.update('bancos', this.bank.id!, this.bank);
+        this.poNotification.success('Conta atualizada!');
+      } else {
+        await this.db.insert('bancos', this.bank);
+        this.poNotification.success('Conta cadastrada!');
+      }
+      await this.loadBanks();
+      this.bankModal.close();
+    } catch (error) {
+      this.poNotification.error('Erro ao salvar conta.');
+    } finally {
+      this.isLoadingSave = false;
     }
-    await this.loadBanks();
-    this.bankModal.close();
   }
 
-  async delete(bank: any) {
-    await this.db.delete('bancos', bank.id);
-    this.poNotification.warning('Banco excluído!');
-    await this.loadBanks();
+  delete(bank: any) {
+    this.poDialog.confirm({
+      title: 'Excluir Conta',
+      message: `Tem certeza que deseja excluir a conta ${bank.nome}?`,
+      confirm: async () => {
+        this.isLoading = true;
+        try {
+          await this.db.delete('bancos', bank.id!);
+          this.poNotification.warning('Conta excluída!');
+          await this.loadBanks();
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir conta.');
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    });
   }
 }
