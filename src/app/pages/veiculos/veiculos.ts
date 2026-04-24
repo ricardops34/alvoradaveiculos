@@ -323,11 +323,6 @@ export class VeiculosComponent implements OnInit {
     this.loadVehicles();
   }
 
-  filterVehicles(filter: string) {
-    this.currentFilter = filter;
-    this.loadVehicles();
-  }
-
   getEmptyVehicle(): Vehicle {
     return {
       tipo_veiculo: undefined,
@@ -387,12 +382,12 @@ export class VeiculosComponent implements OnInit {
   async openStatement(vehicle: Vehicle) {
     this.vehicle = vehicle;
     const allMovements = await this.db.getAll('movimentos');
-    const movements = allMovements.filter(m => m.veiculo_id === vehicle.id);
+    const movements = allMovements.filter((m: any) => m.veiculo_id === vehicle.id);
     const centers = await this.db.getAll('centros_custo');
 
-    this.selectedVehicleStatement = movements.map(m => ({
+    this.selectedVehicleStatement = movements.map((m: any) => ({
       ...m,
-      centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome
+      centro_custo_nome: centers.find((c: any) => c.id === m.centro_custo_id)?.nome
     }));
 
     // Separar movimentos que são a própria compra/venda para não somar em duplicidade
@@ -400,8 +395,8 @@ export class VeiculosComponent implements OnInit {
     const isSale = (m: any) => m.historico.startsWith('Venda Veículo');
 
     // Despesas e receitas ADICIONAIS (ex: manutenção, comissão) - exclui a compra e venda
-    const additionalExpenses = movements.filter(m => m.tipo === 'Débito' && !isPurchase(m)).reduce((sum, m) => sum + Math.abs(parseFloat(m.valor)), 0);
-    const additionalRevenue = movements.filter(m => m.tipo === 'Crédito' && !isSale(m)).reduce((sum, m) => sum + parseFloat(m.valor), 0);
+    const additionalExpenses = movements.filter((m: any) => m.tipo === 'Débito' && !isPurchase(m)).reduce((sum: number, m: any) => sum + Math.abs(parseFloat(m.valor)), 0);
+    const additionalRevenue = movements.filter((m: any) => m.tipo === 'Crédito' && !isSale(m)).reduce((sum: number, m: any) => sum + parseFloat(m.valor), 0);
     
     this.vehicleSummary = {
       totalExpenses: additionalExpenses,
