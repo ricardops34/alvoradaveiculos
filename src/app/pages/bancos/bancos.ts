@@ -24,14 +24,16 @@ export class BancosComponent implements OnInit {
   @ViewChild('bankForm', { static: false }) bankForm!: any;
 
   banks: any[] = [];
-  allBanks: any[] = [];
-  filteredBanks: any[] = [];
-  isLoading: boolean = true;
-  isLoadingSave: boolean = false;
   
-  hasNext: boolean = false;
+  // Paginação no servidor (Priorizado)
   page: number = 1;
   pageSize: number = 20;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
+
   bank: any = { codigo: '', nome: '', agencia: '', conta: '', tipo: 'Corrente', limite_credito: 0, saldo_inicial: 0 };
   isEditing: boolean = false;
 
@@ -81,42 +83,40 @@ export class BancosComponent implements OnInit {
   }
 
   async loadBanks() {
-    this.allBanks = await this.db.getAll('bancos');
-    this.filteredBanks = [...this.allBanks];
     this.page = 1;
-    this.applyPagination(true);
+    this.banks = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('bancos', { 
+        page: this.page, 
+        limit: this.pageSize,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.banks = [...this.banks, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.banks = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterBanks(filter: string) {
-    if (!filter) {
-      this.filteredBanks = [...this.allBanks];
-    } else {
-      const searchTerm = filter.toLowerCase();
-      this.filteredBanks = this.allBanks.filter(b => 
-        b.nome.toLowerCase().includes(searchTerm) ||
-        b.codigo?.toLowerCase().includes(searchTerm) ||
-        b.conta?.toLowerCase().includes(searchTerm)
-      );
-    }
-    this.page = 1;
-    this.applyPagination(true);
-  }
-
-  applyPagination(reset: boolean = true) {
-    if (reset) {
-      this.banks = [];
-    }
-    const startIndex = (this.page - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    const nextItems = this.filteredBanks.slice(startIndex, endIndex);
-    
-    this.banks = [...this.banks, ...nextItems];
-    this.hasNext = endIndex < this.filteredBanks.length;
-  }
-
-  showMore() {
-    this.page++;
-    this.applyPagination(false);
+    this.currentFilter = filter || '';
+    this.loadBanks();
   }
 
   openNew() {

@@ -3,21 +3,35 @@ import pool from '../db';
 
 const router = Router();
 
-// GET - Listar todos (pode filtrar por tipo_veiculo)
+// GET - Listar todos (pode filtrar por tipo_veiculo e suporta paginação)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { tipo_veiculo } = req.query;
+    const { tipo_veiculo, page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+    
     let query = 'SELECT * FROM marcas';
     let params: any[] = [];
+    let paramIndex = 1;
 
     if (tipo_veiculo) {
-      query += ' WHERE tipo_veiculo = $1';
+      query += ` WHERE tipo_veiculo = $${paramIndex++}`;
       params.push(tipo_veiculo);
     }
-    query += ' ORDER BY nome';
+    
+    // Contagem total para o frontend saber se tem mais
+    const totalResult = await pool.query(`SELECT COUNT(*) FROM marcas ${tipo_veiculo ? 'WHERE tipo_veiculo = $1' : ''}`, params);
+    const total = parseInt(totalResult.rows[0].count);
+
+    query += ` ORDER BY nome LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+    params.push(Number(limit), offset);
 
     const result = await pool.query(query, params);
-    res.json(result.rows);
+    
+    res.json({
+      items: result.rows,
+      hasNext: offset + result.rows.length < total,
+      total: total
+    });
   } catch (err) {
     console.error('Erro ao listar marcas:', err);
     res.status(500).json({ error: 'Erro interno' });

@@ -3,12 +3,13 @@ import pool from '../db';
 
 const router = Router();
 
-// GET - Listar todos (pode filtrar por marca_id e tipo_veiculo)
+// GET - Listar todos (pode filtrar por marca_id e tipo_veiculo e suporta paginação)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { marca_id, tipo_veiculo } = req.query;
-    let query = `
-      SELECT m.*, ma.nome as marca_nome 
+    const { marca_id, tipo_veiculo, page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    let queryBase = `
       FROM modelos m 
       LEFT JOIN marcas ma ON m.marca_id = ma.id 
     `;
@@ -24,14 +25,23 @@ router.get('/', async (req: Request, res: Response) => {
       params.push(tipo_veiculo);
     }
 
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
+    const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
+    
+    // Total para paginação
+    const totalResult = await pool.query(`SELECT COUNT(*) ${queryBase} ${whereClause}`, params);
+    const total = parseInt(totalResult.rows[0].count);
 
-    query += ' ORDER BY m.nome';
+    let query = `SELECT m.*, ma.nome as marca_nome ${queryBase} ${whereClause}`;
+    query += ` ORDER BY m.nome LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    params.push(Number(limit), offset);
 
     const result = await pool.query(query, params);
-    res.json(result.rows);
+    
+    res.json({
+      items: result.rows,
+      hasNext: offset + result.rows.length < total,
+      total: total
+    });
   } catch (err) {
     console.error('Erro ao listar modelos:', err);
     res.status(500).json({ error: 'Erro interno' });

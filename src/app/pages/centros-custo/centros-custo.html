@@ -10,8 +10,9 @@
     [p-items]="costCenters" 
     [p-actions]="tableActions"
     [p-show-more-disabled]="!hasNext"
-    (p-show-more)="showMore()"
-    [p-loading]="isLoading">
+    [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
+    (p-show-more)="showMore()">
   </po-table>
 
 </po-page-list>

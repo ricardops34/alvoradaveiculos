@@ -24,14 +24,16 @@ export class CentrosCustoComponent implements OnInit {
   @ViewChild('ccForm', { static: false }) ccForm!: any;
 
   costCenters: any[] = [];
-  allCostCenters: any[] = [];
-  filteredCostCenters: any[] = [];
-  isLoading: boolean = true;
-  isLoadingSave: boolean = false;
   
-  hasNext: boolean = false;
+  // Paginação no servidor (Priorizado)
   page: number = 1;
   pageSize: number = 20;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
+
   cc: any = { codigo: '', nome: '', tipo: 'Despesa' };
   isEditing: boolean = false;
 
@@ -79,41 +81,40 @@ export class CentrosCustoComponent implements OnInit {
   }
 
   async loadCC() {
-    this.allCostCenters = await this.db.getAll('centros_custo');
-    this.filteredCostCenters = [...this.allCostCenters];
     this.page = 1;
-    this.applyPagination(true);
+    this.costCenters = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('centros_custo', { 
+        page: this.page, 
+        limit: this.pageSize,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.costCenters = [...this.costCenters, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.costCenters = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterCC(filter: string) {
-    if (!filter) {
-      this.filteredCostCenters = [...this.allCostCenters];
-    } else {
-      const searchTerm = filter.toLowerCase();
-      this.filteredCostCenters = this.allCostCenters.filter(c => 
-        c.nome.toLowerCase().includes(searchTerm) ||
-        c.codigo?.toLowerCase().includes(searchTerm)
-      );
-    }
-    this.page = 1;
-    this.applyPagination(true);
-  }
-
-  applyPagination(reset: boolean = true) {
-    if (reset) {
-      this.costCenters = [];
-    }
-    const startIndex = (this.page - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    const nextItems = this.filteredCostCenters.slice(startIndex, endIndex);
-    
-    this.costCenters = [...this.costCenters, ...nextItems];
-    this.hasNext = endIndex < this.filteredCostCenters.length;
-  }
-
-  showMore() {
-    this.page++;
-    this.applyPagination(false);
+    this.currentFilter = filter || '';
+    this.loadCC();
   }
 
   openNew() {

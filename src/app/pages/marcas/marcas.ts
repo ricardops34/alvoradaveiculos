@@ -25,19 +25,21 @@ export class MarcasComponent implements OnInit {
   @ViewChild('marcaModal', { static: true }) marcaModal!: PoModalComponent;
 
   marcas: any[] = [];
-  allMarcas: any[] = [];
-  filteredMarcas: any[] = [];
+  
+  // Paginação no servidor (Priorizado)
+  page: number = 1;
+  pageSize: number = 20;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
   isLoading: boolean = true;
   isLoadingSave: boolean = false;
+
   marca: any = { nome: '', tipo_veiculo: 'Carro' };
   
   selectedTipos: string[] = [];
   currentSearchTerm: string = '';
   @ViewChild('advancedFilterModal', { static: true }) advancedFilterModal!: PoModalComponent;
-  
-  hasNext: boolean = false;
-  page: number = 1;
-  pageSize: number = 20;
   
   public readonly columns: PoTableColumn[] = [
     { property: 'id', label: 'ID', width: '80px' },
@@ -94,53 +96,40 @@ export class MarcasComponent implements OnInit {
   }
 
   async load() {
-    this.allMarcas = await this.db.getAll('marcas');
-    this.filteredMarcas = [...this.allMarcas];
     this.page = 1;
-    this.applyPagination(true);
+    this.marcas = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('marcas', { 
+        page: this.page, 
+        limit: this.pageSize,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.marcas = [...this.marcas, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.marcas = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterMarcas(filter: string) {
-    this.currentSearchTerm = filter || '';
-    this.applyAllFilters();
-  }
-
-  applyAllFilters() {
-    let filtered = [...this.allMarcas];
-
-    if (this.currentSearchTerm) {
-      const searchTerm = this.currentSearchTerm.toLowerCase();
-      filtered = filtered.filter(m => 
-        m.nome.toLowerCase().includes(searchTerm) ||
-        m.id.toString().includes(searchTerm) ||
-        m.tipo_veiculo?.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    if (this.selectedTipos.length > 0) {
-      filtered = filtered.filter(m => this.selectedTipos.includes(m.tipo_veiculo));
-    }
-
-    this.filteredMarcas = filtered;
-    this.page = 1;
-    this.applyPagination(true);
-  }
-
-  applyPagination(reset: boolean = true) {
-    if (reset) {
-      this.marcas = [];
-    }
-    const startIndex = (this.page - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    const nextItems = this.filteredMarcas.slice(startIndex, endIndex);
-    
-    this.marcas = [...this.marcas, ...nextItems];
-    this.hasNext = endIndex < this.filteredMarcas.length;
-  }
-
-  showMore() {
-    this.page++;
-    this.applyPagination(false);
+    this.currentFilter = filter || '';
+    this.load();
   }
 
   openAdvancedFilter() {
@@ -148,19 +137,18 @@ export class MarcasComponent implements OnInit {
   }
 
   applyFilters() {
-    const disclaimers = this.selectedTipos.map(tipo => ({
+    this.disclaimerGroup.disclaimers = this.selectedTipos.map(tipo => ({
       label: tipo,
       property: 'tipo_veiculo',
       value: tipo
     }));
-    this.disclaimerGroup.disclaimers = disclaimers;
     this.advancedFilterModal.close();
-    this.applyAllFilters();
+    this.load();
   }
 
   onChangeDisclaimer(disclaimers: any[]) {
     this.selectedTipos = disclaimers.map(d => d.value);
-    this.applyAllFilters();
+    this.load();
   }
 
   add() {

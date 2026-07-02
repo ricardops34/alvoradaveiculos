@@ -29,10 +29,13 @@ export class DatabaseService {
     return endpoints[table] || `/api/${table}`;
   }
 
-  async getAll(table: string, params?: any): Promise<any[]> {
+  async getAll(table: string, params?: any): Promise<any> {
     try {
       const endpoint = this.getEndpoint(table);
-      return await firstValueFrom(this.http.get<any[]>(endpoint, { params }));
+      const response: any = await firstValueFrom(this.http.get<any>(endpoint, { params }));
+      // Se a resposta for um objeto com a chave 'items', retornamos o objeto todo para o componente tratar a paginação
+      // Senão, retornamos apenas o array (compatibilidade com rotas antigas)
+      return response;
     } catch (err) {
       console.error(`Erro ao buscar ${table}:`, err);
       return [];

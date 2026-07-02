@@ -26,19 +26,16 @@ export class PessoasComponent implements OnInit {
   @ViewChild('personForm', { static: false }) personForm!: any;
 
   people: any[] = [];
-  allPeople: any[] = [];
-  filteredPeople: any[] = [];
-  isLoading: boolean = true;
-  isLoadingSave: boolean = false;
   
-  hasNext: boolean = false;
+  // Paginação no servidor (HEAD Priorizado)
   page: number = 1;
   pageSize: number = 20;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
 
-  selectedTipos: string[] = [];
-  selectedPapeis: string[] = [];
-  currentSearchTerm: string = '';
-  @ViewChild('advancedFilterModal', { static: true }) advancedFilterModal!: PoModalComponent;
   person: Person = this.getEmptyPerson();
   isEditing: boolean = false;
 
@@ -63,7 +60,6 @@ export class PessoasComponent implements OnInit {
 
   public readonly filterSettings: any = {
     action: this.filterPeople.bind(this),
-    advancedAction: this.openAdvancedFilter.bind(this),
     placeholder: 'Pesquisar pessoas...'
   };
 
@@ -98,89 +94,56 @@ export class PessoasComponent implements OnInit {
     await this.loadPeople();
     this.isLoading = false;
   }
+
   async loadPeople() {
-    const rawPeople = await this.db.getAll('pessoas');
-    this.allPeople = rawPeople.map(p => {
-      const papeis = [];
-      if (p.is_cliente) papeis.push('Cliente');
-      if (p.is_fornecedor) papeis.push('Fornecedor');
-      if (p.is_vendedor) papeis.push('Vendedor');
-      if (p.is_socio) papeis.push('Sócio');
-      return { ...p, papeis: papeis.join(', ') };
-    });
-    this.filteredPeople = [...this.allPeople];
     this.page = 1;
-    this.applyPagination(true);
+    this.people = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('pessoas', { 
+        page: this.page, 
+        limit: this.pageSize,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        const processedItems = response.items.map((p: any) => {
+          const papeis = [];
+          if (p.is_cliente) papeis.push('Cliente');
+          if (p.is_fornecedor) papeis.push('Fornecedor');
+          if (p.is_vendedor) papeis.push('Vendedor');
+          if (p.is_socio) papeis.push('Sócio');
+          return { ...p, papeis: papeis.join(', ') };
+        });
+        this.people = [...this.people, ...processedItems];
+        this.hasNext = response.hasNext;
+      } else {
+        // Fallback
+        this.people = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterPeople(filter: string) {
-    this.currentSearchTerm = filter || '';
-    this.applyAllFilters();
-  }
-
-  applyAllFilters() {
-    let filtered = [...this.allPeople];
-
-    if (this.currentSearchTerm) {
-      const searchTerm = this.currentSearchTerm.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.nome.toLowerCase().includes(searchTerm) ||
-        p.documento?.toLowerCase().includes(searchTerm) ||
-        p.cidade?.toLowerCase().includes(searchTerm) ||
-        p.email?.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    if (this.selectedTipos.length > 0) {
-      filtered = filtered.filter(p => this.selectedTipos.includes(p.tipo_pessoa));
-    }
-    
-    if (this.selectedPapeis.length > 0) {
-      filtered = filtered.filter(p => {
-        return this.selectedPapeis.some(papel => p.papeis.includes(papel));
-      });
-    }
-
-    this.filteredPeople = filtered;
-    this.page = 1;
-    this.applyPagination(true);
-  }
-
-  applyPagination(reset: boolean = true) {
-    if (reset) {
-      this.people = [];
-    }
-    const startIndex = (this.page - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    const nextItems = this.filteredPeople.slice(startIndex, endIndex);
-    
-    this.people = [...this.people, ...nextItems];
-    this.hasNext = endIndex < this.filteredPeople.length;
-  }
-
-  showMore() {
-    this.page++;
-    this.applyPagination(false);
-  }
-
-  openAdvancedFilter() {
-    this.advancedFilterModal.open();
-  }
-
-  applyFilters() {
-    const disclaimers = [
-      ...this.selectedTipos.map(tipo => ({ label: tipo, property: 'tipo_pessoa', value: tipo })),
-      ...this.selectedPapeis.map(papel => ({ label: papel, property: 'papel', value: papel }))
-    ];
-    this.disclaimerGroup.disclaimers = disclaimers;
-    this.advancedFilterModal.close();
-    this.applyAllFilters();
+    this.currentFilter = filter || '';
+    this.loadPeople();
   }
 
   onChangeDisclaimer(disclaimers: any[]) {
-    this.selectedTipos = disclaimers.filter(d => d.property === 'tipo_pessoa').map(d => d.value);
-    this.selectedPapeis = disclaimers.filter(d => d.property === 'papel').map(d => d.value);
-    this.applyAllFilters();
+    this.currentFilter = disclaimers.find(d => d.property === 'filter')?.value || '';
+    this.loadPeople();
   }
 
   getEmptyPerson(): Person {
@@ -221,13 +184,11 @@ export class PessoasComponent implements OnInit {
       return;
     }
 
-    // Sync roles to person object
     this.person.is_cliente = this.roles.includes('cliente');
     this.person.is_fornecedor = this.roles.includes('fornecedor');
     this.person.is_vendedor = this.roles.includes('vendedor');
     this.person.is_socio = this.roles.includes('socio');
 
-    // Convert boolean to number for PostgreSQL
     const dataToSave = {
       ...this.person,
       is_cliente: this.person.is_cliente ? 1 : 0,

@@ -25,15 +25,17 @@ export class ModelosComponent implements OnInit {
   marcaId: number | null = null;
   marcaNome: string = '';
   modelos: any[] = [];
-  allModelosCache: any[] = [];
-  filteredModelosCache: any[] = [];
-  isLoading: boolean = true;
-  isLoadingSave: boolean = false;
-  modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
   
-  hasNext: boolean = false;
+  // Paginação no servidor (Priorizado)
   page: number = 1;
   pageSize: number = 20;
+  hasNext: boolean = false;
+  loadingShowMore: boolean = false;
+  currentFilter: string = '';
+  isLoading: boolean = true;
+  isLoadingSave: boolean = false;
+
+  modelo: any = { nome: '', ano_inicial: null, ano_final: null, descricao_detalhada: '' };
   
   public readonly columns: PoTableColumn[] = [
     { property: 'id', label: 'ID', width: '80px' },
@@ -78,43 +80,41 @@ export class ModelosComponent implements OnInit {
   }
 
   async load() {
-    // Usar query string para filtrar no backend
-    this.allModelosCache = await this.db.getAll(`modelos?marca_id=${this.marcaId}`);
-    this.filteredModelosCache = [...this.allModelosCache];
     this.page = 1;
-    this.applyPagination(true);
+    this.modelos = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('modelos', { 
+        marca_id: this.marcaId,
+        page: this.page, 
+        limit: this.pageSize,
+        filter: this.currentFilter 
+      });
+
+      if (response && response.items) {
+        this.modelos = [...this.modelos, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.modelos = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterModelos(filter: string) {
-    if (!filter) {
-      this.filteredModelosCache = [...this.allModelosCache];
-    } else {
-      const searchTerm = filter.toLowerCase();
-      this.filteredModelosCache = this.allModelosCache.filter(m => 
-        m.nome.toLowerCase().includes(searchTerm) ||
-        m.id.toString().includes(searchTerm) ||
-        m.descricao_detalhada?.toLowerCase().includes(searchTerm)
-      );
-    }
-    this.page = 1;
-    this.applyPagination(true);
-  }
-
-  applyPagination(reset: boolean = true) {
-    if (reset) {
-      this.modelos = [];
-    }
-    const startIndex = (this.page - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    const nextItems = this.filteredModelosCache.slice(startIndex, endIndex);
-    
-    this.modelos = [...this.modelos, ...nextItems];
-    this.hasNext = endIndex < this.filteredModelosCache.length;
-  }
-
-  showMore() {
-    this.page++;
-    this.applyPagination(false);
+    this.currentFilter = filter || '';
+    this.load();
   }
 
   back() {

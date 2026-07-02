@@ -3,10 +3,21 @@ import pool from '../db';
 
 const router = Router();
 
-router.get('/', async (_req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const result = await pool.query('SELECT * FROM centros_custo ORDER BY id');
-    res.json(result.rows);
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const totalResult = await pool.query('SELECT COUNT(*) FROM centros_custo');
+    const total = parseInt(totalResult.rows[0].count);
+
+    const result = await pool.query('SELECT * FROM centros_custo ORDER BY id DESC LIMIT $1 OFFSET $2', [Number(limit), offset]);
+    
+    res.json({
+      items: result.rows,
+      hasNext: offset + result.rows.length < total,
+      total: total
+    });
   } catch (err) {
     console.error('Erro ao listar centros de custo:', err);
     res.status(500).json({ error: 'Erro interno' });
