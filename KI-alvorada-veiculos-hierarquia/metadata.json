@@ -1,0 +1,15 @@
+{
+  "title": "Hierarquia de Veículos: Marcas e Modelos",
+  "summary": "Documentação do estado atual da refatoração da tela de veículos, que substituiu strings livres por entidades relacionais (Marca -> Modelo) com integração de inclusão rápida (QuickAdd).",
+  "createdAt": "2026-04-22T21:26:00Z",
+  "references": [
+    "ceb0f49a-e42b-4309-84fa-41c94ea49c2b"
+  ],
+  "tags": [
+    "alvorada-veiculos",
+    "po-ui",
+    "nestjs",
+    "postgres",
+    "quick-add"
+  ]
+}
