@@ -23,6 +23,7 @@
                 p-label="Logo da Empresa"
                 p-help="Ícone exibido no menu lateral. Formato sugerido: PNG transparente, 200x50px."
                 p-url="/api/config/upload"
+                [p-headers]="uploadHeaders"
                 (p-success)="onUploadSuccess($event, 'logo_url')">
               </po-upload>
               <div class="preview-container po-mt-1" *ngIf="parametros.logo_url">
@@ -36,6 +37,7 @@
                 p-label="Favicon"
                 p-help="Ícone da aba do navegador. Formato sugerido: .ico ou .png de 32x32px."
                 p-url="/api/config/upload"
+                [p-headers]="uploadHeaders"
                 (p-success)="onUploadSuccess($event, 'favicon_url')">
               </po-upload>
               <div class="preview-container po-mt-1" *ngIf="parametros.favicon_url">
@@ -51,6 +53,7 @@
                 p-label="Imagem de Fundo (Login)"
                 p-help="Fundo da tela de login. Formato sugerido: JPG/PNG de alta resolução (1920x1080px)."
                 p-url="/api/config/upload"
+                [p-headers]="uploadHeaders"
                 (p-success)="onUploadSuccess($event, 'background_url')">
               </po-upload>
               <div class="preview-container po-mt-1" *ngIf="parametros.background_url">
@@ -109,6 +112,7 @@
             p-label="Enviar novo arquivo de dados"
             p-help="Envie arquivos com o mesmo nome dos modelos (ex: marcas-carros.csv) para substituir os dados base."
             p-url="/api/config/upload-csv"
+            [p-headers]="uploadHeaders"
             (p-success)="onCsvUploadSuccess()">
           </po-upload>
         </div>
@@ -129,6 +133,37 @@
         <p *ngIf="marcasCount > 0" class="po-font-text-smaller po-mt-1" style="color: green;">
           ✅ Os dados já estão carregados no banco de dados.
         </p>
+      </po-widget>
+    </div>
+  </div>
+
+  <div class="po-row po-mt-2">
+    <div class="po-md-12">
+      <po-widget p-title="Backup do Banco de Dados">
+        <p class="po-font-text-smaller po-mb-2">
+          Exporta todos os cadastros e movimentações em um arquivo JSON. A importação atualiza os registros existentes
+          e adiciona os novos — nunca apaga nada do banco atual.
+        </p>
+        <div class="po-row">
+          <po-button
+            class="po-md-6"
+            p-label="Exportar Backup"
+            p-kind="primary"
+            p-icon="an an-download"
+            [p-loading]="backupLoading"
+            (p-click)="exportarBackup()">
+          </po-button>
+          <div class="po-md-6">
+            <input #backupFileInput type="file" accept="application/json" style="display: none" (change)="onSelecionarArquivoBackup($event)">
+            <po-button
+              p-label="Importar Backup"
+              p-kind="secondary"
+              p-icon="an an-upload"
+              [p-loading]="backupLoading"
+              (p-click)="backupFileInput.click()">
+            </po-button>
+          </div>
+        </div>
       </po-widget>
     </div>
   </div>

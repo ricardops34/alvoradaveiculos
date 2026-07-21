@@ -1,0 +1,146 @@
+<po-page-default p-title="Contas a Pagar e a Receber" [p-actions]="actions">
+
+  <po-container>
+    <div class="po-row">
+      <po-select class="po-md-3" name="filtro_tipo" [(ngModel)]="filtro.tipo" p-label="Tipo" [p-options]="tipoFiltroOptions" (p-change)="load()"></po-select>
+      <po-select class="po-md-3" name="filtro_status" [(ngModel)]="filtro.status" p-label="Status" [p-options]="statusFiltroOptions" (p-change)="load()"></po-select>
+    </div>
+  </po-container>
+
+  <po-table
+    class="po-mt-1 po-mb-5"
+    p-sort="true"
+    [p-columns]="columns"
+    [p-items]="contas"
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
+    (p-show-more)="showMore()">
+  </po-table>
+
+</po-page-default>
+
+<!-- Modal de Cadastro/Edição -->
+<po-modal #contaModal
+  [p-title]="conta.id ? 'Editar Conta' : 'Nova Conta'"
+  p-size="lg"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: contaModal.close.bind(contaModal) }">
+
+  <form #contaForm="ngForm">
+    <div class="po-row">
+      <po-radio-group class="po-md-4" name="tipo" [(ngModel)]="conta.tipo" p-label="Tipo" [p-options]="tipoOptions" p-required></po-radio-group>
+      <po-input class="po-md-8" name="descricao" [(ngModel)]="conta.descricao" p-label="Descrição" p-required></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-decimal class="po-md-4" name="valor" [(ngModel)]="conta.valor" p-label="Valor" p-decimals="2" p-required></po-decimal>
+      <po-datepicker class="po-md-4" name="data_emissao" [(ngModel)]="conta.data_emissao" p-label="Data de Emissão" p-required></po-datepicker>
+      <po-datepicker class="po-md-4" name="data_vencimento" [(ngModel)]="conta.data_vencimento" p-label="Data de Vencimento"></po-datepicker>
+    </div>
+
+    <po-divider p-label="Vínculos (Opcional)"></po-divider>
+
+    <div class="po-row">
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="pessoa_id"
+          [(ngModel)]="conta.pessoa_id"
+          p-label="Pessoa"
+          [p-filter-service]="pessoasLookup"
+          p-field-label="nome"
+          p-field-value="id">
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='pessoa_id'; appQuickAdd.open('pessoas')"></po-button>
+        </div>
+      </div>
+      <po-lookup
+        class="po-md-6"
+        name="veiculo_id"
+        [(ngModel)]="conta.veiculo_id"
+        p-label="Veículo (placa)"
+        [p-filter-service]="veiculosLookup"
+        p-field-label="placa"
+        p-field-value="id">
+      </po-lookup>
+    </div>
+
+    <div class="po-row" *ngIf="conta.veiculo_id">
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="centro_custo_id"
+          [(ngModel)]="conta.centro_custo_id"
+          p-label="Centro de Custo"
+          [p-filter-service]="centrosCustoLookup"
+          p-field-label="nome"
+          p-field-value="id"
+          p-required
+          p-help="Obrigatório porque a conta está vinculada a um veículo.">
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='centro_custo_id'; appQuickAdd.open('centros-custo')"></po-button>
+        </div>
+      </div>
+    </div>
+  </form>
+</po-modal>
+
+<!-- Modal de Baixa -->
+<po-modal #baixaModal
+  p-title="Dar Baixa"
+  p-size="md"
+  [p-primary-action]="{ label: 'Confirmar Baixa', action: confirmarBaixa.bind(this) }"
+  [p-secondary-action]="{ label: 'Cancelar', action: baixaModal.close.bind(baixaModal) }">
+
+  <form #baixaForm="ngForm">
+    <div class="po-row" *ngIf="contaSelecionada">
+      <po-info class="po-md-12" p-label="Conta" [p-value]="contaSelecionada.descricao + ' — ' + (contaSelecionada.valor | currency:'BRL')"></po-info>
+    </div>
+
+    <div class="po-row po-mt-2">
+      <div class="po-md-12" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="baixa_banco_id"
+          [(ngModel)]="baixaData.banco_id"
+          p-label="Conta Bancária / Caixa"
+          [p-filter-service]="bancosLookup"
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='baixa_banco_id'; appQuickAdd.open('bancos')"></po-button>
+        </div>
+      </div>
+    </div>
+
+    <div class="po-row po-mt-2">
+      <div class="po-md-12" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="baixa_centro_custo_id"
+          [(ngModel)]="baixaData.centro_custo_id"
+          p-label="Centro de Custo"
+          [p-filter-service]="centrosCustoLookup"
+          p-field-label="nome"
+          p-field-value="id"
+          p-required>
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='baixa_centro_custo_id'; appQuickAdd.open('centros-custo')"></po-button>
+        </div>
+      </div>
+    </div>
+
+    <div class="po-row po-mt-2">
+      <po-datepicker class="po-md-12" name="data_pagamento" [(ngModel)]="baixaData.data_pagamento" p-label="Data do Pagamento/Recebimento" p-required></po-datepicker>
+    </div>
+  </form>
+</po-modal>
+
+<app-quick-add #appQuickAdd (onAdded)="handleQuickAdd($event, currentQuickAddField)"></app-quick-add>

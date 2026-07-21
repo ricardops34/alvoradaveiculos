@@ -11,10 +11,10 @@ export interface Vehicle {
   modelo_id?: number;
   modelo_nome?: string;
   versao?: string;
-  ano_fabricacao: number;
-  ano_modelo: number;
+  ano_fabricacao?: number;
+  ano_modelo?: number;
   cor?: string;
-  quilometragem: number;
+  quilometragem?: number;
   valor_compra: number;
   data_compra?: string;
   valor_venda?: number;
@@ -26,4 +26,10 @@ export interface Vehicle {
   cliente_id?: number;
   status: string;
   fotos?: string[]; // Array de strings Base64
+  valor_fipe?: number;
+  observacoes?: string;
+  opcionais?: string[];
+  vendedor_id?: number;
+  vendedor_nome?: string;
+  comissao_valor?: number;
 }

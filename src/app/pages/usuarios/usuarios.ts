@@ -25,15 +25,15 @@ export class UsuariosComponent implements OnInit {
   @ViewChild('userForm', { static: false }) userForm!: any;
 
   users: any[] = [];
-  allUsers: any[] = [];
-  filteredUsers: any[] = [];
   isLoading: boolean = true;
   isLoadingSave: boolean = false;
+  loadingShowMore: boolean = false;
   profiles: any[] = [];
-  
+
   hasNext: boolean = false;
   page: number = 1;
   pageSize: number = 20;
+  currentFilter: string = '';
   user: any = { nome: '', email: '', senha: '', perfil_id: null };
   isEditing: boolean = false;
 
@@ -80,46 +80,40 @@ export class UsuariosComponent implements OnInit {
   }
 
   async loadUsers() {
-    const rawUsers = await this.db.getAll('usuarios');
-    this.allUsers = rawUsers.map(u => {
-      const profile = this.profiles.find(p => p.id === u.perfil_id);
-      return { ...u, perfil_nome: profile ? profile.nome : 'N/A' };
-    });
-    this.filteredUsers = [...this.allUsers];
     this.page = 1;
-    this.applyPagination(true);
+    this.users = [];
+    await this.fetchData();
+  }
+
+  async showMore() {
+    this.page++;
+    await this.fetchData();
+  }
+
+  private async fetchData() {
+    this.loadingShowMore = true;
+    try {
+      const response = await this.db.getAll('usuarios', {
+        page: this.page,
+        limit: this.pageSize,
+        filter: this.currentFilter
+      });
+
+      if (response && response.items) {
+        this.users = [...this.users, ...response.items];
+        this.hasNext = response.hasNext;
+      } else {
+        this.users = response;
+        this.hasNext = false;
+      }
+    } finally {
+      this.loadingShowMore = false;
+    }
   }
 
   filterUsers(filter: string) {
-    if (!filter) {
-      this.filteredUsers = [...this.allUsers];
-    } else {
-      const searchTerm = filter.toLowerCase();
-      this.filteredUsers = this.allUsers.filter(u => 
-        u.nome.toLowerCase().includes(searchTerm) ||
-        u.email.toLowerCase().includes(searchTerm) ||
-        u.perfil_nome?.toLowerCase().includes(searchTerm)
-      );
-    }
-    this.page = 1;
-    this.applyPagination(true);
-  }
-
-  applyPagination(reset: boolean = true) {
-    if (reset) {
-      this.users = [];
-    }
-    const startIndex = (this.page - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    const nextItems = this.filteredUsers.slice(startIndex, endIndex);
-    
-    this.users = [...this.users, ...nextItems];
-    this.hasNext = endIndex < this.filteredUsers.length;
-  }
-
-  showMore() {
-    this.page++;
-    this.applyPagination(false);
+    this.currentFilter = filter || '';
+    this.loadUsers();
   }
 
   openNew() {

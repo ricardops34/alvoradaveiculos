@@ -14,10 +14,6 @@ export const routes: Routes = [
       {
         path: 'login',
         loadComponent: () => import('./auth/login/login').then(m => m.LoginComponent)
-      },
-      {
-        path: 'register',
-        loadComponent: () => import('./auth/register/register').then(m => m.RegisterComponent)
       }
     ]
   },
@@ -63,6 +59,10 @@ export const routes: Routes = [
         path: 'movimentos',
         loadComponent: () => import('./pages/movimentos/movimentos').then(m => m.MovimentosComponent)
       },
+      {
+        path: 'contas',
+        loadComponent: () => import('./pages/contas/contas').then(m => m.ContasComponent)
+      },
       // Relatórios
       {
         path: 'relatorios/extrato-bancario',
@@ -75,6 +75,10 @@ export const routes: Routes = [
       {
         path: 'relatorios/relatorio-despesas',
         loadComponent: () => import('./pages/relatorios/relatorio-despesas/relatorio-despesas').then(m => m.RelatorioDespesasComponent)
+      },
+      {
+        path: 'relatorios/ranking-vendedores',
+        loadComponent: () => import('./pages/relatorios/ranking-vendedores/ranking-vendedores').then(m => m.RankingVendedoresComponent)
       },
       // Configurações
       {

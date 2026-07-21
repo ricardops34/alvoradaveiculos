@@ -143,6 +143,16 @@
     <div class="po-row">
       <po-info class="po-md-3" p-label="Status Atual" [p-value]="vehicle.status"></po-info>
       <po-decimal class="po-md-3" name="valor_avaliacao" [(ngModel)]="vehicle.valor_avaliacao" p-label="Valor de Avaliação" p-decimals="2"></po-decimal>
+      <po-decimal class="po-md-3" name="valor_fipe" [(ngModel)]="vehicle.valor_fipe" p-label="Valor FIPE" p-decimals="2"></po-decimal>
+    </div>
+
+    <po-divider p-label="Opcionais e Observações"></po-divider>
+
+    <div class="po-row">
+      <po-multiselect class="po-md-12" name="opcionais" [(ngModel)]="vehicle.opcionais" p-label="Opcionais" [p-options]="opcionaisOptions"></po-multiselect>
+    </div>
+    <div class="po-row">
+      <po-textarea class="po-md-12" name="observacoes" [(ngModel)]="vehicle.observacoes" p-label="Observações"></po-textarea>
     </div>
 
   </form>
@@ -216,32 +226,31 @@
     </div>
 
     <div class="po-row po-mt-2">
-      <po-radio-group class="po-md-3" name="forma_venda" [(ngModel)]="sellData.forma_venda" p-label="Forma de Recebimento" [p-options]="formaCompraOptions" p-required></po-radio-group>
-      
-      <div class="po-md-4" *ngIf="sellData.forma_venda === 'Banco'" style="display: flex; gap: 8px;">
-        <po-lookup 
-          style="flex: 1" 
-          name="banco_venda" 
-          [(ngModel)]="sellData.banco_id" 
-          p-label="Conta Bancária (Entrada)" 
-          [p-filter-service]="bancosLookup" 
+      <po-radio-group class="po-md-3" name="forma_venda" [(ngModel)]="sellData.forma_venda" p-label="Forma de Recebimento" [p-options]="formaVendaOptions" p-required></po-radio-group>
+
+      <div class="po-md-4" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="banco_venda"
+          [(ngModel)]="sellData.banco_id"
+          [p-label]="sellData.forma_venda === 'Troca' ? 'Conta Bancária (só se houver comissão)' : 'Conta Bancária (Entrada)'"
+          [p-filter-service]="bancosLookup"
           p-field-label="nome"
           p-field-value="id"
-          p-required>
+          [p-required]="sellData.forma_venda === 'Banco'">
         </po-lookup>
         <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
           <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='venda_banco_id'; appQuickAdd.open('bancos')"></po-button>
         </div>
       </div>
 
-      <div class="po-md-5" *ngIf="sellData.forma_venda === 'Banco'" style="display: flex; gap: 8px;">
-        <po-lookup 
-          style="flex: 1" 
-          name="centro_venda" 
-          [(ngModel)]="sellData.centro_custo_id" 
-          p-label="Centro de Custo (Receita)" 
-          [p-filter-service]="centrosCustoLookup" 
-          [p-filter-params]="{ tipo: 'Entrada' }"
+      <div class="po-md-5" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="centro_venda"
+          [(ngModel)]="sellData.centro_custo_id"
+          p-label="Centro de Custo"
+          [p-filter-service]="centrosCustoLookup"
           p-field-label="nome"
           p-field-value="id"
           p-required>
@@ -251,6 +260,69 @@
         </div>
       </div>
     </div>
+
+    <div class="po-row po-mt-2">
+      <div class="po-md-6" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="vendedor_venda"
+          [(ngModel)]="sellData.vendedor_id"
+          p-label="Vendedor (Opcional — calcula comissão automática)"
+          [p-filter-service]="pessoasLookup"
+          [p-filter-params]="{ is_vendedor: true }"
+          p-field-label="nome"
+          p-field-value="id">
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='venda_vendedor_id'; appQuickAdd.open('pessoas')"></po-button>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="sellData.forma_venda === 'Troca'">
+      <po-divider p-label="Veículo Recebido na Troca"></po-divider>
+
+      <div class="po-row">
+        <po-select class="po-md-2" name="troca_tipo_veiculo" [(ngModel)]="sellData.troca_tipo_veiculo" p-label="Tipo" [p-options]="tipoVeiculoOptions" p-required></po-select>
+
+        <div class="po-md-3" style="display: flex; gap: 8px;">
+          <po-combo style="flex: 1" name="troca_marca_id" [(ngModel)]="sellData.troca_marca_id" p-label="Marca" [p-options]="marcasOptions" (p-change)="updateTrocaModelos()"></po-combo>
+          <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+            <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='troca_marca_id'; appQuickAdd.open('marcas')"></po-button>
+          </div>
+        </div>
+
+        <div class="po-md-3" style="display: flex; gap: 8px;">
+          <po-combo style="flex: 1" name="troca_modelo_id" [(ngModel)]="sellData.troca_modelo_id" p-label="Modelo" [p-options]="trocaModelosOptions" [p-disabled]="!sellData.troca_marca_id"></po-combo>
+          <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+            <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='troca_modelo_id'; appQuickAdd.open('modelos')" [p-disabled]="!sellData.troca_marca_id"></po-button>
+          </div>
+        </div>
+
+        <po-input class="po-md-2" name="troca_cor" [(ngModel)]="sellData.troca_cor" p-label="Cor"></po-input>
+        <po-input class="po-md-2" name="troca_placa" [(ngModel)]="sellData.troca_placa" p-label="Placa" p-required p-maxlength="7" style="text-transform: uppercase;"></po-input>
+      </div>
+
+      <div class="po-row">
+        <po-input class="po-md-4" name="troca_chassi" [(ngModel)]="sellData.troca_chassi" p-label="Chassi"></po-input>
+        <po-number class="po-md-2" name="troca_ano_fab" [(ngModel)]="sellData.troca_ano_fab" p-label="Ano Fab."></po-number>
+        <po-number class="po-md-2" name="troca_ano_mod" [(ngModel)]="sellData.troca_ano_mod" p-label="Ano Mod."></po-number>
+        <po-number class="po-md-2" name="troca_quilometragem" [(ngModel)]="sellData.troca_quilometragem" p-label="Km"></po-number>
+      </div>
+
+      <div class="po-row">
+        <po-decimal class="po-md-3" name="troca_valor_fipe" [(ngModel)]="sellData.troca_valor_fipe" p-label="Valor FIPE" p-decimals="2"></po-decimal>
+        <po-decimal class="po-md-3" name="troca_valor" [(ngModel)]="sellData.troca_valor" p-label="Valor de Negociação" p-decimals="2" p-required></po-decimal>
+        <po-textarea class="po-md-6" name="troca_observacoes" [(ngModel)]="sellData.troca_observacoes" p-label="Observações"></po-textarea>
+      </div>
+
+      <po-info
+        class="po-md-12"
+        p-label="Diferença (Valor da Venda − Valor de Negociação da Troca)"
+        [p-value]="((sellData.valor_venda - sellData.troca_valor) | currency:'BRL') ?? ''"
+        p-help="Se positivo, vira Conta a Receber do cliente. Se negativo, vira Conta a Pagar ao cliente. Só é lançado no banco/caixa quando a conta for baixada.">
+      </po-info>
+    </ng-container>
   </form>
 </po-modal>
 <app-quick-add #appQuickAdd (onAdded)="handleQuickAdd($event, currentQuickAddField)"></app-quick-add>

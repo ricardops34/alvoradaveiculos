@@ -40,10 +40,11 @@ export class ExtratoVeiculoComponent implements OnInit {
   }
 
   async loadVehicles() {
-    const veiculos = await this.db.getAll('veiculos');
-    this.vehicles = veiculos.map(v => ({ 
-      label: `${v.marca} ${v.modelo} (${v.placa})`, 
-      value: v.id 
+    const response = await this.db.getAll('veiculos', { limit: 1000000 });
+    const veiculos = response?.items || response || [];
+    this.vehicles = veiculos.map((v: any) => ({
+      label: `${v.marca_nome || v.marca} ${v.modelo_nome || v.modelo} (${v.placa})`,
+      value: v.id
     }));
   }
 
@@ -54,19 +55,12 @@ export class ExtratoVeiculoComponent implements OnInit {
       return;
     }
 
-    const allVehicles = await this.db.getAll('veiculos');
-    this.vehicleData = allVehicles.find(v => v.id === this.veiculo_id);
+    this.vehicleData = await this.db.getById('veiculos', this.veiculo_id);
 
-    const allMovements = await this.db.getAll('movimentos');
-    const centers = await this.db.getAll('centros_custo');
+    const movementsResponse = await this.db.getAll('movimentos', { veiculo_id: this.veiculo_id, limit: 1000000 });
 
-    // Get vehicle movements
-    let vehicleMovements = allMovements
-      .filter(m => m.veiculo_id === this.veiculo_id)
-      .map(m => ({
-        ...m,
-        centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome
-      }));
+    // Get vehicle movements (o backend já traz centro_custo_nome via JOIN)
+    let vehicleMovements = movementsResponse?.items || movementsResponse || [];
 
     // Add Purchase as a Debit entry
     const compraEntry = {

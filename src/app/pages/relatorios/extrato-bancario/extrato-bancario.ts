@@ -57,8 +57,9 @@ export class ExtratoBancarioComponent implements OnInit {
   }
 
   async loadBanks() {
-    const bancos = await this.db.getAll('bancos');
-    this.banks = bancos.map(b => ({ label: b.nome, value: b.id }));
+    const response = await this.db.getAll('bancos', { limit: 1000 });
+    const bancos = response?.items || response || [];
+    this.banks = bancos.map((b: any) => ({ label: b.nome, value: b.id }));
     if (this.banks.length > 0) {
       this.filter.banco_id = this.banks[0].value as any;
       await this.search();
@@ -71,29 +72,28 @@ export class ExtratoBancarioComponent implements OnInit {
       return;
     }
 
-    const allMovements = await this.db.getAll('movimentos');
-    const centers = await this.db.getAll('centros_custo');
-    const bancos = await this.db.getAll('bancos');
-    const bank = bancos.find(b => b.id === this.filter.banco_id);
-    
+    // Todos os movimentos do banco (sem filtro de período) para o saldo total considerar o histórico completo
+    const allResponse = await this.db.getAll('movimentos', { banco_id: this.filter.banco_id, limit: 1000000 });
+    const allMovements = allResponse?.items || allResponse || [];
+
+    const periodResponse = await this.db.getAll('movimentos', {
+      banco_id: this.filter.banco_id,
+      data_inicio: this.filter.data_inicio,
+      data_fim: this.filter.data_fim,
+      limit: 1000000
+    });
+    const periodMovements = periodResponse?.items || periodResponse || [];
+
+    const bancosResponse = await this.db.getAll('bancos', { limit: 1000 });
+    const bancos = bancosResponse?.items || bancosResponse || [];
+    const bank = bancos.find((b: any) => b.id === this.filter.banco_id);
+
     this.creditLimit = bank ? Number(bank.limite_credito || 0) : 0;
 
-    this.movements = allMovements
-      .filter(m => m.banco_id === this.filter.banco_id)
-      .filter(m => {
-        const d = m.data;
-        return (!this.filter.data_inicio || d >= this.filter.data_inicio) &&
-               (!this.filter.data_fim || d <= this.filter.data_fim);
-      })
-      .map(m => ({
-        ...m,
-        centro_custo_nome: centers.find(c => c.id === m.centro_custo_id)?.nome
-      }))
-      .sort((a, b) => a.data.localeCompare(b.data));
+    this.movements = periodMovements.sort((a: any, b: any) => a.data.localeCompare(b.data));
 
-    // Calculate total balance for this bank considering ALL movements up to date_fim
-    const totalMovementsUntilNow = allMovements.filter(m => m.banco_id === this.filter.banco_id);
-    this.totalBalance = totalMovementsUntilNow.reduce((sum, m) => sum + Number(m.valor || 0), 0);
+    // Saldo total do banco considerando TODOS os movimentos, não só o período filtrado
+    this.totalBalance = allMovements.reduce((sum: number, m: any) => sum + Number(m.valor || 0), 0);
     this.availableBalance = Number(this.totalBalance) + Number(this.creditLimit);
   }
 

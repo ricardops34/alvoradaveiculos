@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PoModule, PoNotificationService } from '@po-ui/ng-components';
+import { PoModule, PoNotificationService, PoDialogService } from '@po-ui/ng-components';
+import { firstValueFrom } from 'rxjs';
 import { DatabaseService } from '../../services/database';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-configuracoes',
@@ -15,10 +17,20 @@ export class ConfiguracoesComponent implements OnInit {
   loading = false;
   marcasCount = 0;
 
+  backupLoading = false;
+
   constructor(
     private db: DatabaseService,
-    private poNotification: PoNotificationService
+    private poNotification: PoNotificationService,
+    private authService: AuthService,
+    private poDialog: PoDialogService
   ) {}
+
+  // Os componentes po-upload fazem a requisição por fora do HttpClient (não passam
+  // pelo interceptor), então o token precisa ser anexado manualmente aqui.
+  get uploadHeaders() {
+    return { Authorization: `Bearer ${this.authService.getToken()}` };
+  }
 
   parametros: any = {
     empresa_nome: '',
@@ -75,8 +87,8 @@ export class ConfiguracoesComponent implements OnInit {
 
   async checkData() {
     try {
-      const marcas = await this.db.getAll('marcas');
-      this.marcasCount = marcas.length;
+      const response = await this.db.getAll('marcas', { limit: 1 });
+      this.marcasCount = response?.total ?? (Array.isArray(response) ? response.length : 0);
     } catch (e) {
       console.error(e);
     }
@@ -94,5 +106,61 @@ export class ConfiguracoesComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  async exportarBackup() {
+    this.backupLoading = true;
+    try {
+      const data: any = await firstValueFrom(this.db.http.get('/api/backup/export'));
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `alvorada_backup_${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      this.poNotification.success('Backup exportado com sucesso!');
+    } catch (e) {
+      this.poNotification.error('Erro ao exportar backup.');
+    } finally {
+      this.backupLoading = false;
+    }
+  }
+
+  onSelecionarArquivoBackup(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const backup = JSON.parse(reader.result as string);
+        this.confirmarImportarBackup(backup);
+      } catch (e) {
+        this.poNotification.error('Arquivo de backup inválido (não é um JSON válido).');
+      } finally {
+        input.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  private confirmarImportarBackup(backup: any) {
+    this.poDialog.confirm({
+      title: 'Importar Backup',
+      message: 'Isso vai atualizar os registros do banco com os dados deste arquivo (registros existentes não são apagados, só atualizados ou complementados). Deseja continuar?',
+      confirm: async () => {
+        this.backupLoading = true;
+        try {
+          const response: any = await firstValueFrom(this.db.http.post('/api/backup/import', backup));
+          this.poNotification.success(response.message || 'Backup importado com sucesso!');
+        } catch (e: any) {
+          this.poNotification.error(e?.error?.error || 'Erro ao importar backup.');
+        } finally {
+          this.backupLoading = false;
+        }
+      }
+    });
   }
 }

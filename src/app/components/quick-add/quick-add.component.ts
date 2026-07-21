@@ -53,8 +53,9 @@ export class QuickAddComponent {
     } else if (type === 'modelos') {
       this.title = 'Novo Modelo';
       this.data = { nome: '', marca_id: null, tipo_veiculo: 'Carro' };
-      this.db.getAll('marcas').then(m => {
-        this.marcasOptions = m.map((i: any) => ({ label: i.nome, value: i.id }));
+      this.db.getAll('marcas', { limit: 1000000 }).then(response => {
+        const marcas = response?.items || response || [];
+        this.marcasOptions = marcas.map((i: any) => ({ label: i.nome, value: i.id }));
       });
     }
 

@@ -24,6 +24,21 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM centros_custo WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Centro de custo não encontrado' });
+      return;
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar centro de custo:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 router.post('/', async (req: Request, res: Response) => {
   try {
     const { codigo, nome, tipo } = req.body;

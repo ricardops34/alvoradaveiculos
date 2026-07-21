@@ -52,30 +52,25 @@ export class RelatorioDespesasComponent implements OnInit {
   }
 
   async search() {
-    const allMovements = await this.db.getAll('movimentos');
-    const centers = await this.db.getAll('centros_custo');
-    const vehicles = await this.db.getAll('veiculos');
+    const response = await this.db.getAll('movimentos', {
+      tipo: 'Débito',
+      data_inicio: this.filter.data_inicio,
+      data_fim: this.filter.data_fim,
+      limit: 1000000
+    });
+    const allMovements = response?.items || response || [];
 
-    this.movements = allMovements
-      .filter(m => m.tipo === 'Débito')
-      .filter(m => {
-        const d = m.data;
-        return (!this.filter.data_inicio || d >= this.filter.data_inicio) &&
-               (!this.filter.data_fim || d <= this.filter.data_fim);
-      })
-      .map(m => {
-        const center = centers.find(c => c.id === m.centro_custo_id);
-        return {
-          ...m,
-          centro_custo_nome: center?.nome || 'Outros',
-          veiculo_placa: vehicles.find(v => v.id === m.veiculo_id)?.placa || 'N/A'
-        };
-      });
+    // O backend já traz centro_custo_nome e veiculo_placa via JOIN
+    this.movements = allMovements.map((m: any) => ({
+      ...m,
+      centro_custo_nome: m.centro_custo_nome || 'Outros',
+      veiculo_placa: m.veiculo_placa || 'N/A'
+    }));
 
     // Apply vehicle purchase filter if enabled
     if (this.filter.ignoreVehiclePurchase) {
-      this.movements = this.movements.filter(m => 
-        !m.centro_custo_nome.toLowerCase().includes('venda') && 
+      this.movements = this.movements.filter(m =>
+        !m.centro_custo_nome.toLowerCase().includes('venda') &&
         !m.centro_custo_nome.toLowerCase().includes('estoque') &&
         !m.centro_custo_nome.toLowerCase().includes('aquisição')
       );

@@ -60,13 +60,15 @@ export class BancosComponent implements OnInit {
     { property: 'limite_credito', label: 'Limite', type: 'currency', format: 'BRL' },
     { property: 'tipo', label: 'Tipo', type: 'label', labels: [
       { value: 'Corrente', color: 'color-10', label: 'Corrente' },
-      { value: 'Poupança', color: 'color-11', label: 'Poupança' }
+      { value: 'Poupança', color: 'color-11', label: 'Poupança' },
+      { value: 'Caixa', color: 'color-08', label: 'Caixa' }
     ]}
   ];
 
   public readonly typeOptions: PoSelectOption[] = [
     { label: 'Corrente', value: 'Corrente' },
-    { label: 'Poupança', value: 'Poupança' }
+    { label: 'Poupança', value: 'Poupança' },
+    { label: 'Caixa', value: 'Caixa' }
   ];
 
   constructor(

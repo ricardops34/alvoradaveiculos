@@ -1,10 +1,10 @@
 # Estágio 1: Build
-FROM node:20-alpine as build
+FROM node:20-alpine AS build
 # Aumenta a memória disponível para o Node (evita erros em containers pequenos)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
 COPY . .
 # Build em modo produção
 RUN npm run build -- --configuration production

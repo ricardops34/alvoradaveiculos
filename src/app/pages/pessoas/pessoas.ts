@@ -65,6 +65,7 @@ export class PessoasComponent implements OnInit {
 
   public readonly tableActions: PoTableAction[] = [
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
+    { label: 'Conversar no WhatsApp', action: this.openWhatsapp.bind(this), icon: 'an an-whatsapp-logo', visible: (row: any) => !!row.telefone },
     { label: 'Excluir', action: this.delete.bind(this), icon: 'po-icon-delete', type: 'danger' }
   ];
 
@@ -73,6 +74,13 @@ export class PessoasComponent implements OnInit {
     { property: 'documento', label: 'CPF/CNPJ' },
     { property: 'tipo_pessoa', label: 'Tipo' },
     { property: 'papeis', label: 'Papéis' },
+    { property: 'lead_status', label: 'Status do Lead', type: 'label', labels: [
+      { value: 'Novo', color: 'color-08', label: 'Novo' },
+      { value: 'Contatado', color: 'color-01', label: 'Contatado' },
+      { value: 'Negociando', color: 'color-07', label: 'Negociando' },
+      { value: 'Convertido', color: 'color-10', label: 'Convertido' },
+      { value: 'Perdido', color: 'color-11', label: 'Perdido' }
+    ]},
     { property: 'telefone', label: 'Telefone' },
     { property: 'cidade', label: 'Cidade' }
   ];
@@ -80,6 +88,14 @@ export class PessoasComponent implements OnInit {
   public readonly typeOptions: PoSelectOption[] = [
     { label: 'Física', value: 'Física' },
     { label: 'Jurídica', value: 'Jurídica' }
+  ];
+
+  public readonly leadStatusOptions: PoSelectOption[] = [
+    { label: 'Novo', value: 'Novo' },
+    { label: 'Contatado', value: 'Contatado' },
+    { label: 'Negociando', value: 'Negociando' },
+    { label: 'Convertido', value: 'Convertido' },
+    { label: 'Perdido', value: 'Perdido' }
   ];
 
   constructor(
@@ -117,7 +133,7 @@ export class PessoasComponent implements OnInit {
 
       if (response && response.items) {
         const processedItems = response.items.map((p: any) => {
-          const papeis = [];
+          const papeis: string[] = [];
           if (p.is_cliente) papeis.push('Cliente');
           if (p.is_fornecedor) papeis.push('Fornecedor');
           if (p.is_vendedor) papeis.push('Vendedor');
@@ -155,8 +171,20 @@ export class PessoasComponent implements OnInit {
       is_fornecedor: false,
       is_vendedor: false,
       is_socio: false,
-      estado: ''
+      estado: '',
+      lead_status: 'Novo',
+      comissao_percentual: 0
     };
+  }
+
+  openWhatsapp(person: any) {
+    const digits = (person.telefone || '').replace(/\D/g, '');
+    if (!digits) {
+      this.poNotification.warning('Esta pessoa não tem telefone cadastrado.');
+      return;
+    }
+    const numero = digits.length <= 11 ? `55${digits}` : digits;
+    window.open(`https://wa.me/${numero}`, '_blank');
   }
 
   openNew() {

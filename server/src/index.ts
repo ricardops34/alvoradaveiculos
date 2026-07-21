@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import seed from './seed';
+import { authMiddleware, requireRotina, requireAdmin } from './middleware/auth';
 
 // Rotas
 import authRoutes from './routes/auth';
@@ -17,6 +18,9 @@ import dashboardRoutes from './routes/dashboard';
 import marcasRoutes from './routes/marcas';
 import modelosRoutes from './routes/modelos';
 import configRoutes from './routes/config';
+import vendedoresRoutes from './routes/vendedores';
+import contasRoutes from './routes/contas';
+import backupRoutes from './routes/backup';
 
 dotenv.config();
 
@@ -29,17 +33,24 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 
 // Rotas da API
+// Cada módulo exige, além de um token válido, que o perfil do usuário tenha a rotina correspondente
+// (Administrador sempre passa). Marcas/Modelos são sub-recursos de Veículos e usam a mesma rotina.
 app.use('/api/auth', authRoutes);
-app.use('/api/perfis', perfisRoutes);
-app.use('/api/bancos', bancosRoutes);
-app.use('/api/pessoas', pessoasRoutes);
-app.use('/api/centros-custo', centrosCustoRoutes);
-app.use('/api/veiculos', veiculosRoutes);
-app.use('/api/movimentos', movimentosRoutes);
-app.use('/api/usuarios', usuariosRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/marcas', marcasRoutes);
-app.use('/api/modelos', modelosRoutes);
+app.use('/api/perfis', authMiddleware, requireRotina('perfis'), perfisRoutes);
+app.use('/api/bancos', authMiddleware, requireRotina('bancos'), bancosRoutes);
+app.use('/api/pessoas', authMiddleware, requireRotina('pessoas'), pessoasRoutes);
+app.use('/api/centros-custo', authMiddleware, requireRotina('centros_custo'), centrosCustoRoutes);
+app.use('/api/veiculos', authMiddleware, requireRotina('veiculos'), veiculosRoutes);
+app.use('/api/movimentos', authMiddleware, requireRotina('movimentos'), movimentosRoutes);
+app.use('/api/usuarios', authMiddleware, requireRotina('usuarios'), usuariosRoutes);
+app.use('/api/dashboard', authMiddleware, requireRotina('dashboard'), dashboardRoutes);
+app.use('/api/marcas', authMiddleware, requireRotina('veiculos'), marcasRoutes);
+app.use('/api/modelos', authMiddleware, requireRotina('veiculos'), modelosRoutes);
+app.use('/api/vendedores', authMiddleware, requireRotina('relatorio_despesas'), vendedoresRoutes);
+app.use('/api/contas', authMiddleware, requireRotina('contas'), contasRoutes);
+app.use('/api/backup', authMiddleware, requireAdmin, backupRoutes);
+// /api/config protege cada rota individualmente (GET /parametros fica público para a tela de login,
+// o resto exige perfil Administrador — ver config.ts)
 app.use('/api/config', configRoutes);
 
 // Health check

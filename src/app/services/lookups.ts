@@ -7,7 +7,8 @@ export class GenericLookupService implements PoLookupFilter {
   constructor(protected db: DatabaseService, protected table: string, protected searchField: string = 'nome') {}
 
   getFilteredItems(filteredParams: PoLookupFilteredItemsParams): Observable<any> {
-    return from(this.db.getAll(this.table).then(all => {
+    return from(this.db.getAll(this.table, { limit: 1000000 }).then(response => {
+      const all = response?.items || response || [];
       const filter = filteredParams.filter ? filteredParams.filter.toLowerCase() : '';
       const params = (filteredParams as any).params || {};
 

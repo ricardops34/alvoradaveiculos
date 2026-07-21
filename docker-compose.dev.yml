@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-alvorada}
+      POSTGRES_PASSWORD: ${DB_PASS:-alvorada2026}
+      POSTGRES_DB: ${DB_NAME:-alvorada_db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  alvorada-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-alvorada}:${DB_PASS:-alvorada2026}@postgres:5432/${DB_NAME:-alvorada_db}
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-nao-usar-em-producao}
+    ports:
+      - "${API_PORT:-3000}:3000"
+    volumes:
+      - ./server:/app
+      - api_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  alvorada-crm:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - "${DEV_APP_PORT:-4200}:4200"
+    volumes:
+      - .:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - alvorada-api
+
+volumes:
+  postgres_dev_data:
+  api_node_modules:
+  frontend_node_modules:

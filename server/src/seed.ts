@@ -26,6 +26,15 @@ async function seed() {
         rotinas TEXT[] DEFAULT '{}'
       );
 
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(200) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        senha VARCHAR(255) NOT NULL,
+        perfil_id INTEGER REFERENCES perfis(id) ON DELETE SET NULL,
+        theme VARCHAR(20) DEFAULT 'light'
+      );
+
       CREATE TABLE IF NOT EXISTS bancos (
         id SERIAL PRIMARY KEY,
         codigo VARCHAR(10),
@@ -80,6 +89,8 @@ async function seed() {
         id SERIAL PRIMARY KEY,
         tipo_veiculo VARCHAR(20) DEFAULT 'Carro',
         placa VARCHAR(10),
+        marca VARCHAR(100),
+        modelo VARCHAR(100),
         marca_id INTEGER REFERENCES marcas(id) ON DELETE SET NULL,
         modelo_id INTEGER REFERENCES modelos(id) ON DELETE SET NULL,
         versao VARCHAR(50),
@@ -91,12 +102,25 @@ async function seed() {
         valor_avaliacao DECIMAL(15,2),
         valor_venda DECIMAL(15,2),
         data_compra DATE,
+        data_venda DATE,
         status VARCHAR(20) DEFAULT 'Estoque',
         forma_compra VARCHAR(20) DEFAULT 'Troca',
         banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL,
         fornecedor_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
         cliente_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
         fotos TEXT[] DEFAULT '{}'
+      );
+
+      CREATE TABLE IF NOT EXISTS movimentos (
+        id SERIAL PRIMARY KEY,
+        data DATE NOT NULL,
+        banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL,
+        tipo VARCHAR(20) NOT NULL,
+        historico TEXT,
+        valor DECIMAL(15,2) NOT NULL DEFAULT 0,
+        centro_custo_id INTEGER REFERENCES centros_custo(id) ON DELETE SET NULL,
+        veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE SET NULL,
+        pessoa_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL
       );
 
       CREATE TABLE IF NOT EXISTS parametros (
@@ -108,12 +132,40 @@ async function seed() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
+      CREATE TABLE IF NOT EXISTS contas (
+        id SERIAL PRIMARY KEY,
+        tipo VARCHAR(10) NOT NULL, -- 'Pagar' ou 'Receber'
+        descricao TEXT NOT NULL,
+        valor DECIMAL(15,2) NOT NULL,
+        data_emissao DATE NOT NULL DEFAULT CURRENT_DATE,
+        data_vencimento DATE,
+        status VARCHAR(20) NOT NULL DEFAULT 'Pendente', -- 'Pendente', 'Pago', 'Cancelado'
+        pessoa_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL,
+        veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE SET NULL,
+        centro_custo_id INTEGER REFERENCES centros_custo(id) ON DELETE SET NULL,
+        banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL,
+        data_pagamento DATE,
+        movimento_id INTEGER REFERENCES movimentos(id) ON DELETE SET NULL
+      );
+
       INSERT INTO parametros (id, empresa_nome, favicon_url, logo_url, background_url)
       VALUES (1, 'Alvorada Veículos', 'favicon.ico', 'icone.png', 'fundologin.png')
       ON CONFLICT (id) DO NOTHING;
 
       ALTER TABLE modelos ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
       ALTER TABLE marcas ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS marca VARCHAR(100);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS modelo VARCHAR(100);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS data_venda DATE;
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS vendedor_id INTEGER REFERENCES pessoas(id) ON DELETE SET NULL;
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS comissao_valor DECIMAL(15,2);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS valor_fipe DECIMAL(15,2);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS observacoes TEXT;
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS chassi VARCHAR(30);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS renavam VARCHAR(20);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS opcionais TEXT[] DEFAULT '{}';
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS lead_status VARCHAR(30) DEFAULT 'Novo';
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS comissao_percentual DECIMAL(5,2) DEFAULT 0;
 
       CREATE INDEX IF NOT EXISTS idx_marcas_tipo ON marcas(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_tipo ON modelos(tipo_veiculo);
@@ -146,35 +198,42 @@ async function seed() {
 
     console.log('✅ Tabelas verificadas/criadas.');
 
-    // Verificar se já tem dados de perfis para evitar re-seed básico
-    const countCheck = await client.query('SELECT COUNT(*) FROM perfis');
-    const hasData = parseInt(countCheck.rows[0].count) > 0;
+    console.log('🌱 Verificando dados base (perfis, usuários, etc)...');
 
-    if (!hasData) {
-      console.log('🌱 Inserindo dados base (perfis, usuários, etc)...');
-      
-      // Perfis
-      await client.query(`
-        INSERT INTO perfis (id, nome, rotinas) VALUES
-        (1, 'Administrador', '{dashboard,veiculos,bancos,pessoas,centros_custo,movimentos,extrato_bancario,extrato_veiculo,relatorio_despesas,usuarios,perfis}'),
-        (2, 'Vendedor', '{dashboard,veiculos,pessoas}'),
-        (3, 'Financeiro', '{dashboard,bancos,movimentos,extrato_bancario,extrato_veiculo,relatorio_despesas}')
-      `);
+    await client.query(`
+      INSERT INTO perfis (id, nome, rotinas) VALUES
+      (1, 'Administrador', '{dashboard,veiculos,bancos,pessoas,centros_custo,movimentos,extrato_bancario,extrato_veiculo,relatorio_despesas,usuarios,perfis,contas}'),
+      (2, 'Vendedor', '{dashboard,veiculos,pessoas}'),
+      (3, 'Financeiro', '{dashboard,bancos,movimentos,extrato_bancario,extrato_veiculo,relatorio_despesas,contas}')
+      ON CONFLICT (id) DO NOTHING
+    `);
 
-      // Usuários
-      const adminHash = await bcrypt.hash('admin123', SALT_ROUNDS);
-      await client.query(`
-        INSERT INTO usuarios (id, nome, email, senha, perfil_id, theme) VALUES
-        (1, 'Administrador', 'admin@alvorada.com', $1, 1, 'dark')
-      `, [adminHash]);
+    // Garante a rotina 'contas' nos perfis Administrador e Financeiro mesmo se o perfil já existia antes desta versão
+    await client.query(`
+      UPDATE perfis SET rotinas = array_append(rotinas, 'contas')
+      WHERE id IN (1, 3) AND NOT ('contas' = ANY(rotinas));
+    `);
 
-      // Centros de Custo Básicos
-      await client.query(`
-        INSERT INTO centros_custo (id, nome, tipo) VALUES
-        (1, 'Venda de Veículos', 'Receita'),
-        (2, 'Manutenção de Estoque', 'Despesa')
-      `);
-    }
+    const adminHash = await bcrypt.hash('admin123', SALT_ROUNDS);
+    await client.query(`
+      INSERT INTO usuarios (id, nome, email, senha, perfil_id, theme) VALUES
+      (1, 'Administrador', 'admin@alvorada.com', $1, 1, 'dark')
+      ON CONFLICT (id) DO NOTHING
+    `, [adminHash]);
+
+    await client.query(`
+      INSERT INTO centros_custo (id, nome, tipo) VALUES
+      (1, 'Venda de Veículos', 'Receita'),
+      (2, 'Manutenção de Estoque', 'Despesa'),
+      (3, 'Comissão de Vendas', 'Despesa')
+      ON CONFLICT (id) DO NOTHING
+    `);
+
+    await client.query(`
+      INSERT INTO bancos (id, nome, tipo, saldo_inicial) VALUES
+      (1, 'Caixa', 'Caixa', 0)
+      ON CONFLICT (id) DO NOTHING
+    `);
 
     // A importação de Marcas e Modelos agora é feita manualmente via painel administrativo (Rota: /api/config/importar-marcas-modelos)
 
@@ -211,6 +270,7 @@ async function seed() {
       SELECT setval('usuarios_id_seq', (SELECT COALESCE(MAX(id), 1) FROM usuarios));
       SELECT setval('marcas_id_seq', (SELECT COALESCE(MAX(id), 1) FROM marcas));
       SELECT setval('modelos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM modelos));
+      SELECT setval('centros_custo_id_seq', (SELECT COALESCE(MAX(id), 1) FROM centros_custo));
     `);
 
   } catch (err) {

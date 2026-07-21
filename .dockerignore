@@ -1,9 +1,10 @@
 node_modules
+server
 dist
 .git
 .vscode
 .antigravity
 npm-debug.log
 README.md
-# Dockerfile e nginx.conf NÃO devem ser ignorados para o build funcionar
+# Dockerfiles e arquivos de configuração não devem ser ignorados.
 # docker-compose.yml

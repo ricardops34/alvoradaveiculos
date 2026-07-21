@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { parse } from 'csv-parse';
 import multer from 'multer';
+import { authMiddleware, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -12,14 +13,15 @@ const storage = multer.diskStorage({
     cb(null, path.join(__dirname, '..', '..', '..', 'public'));
   },
   filename: (_req, file, cb) => {
-    cb(null, file.originalname);
+    // path.basename evita path traversal (ex: "../../etc/passwd") vindo do nome original do arquivo
+    cb(null, path.basename(file.originalname));
   }
 });
 
 const upload = multer({ storage });
 
 // POST - Upload de arquivos de imagem
-router.post('/upload', upload.single('file'), (req: Request, res: Response) => {
+router.post('/upload', authMiddleware, requireAdmin, upload.single('file'), (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   }
@@ -29,7 +31,8 @@ router.post('/upload', upload.single('file'), (req: Request, res: Response) => {
   });
 });
 
-// GET - Download de modelos CSV
+// GET - Download de modelos CSV (público: são apenas catálogos genéricos de marca/modelo,
+// e o botão de download do frontend abre a URL direto no navegador, sem enviar o token)
 router.get('/modelos-csv/:tipo', (req: Request, res: Response) => {
   const { tipo } = req.params;
   const basePath = path.join(__dirname, '..', '..', '..', 'base', 'marcas-e-modelos');
@@ -53,13 +56,14 @@ router.get('/modelos-csv/:tipo', (req: Request, res: Response) => {
 });
 
 // POST - Upload de CSV customizado
-router.post('/upload-csv', upload.single('file'), (req: Request, res: Response) => {
+router.post('/upload-csv', authMiddleware, requireAdmin, upload.single('file'), (req: Request, res: Response) => {
   if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
-  
-  // Mover o arquivo da pasta public para a pasta base/marcas-e-modelos
+
+  // Mover o arquivo da pasta public para a pasta base/marcas-e-modelos.
+  // path.basename evita path traversal vindo do nome original do arquivo.
   const srcPath = req.file.path;
-  const destPath = path.join(__dirname, '..', '..', '..', 'base', 'marcas-e-modelos', req.file.originalname);
-  
+  const destPath = path.join(__dirname, '..', '..', '..', 'base', 'marcas-e-modelos', path.basename(req.file.originalname));
+
   try {
     fs.renameSync(srcPath, destPath);
     res.json({ message: 'Arquivo de modelo atualizado com sucesso!' });
@@ -68,7 +72,7 @@ router.post('/upload-csv', upload.single('file'), (req: Request, res: Response) 
   }
 });
 
-router.post('/importar-marcas-modelos', async (req: Request, res: Response) => {
+router.post('/importar-marcas-modelos', authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
     // 1. Verificar se já existem dados
@@ -162,7 +166,7 @@ router.get('/parametros', async (_req: Request, res: Response) => {
 });
 
 // PUT - Atualizar parâmetros
-router.put('/parametros', async (req: Request, res: Response) => {
+router.put('/parametros', authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
     const { empresa_nome, favicon_url, logo_url, background_url } = req.body;
     const result = await pool.query(

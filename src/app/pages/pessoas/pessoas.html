@@ -45,7 +45,12 @@
 
     <div class="po-row">
       <po-input class="po-md-4" name="email" [(ngModel)]="person.email" p-label="E-mail" p-icon="po-icon-mail"></po-input>
-      <po-input class="po-md-4" name="telefone" [(ngModel)]="person.telefone" p-label="Telefone" p-mask="(99) 99999-9999"></po-input>
+      <div class="po-md-4" style="display: flex; gap: 8px;">
+        <po-input style="flex: 1" name="telefone" [(ngModel)]="person.telefone" p-label="Telefone" p-mask="(99) 99999-9999"></po-input>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="secondary" p-icon="an an-whatsapp-logo" p-tooltip="Conversar no WhatsApp" (p-click)="openWhatsapp(person)"></po-button>
+        </div>
+      </div>
       <po-input class="po-md-4" name="cep" [(ngModel)]="person.cep" p-label="CEP" p-mask="99999-999"></po-input>
     </div>
 
@@ -54,28 +59,11 @@
       <po-input class="po-md-2" name="numero" [(ngModel)]="person.numero" p-label="Número"></po-input>
       <po-input class="po-md-4" name="cidade" [(ngModel)]="person.cidade" p-label="Cidade"></po-input>
     </div>
-  </form>
-</po-modal>
 
-<po-modal #advancedFilterModal p-title="Busca avançada" [p-primary-action]="{ label: 'Aplicar filtros', action: applyFilters.bind(this) }">
-  <div class="po-row">
-    <po-checkbox-group
-      class="po-md-12"
-      name="tipo_pessoa_filter"
-      p-label="Filtrar por Tipo de Pessoa"
-      p-columns="2"
-      [p-options]="typeOptions"
-      [(ngModel)]="selectedTipos">
-    </po-checkbox-group>
-  </div>
-  <div class="po-row po-mt-2">
-    <po-checkbox-group
-      class="po-md-12"
-      name="papel_filter"
-      p-label="Filtrar por Papel"
-      p-columns="2"
-      [p-options]="roleOptions"
-      [(ngModel)]="selectedPapeis">
-    </po-checkbox-group>
-  </div>
+    <div class="po-row" *ngIf="roles.includes('cliente') || roles.includes('vendedor')">
+      <po-divider class="po-md-12" p-label="Detalhes por Papel"></po-divider>
+      <po-select *ngIf="roles.includes('cliente')" class="po-md-4" name="lead_status" [(ngModel)]="person.lead_status" p-label="Status do Lead" [p-options]="leadStatusOptions" p-help="Acompanhamento do interesse deste cliente"></po-select>
+      <po-decimal *ngIf="roles.includes('vendedor')" class="po-md-4" name="comissao_percentual" [(ngModel)]="person.comissao_percentual" p-label="Comissão (%)" p-decimals="2" p-help="Percentual aplicado sobre o valor da venda"></po-decimal>
+    </div>
+  </form>
 </po-modal>

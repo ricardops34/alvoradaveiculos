@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import pool from '../db';
 import bcrypt from 'bcrypt';
+import { signToken } from '../middleware/auth';
 
 const router = Router();
 
@@ -31,13 +32,17 @@ router.post('/login', async (req: Request, res: Response) => {
       return;
     }
 
+    const rotinas = user.rotinas || [];
+    const token = signToken({ id: user.id, email: user.email, perfil_id: user.perfil_id, rotinas });
+
     res.json({
       id: user.id.toString(),
       email: user.email,
       name: user.nome,
       role: user.perfil_id === 1 ? 'admin' : 'user',
-      permissoes: user.rotinas || [],
-      theme: user.theme || 'light'
+      permissoes: rotinas,
+      theme: user.theme || 'light',
+      token
     });
   } catch (err) {
     console.error('Erro no login:', err);

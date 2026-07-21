@@ -60,13 +60,66 @@ Sistema especializado para gestão financeira de revendas de veículos, focado e
    ```bash
    git clone https://github.com/ricardops34/alvoradaveiculos.git
    ```
-2. Inicie os containers:
+2. Opcionalmente, copie `.env.dev.example` para `.env` e ajuste as portas ou credenciais.
+3. Construa e inicie os containers de desenvolvimento:
    ```bash
-   docker-compose up -d
+   docker compose -f docker-compose.dev.yml up -d --build
    ```
-3. Acesse a aplicação:
+4. Acesse a aplicação:
    - Frontend: `http://localhost:4200`
-   - API: `http://localhost:3000`
+   - API/health check: `http://localhost:3000/api/health`
+
+Para acompanhar os logs, use
+`docker compose -f docker-compose.dev.yml logs -f`. Para encerrar os
+containers, use `docker compose -f docker-compose.dev.yml down`.
+
+### Ambiente de desenvolvimento com hot reload
+
+Use a configuração de desenvolvimento para refletir automaticamente as
+alterações feitas no frontend e na API:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+O frontend estará em `http://localhost:4200` e a API em
+`http://localhost:3000`. Para encerrar, pressione `Ctrl+C` ou execute:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+### Publicação no Docker Hub
+
+O script PowerShell constrói e publica as imagens da API e do frontend na
+organização `bjsoftware`:
+
+```powershell
+.\publish.ps1
+```
+
+Por padrão, as imagens recebem a tag `latest`. Para publicar uma versão:
+
+```powershell
+.\publish.ps1 -Tag 1.0.0
+```
+
+Imagens geradas: `bjsoftware/alvorada-api` e `bjsoftware/alvorada-crm`.
+
+### Stack no Portainer
+
+Use o arquivo `docker-compose.yml` em **Stacks > Add stack** no Portainer. Use
+`.env.example` como referência e defina as seguintes variáveis antes de publicar:
+
+- `HOST_URL`: domínio do sistema, sem `https://`;
+- `DB_HOST`: hostname do PostgreSQL acessível pela `network_db`;
+- `DB_PORT`: porta do PostgreSQL (normalmente `5432`);
+- `DB_NAME`, `DB_USER` e `DB_PASS`: credenciais do banco;
+- `IMAGE_TAG`: tag das imagens (opcional, padrão `latest`).
+
+As redes Docker externas `network_db` e `network_public` devem existir no
+cluster. O Traefik deve estar conectado à `network_public` e possuir o resolver
+de certificados `letsencryptresolver`.
 
 ---
 

@@ -38,6 +38,22 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// GET - Buscar uma
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query('SELECT * FROM marcas WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Marca não encontrada' });
+      return;
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar marca:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 // POST - Criar
 router.post('/', async (req: Request, res: Response) => {
   try {

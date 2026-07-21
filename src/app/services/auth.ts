@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, from, of } from 'rxjs';
-import { map, switchMap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { DatabaseService } from './database';
 
 export interface User {
@@ -11,6 +11,7 @@ export interface User {
   role: 'admin' | 'user';
   permissoes: string[];
   theme?: 'light' | 'dark';
+  token?: string;
 }
 
 @Injectable({
@@ -31,6 +32,10 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  public getToken(): string | null {
+    return this.currentUserSubject.value?.token || null;
+  }
+
   login(email: string, password: string): Observable<User | null> {
     return this.http.post<User>('/api/auth/login', { email, senha: password }).pipe(
       map((user: User) => {
@@ -41,30 +46,6 @@ export class AuthService {
       catchError(err => {
         console.error('Login error:', err);
         return of(null);
-      })
-    );
-  }
-
-  register(name: string, email: string, password: string): Observable<User> {
-    return from(this.db.insert('usuarios', {
-      nome: name,
-      email,
-      senha: password,
-      perfil_id: 2
-    })).pipe(
-      switchMap(() => from(this.db.getAll('usuarios'))),
-      map((users: any[]) => {
-        const userFound = users.find(u => u.email === email);
-        const user: User = {
-          id: userFound.id.toString(),
-          email,
-          name,
-          role: 'user',
-          permissoes: []
-        };
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        this.currentUserSubject.next(user);
-        return user;
       })
     );
   }

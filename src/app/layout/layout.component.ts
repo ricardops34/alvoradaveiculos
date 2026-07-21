@@ -70,7 +70,7 @@ export class LayoutComponent implements OnInit {
 
     // Veículos
     if (permissions.includes('veiculos')) {
-      const veiculoItems = [];
+      const veiculoItems: Array<PoMenuItem> = [];
       veiculoItems.push({ label: 'Gerenciar Veículos', link: '/home/veiculos', icon: 'an an-car' });
       veiculoItems.push({ label: 'Marcas e Modelos', link: '/home/marcas', icon: 'an an-tag' });
       
@@ -78,20 +78,22 @@ export class LayoutComponent implements OnInit {
     }
 
     // Financeiro
-    const financeiroItems = [];
+    const financeiroItems: Array<PoMenuItem> = [];
     if (permissions.includes('bancos')) financeiroItems.push({ label: 'Contas Bancárias', link: '/home/bancos', icon: 'an an-bank' });
     if (permissions.includes('centros_custo')) financeiroItems.push({ label: 'Centros de Custo', link: '/home/centros-custo', icon: 'an an-list-bullets' });
     if (permissions.includes('movimentos')) financeiroItems.push({ label: 'Movimentações', link: '/home/movimentos', icon: 'an an-currency-dollar' });
+    if (permissions.includes('contas')) financeiroItems.push({ label: 'Contas a Pagar/Receber', link: '/home/contas', icon: 'an an-invoice' });
 
     if (financeiroItems.length > 0) {
       allMenus.push({ label: 'Financeiro', icon: 'an an-money', shortLabel: 'Financ', subItems: financeiroItems });
     }
 
     // Relatórios
-    const relatorioItems = [];
+    const relatorioItems: Array<PoMenuItem> = [];
     if (permissions.includes('extrato_bancario')) relatorioItems.push({ label: 'Extrato Bancário', link: '/home/relatorios/extrato-bancario', icon: 'an an-file-text' });
     if (permissions.includes('extrato_veiculo')) relatorioItems.push({ label: 'Extrato por Veículo', link: '/home/relatorios/extrato-veiculo', icon: 'an an-car-profile' });
     if (permissions.includes('relatorio_despesas')) relatorioItems.push({ label: 'Relatório de Despesas', link: '/home/relatorios/relatorio-despesas', icon: 'an an-chart-bar' });
+    if (permissions.includes('relatorio_despesas')) relatorioItems.push({ label: 'Ranking de Vendedores', link: '/home/relatorios/ranking-vendedores', icon: 'an an-trophy' });
 
     if (relatorioItems.length > 0) {
       allMenus.push({ label: 'Relatórios', icon: 'an an-files', shortLabel: 'Relat', subItems: relatorioItems });
@@ -104,7 +106,7 @@ export class LayoutComponent implements OnInit {
 
     // Configurações
     if (permissions.includes('usuarios') || user.role === 'admin') {
-      const configItems = [];
+      const configItems: Array<PoMenuItem> = [];
       configItems.push({ label: 'Perfis de Acesso', link: '/home/perfis', icon: 'an an-shield-check' });
       configItems.push({ label: 'Usuários', link: '/home/usuarios', icon: 'an an-user' });
       if (user.role === 'admin') {

@@ -10,6 +10,7 @@
     [p-items]="users" 
     [p-actions]="tableActions"
     [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
     (p-show-more)="showMore()"
     [p-loading]="isLoading">
   </po-table>

@@ -17,4 +17,6 @@ export interface Person {
   bairro?: string;
   cidade?: string;
   estado?: string;
+  lead_status?: string;
+  comissao_percentual?: number;
 }
