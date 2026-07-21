@@ -12,7 +12,7 @@ import { OnInit } from '@angular/core';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, PoModule],
   templateUrl: './login.html',
-  styleUrl: './login.scss',
+  styleUrls: ['./login.scss'],
 })
 export class LoginComponent implements OnInit {
   email = '';

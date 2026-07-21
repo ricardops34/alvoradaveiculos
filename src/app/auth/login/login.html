@@ -1,37 +1,64 @@
-<div class="login-page"
-  [style.background-image]="'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(' + parametros.background_url + ')'">
-  <div class="login-card">
-    <div class="logo-section">
-      <img [src]="parametros.logo_url" [alt]="parametros.empresa_nome" class="logo-img">
-      <h1 class="title">{{ parametros.empresa_nome }}</h1>
-    </div>
-
-    <form #formLogin="ngForm" class="login-form">
-      <div class="form-field">
-        <po-email name="login" [(ngModel)]="email" p-clean p-error-pattern="e-mail inválido" p-label="E-mail"
-          p-placeholder="Informe seu e-mail" p-required>
-        </po-email>
+<main
+  class="login-page"
+  [style.--login-background]="'url(\'fachada-alvorada-login-v2.png\')'"
+>
+  <section class="access-panel">
+    <div class="login-card">
+      <div class="logo-section">
+        <div class="logo-frame">
+          <img src="logo-alvorada-horizontal.png" alt="Alvorada Veículos" class="logo-img">
+        </div>
       </div>
 
-      <div class="form-field">
-        <po-password name="password" [(ngModel)]="password" p-label="Senha" p-required="true"
-          (keyup.enter)="onLogin(formLogin)">
-        </po-password>
+      <div class="welcome-copy">
+        <h3></h3>
+        <p>Entre com seus dados para acessar o sistema.</p>
       </div>
 
-      <div class="form-field remember-field">
-        <po-checkbox name="remember" [(ngModel)]="rememberMe" p-label="Lembrar-me">
-        </po-checkbox>
-      </div>
+      <form #formLogin="ngForm" class="login-form" (ngSubmit)="onLogin(formLogin)">
+        <div class="form-field">
+          <po-email
+            name="login"
+            [(ngModel)]="email"
+            p-clean
+            p-error-pattern="E-mail inválido"
+            p-label="E-mail"
+            p-placeholder="Informe seu e-mail"
+            p-required>
+          </po-email>
+        </div>
 
-      <div class="form-field">
-        <po-button p-label="Entrar" p-kind="primary" [p-loading]="loading" (p-click)="onLogin(formLogin)">
+        <div class="form-field">
+          <po-password
+            name="password"
+            [(ngModel)]="password"
+            p-label="Senha"
+            p-placeholder="Informe sua senha"
+            p-required="true">
+          </po-password>
+        </div>
+
+        <div class="login-options">
+          <po-checkbox name="remember" [(ngModel)]="rememberMe" p-label="Lembrar-me">
+          </po-checkbox>
+          <button type="button" (click)="forgotPassword()" class="forgot-link">
+            Esqueci minha senha
+          </button>
+        </div>
+
+        <po-button
+          class="submit-button"
+          p-label="Entrar no sistema"
+          p-kind="primary"
+          p-type="submit"
+          [p-loading]="loading">
         </po-button>
-      </div>
-    </form>
+      </form>
 
-    <div class="forgot-section">
-      <a (click)="forgotPassword()" class="forgot-link">Esqueci minha senha</a>
+      <footer class="login-footer">
+        <span aria-hidden="true" class="lock-icon">●</span>
+        Ambiente seguro e protegido
+      </footer>
     </div>
-  </div>
-</div>
+  </section>
+</main>

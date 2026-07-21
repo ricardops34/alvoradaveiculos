@@ -176,7 +176,6 @@ async function seed() {
         observacoes TEXT
       );
 
-      CREATE INDEX IF NOT EXISTS idx_veiculos_chassi ON veiculos(chassi);
       CREATE INDEX IF NOT EXISTS idx_km_historico_veiculo ON veiculo_km_historico(veiculo_id);
       CREATE INDEX IF NOT EXISTS idx_cautelares_veiculo ON cautelares(veiculo_id);
 
@@ -194,6 +193,7 @@ async function seed() {
       ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS valor_fipe DECIMAL(15,2);
       ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS observacoes TEXT;
       ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS chassi VARCHAR(30);
+      CREATE INDEX IF NOT EXISTS idx_veiculos_chassi ON veiculos(chassi);
       ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS renavam VARCHAR(20);
       ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS opcionais TEXT[] DEFAULT '{}';
       ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS lead_status VARCHAR(30) DEFAULT 'Novo';
@@ -343,6 +343,7 @@ async function seed() {
       SELECT setval('marcas_id_seq', (SELECT COALESCE(MAX(id), 1) FROM marcas));
       SELECT setval('modelos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM modelos));
       SELECT setval('centros_custo_id_seq', (SELECT COALESCE(MAX(id), 1) FROM centros_custo));
+      SELECT setval('bancos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM bancos));
     `);
 
   } catch (err) {

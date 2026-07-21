@@ -73,6 +73,25 @@ Para acompanhar os logs, use
 `docker compose -f docker-compose.dev.yml logs -f`. Para encerrar os
 containers, use `docker compose -f docker-compose.dev.yml down`.
 
+### Base de dados de teste (Seed-Teste)
+
+Com os containers de desenvolvimento no ar, popule o banco com dados fictícios
+(veículos, pessoas, movimentos, contas, cautelares — incluindo um caso de
+recompra do mesmo veículo, pra testar a tela de Histórico) rodando dentro do
+container da API:
+
+```bash
+docker compose -f docker-compose.dev.yml exec alvorada-api npm run seed:teste
+```
+
+É seguro rodar mais de uma vez — se os dados de teste já existirem nesse
+banco, o script não faz nada. Ele também se recusa a rodar com
+`NODE_ENV=production` (só é liberado definindo `FORCE_SEED_TESTE=true`, pra
+evitar poluir um banco de produção por engano).
+
+Usuários extras criados: `vendedor@teste.alvorada.com` e
+`financeiro@teste.alvorada.com`, senha `teste123`.
+
 ### Ambiente de desenvolvimento com hot reload
 
 Use a configuração de desenvolvimento para refletir automaticamente as
