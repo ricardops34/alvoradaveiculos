@@ -33,8 +33,11 @@ export class VeiculosComponent implements OnInit {
   @ViewChild('vehicleModal', { static: true }) vehicleModal!: PoModalComponent;
   @ViewChild('statementModal', { static: true }) statementModal!: PoModalComponent;
   @ViewChild('sellModal', { static: true }) sellModal!: PoModalComponent;
+  @ViewChild('historicoModal', { static: true }) historicoModal!: PoModalComponent;
+  @ViewChild('cautelarModal', { static: true }) cautelarModal!: PoModalComponent;
   @ViewChild('vehicleForm', { static: false }) vehicleForm!: any;
   @ViewChild('sellForm', { static: false }) sellForm!: any;
+  @ViewChild('cautelarForm', { static: false }) cautelarForm!: any;
   @ViewChild('quickAdd') quickAdd!: QuickAddComponent;
 
   vehicles: any[] = [];
@@ -117,6 +120,26 @@ export class VeiculosComponent implements OnInit {
     maxFileSize: 10 * 1024 * 1024
   };
 
+  public readonly laudoRestrictions: PoUploadFileRestrictions = {
+    allowedExtensions: ['.pdf', '.png', '.jpg', '.jpeg'],
+    maxFileSize: 10 * 1024 * 1024
+  };
+
+  public readonly resultadoCautelarOptions: PoSelectOption[] = [
+    { label: 'Aprovado', value: 'Aprovado' },
+    { label: 'Reprovado', value: 'Reprovado' },
+    { label: 'Restrição', value: 'Restrição' }
+  ];
+
+  // Histórico do veículo (estadias anteriores pela loja, KM e cautelares) — buscado por chassi
+  historico: { estadias: any[]; km_historico: any[]; cautelares: any[] } = { estadias: [], km_historico: [], cautelares: [] };
+  buscandoHistorico = false;
+  chassiVerificado = '';
+  estadiasAnterioresEncontradas = 0;
+
+  cautelar: any = this.getEmptyCautelar();
+  isLoadingSaveCautelar = false;
+
   // O po-upload faz a requisição por fora do HttpClient (não passa pelo interceptor),
   // então o token precisa ser anexado manualmente aqui (mesmo padrão de configuracoes.ts).
   get uploadHeaders() {
@@ -147,7 +170,8 @@ export class VeiculosComponent implements OnInit {
     troca_quilometragem: null,
     troca_valor_fipe: null,
     troca_observacoes: '',
-    nota_fiscal_venda_chave: ''
+    nota_fiscal_venda_chave: '',
+    quilometragem: null
   };
 
   public readonly pageActions: PoPageAction[] = [
@@ -170,6 +194,7 @@ export class VeiculosComponent implements OnInit {
     { label: 'Editar', action: this.openEdit.bind(this), icon: 'po-icon-edit' },
     { label: 'Vender', action: this.openSellModal.bind(this), icon: 'po-icon-cart', visible: (row: any) => row.status === 'Estoque' || row.status === 'Preparação' },
     { label: 'Extrato/Custos', action: this.openStatement.bind(this), icon: 'po-icon-finance-secure' },
+    { label: 'Histórico do Veículo', action: this.openHistorico.bind(this), icon: 'an an-clock-counter-clockwise' },
     { label: 'Gerar Proposta Comercial', action: this.gerarProposta.bind(this), icon: 'an an-file-text', visible: (row: any) => row.status === 'Estoque' || row.status === 'Preparação' },
     { label: 'Recibo de Compra', action: (row: any) => this.gerarRecibo(row, 'compra'), icon: 'an an-receipt' },
     { label: 'Recibo de Venda', action: (row: any) => this.gerarRecibo(row, 'venda'), icon: 'an an-receipt', visible: (row: any) => row.status === 'Vendido' },
@@ -200,6 +225,62 @@ export class VeiculosComponent implements OnInit {
     { property: 'historico', label: 'Histórico' },
     { property: 'centro_custo_nome', label: 'Centro de Custo' },
     { property: 'valor', label: 'Valor', type: 'currency', format: 'BRL' }
+  ];
+
+  public readonly proprietariosColumns: PoTableColumn[] = [
+    { property: 'estadia', label: 'Estadia', type: 'number' },
+    { property: 'proprietario', label: 'Proprietário' },
+    { property: 'papel', label: 'Movimento' },
+    { property: 'data', label: 'Data', type: 'date' }
+  ];
+
+  // Linha do tempo de proprietários, derivada das estadias do veículo (quem vendeu pra loja
+  // e quem comprou da loja em cada passagem) — mesma informação de historico.estadias, só
+  // apresentada como cadeia de propriedade em vez de tabela financeira.
+  get proprietarios(): any[] {
+    const linhas: any[] = [];
+    this.historico.estadias.forEach((e: any, idx: number) => {
+      if (e.fornecedor_nome) {
+        linhas.push({ estadia: idx + 1, proprietario: e.fornecedor_nome, papel: 'Vendeu para a loja', data: e.data_compra });
+      }
+      if (e.cliente_nome) {
+        linhas.push({ estadia: idx + 1, proprietario: e.cliente_nome, papel: 'Comprou da loja', data: e.data_venda });
+      }
+    });
+    return linhas;
+  }
+
+  public readonly estadiasColumns: PoTableColumn[] = [
+    { property: 'data_compra', label: 'Compra', type: 'date' },
+    { property: 'fornecedor_nome', label: 'Fornecedor' },
+    { property: 'valor_compra', label: 'Vlr. Compra', type: 'currency', format: 'BRL' },
+    { property: 'data_venda', label: 'Venda', type: 'date' },
+    { property: 'cliente_nome', label: 'Cliente' },
+    { property: 'valor_venda', label: 'Vlr. Venda', type: 'currency', format: 'BRL' },
+    { property: 'status', label: 'Status' }
+  ];
+
+  public readonly kmHistoricoColumns: PoTableColumn[] = [
+    { property: 'data', label: 'Data', type: 'date' },
+    { property: 'quilometragem', label: 'Km', type: 'number' },
+    { property: 'origem', label: 'Origem' }
+  ];
+
+  public readonly cautelaresColumns: PoTableColumn[] = [
+    { property: 'data', label: 'Data', type: 'date' },
+    { property: 'empresa_realizadora', label: 'Empresa' },
+    { property: 'resultado', label: 'Resultado', type: 'label', labels: [
+      { value: 'Aprovado', color: 'color-10', label: 'Aprovado' },
+      { value: 'Reprovado', color: 'color-07', label: 'Reprovado' },
+      { value: 'Restrição', color: 'color-08', label: 'Restrição' }
+    ]},
+    { property: 'custo', label: 'Custo', type: 'currency', format: 'BRL' },
+    { property: 'veiculo_placa', label: 'Placa (na época)' }
+  ];
+
+  public readonly cautelaresTableActions: PoTableAction[] = [
+    { label: 'Ver Laudo', action: (row: any) => window.open(row.laudo_url, '_blank'), icon: 'an an-file-pdf', visible: (row: any) => !!row.laudo_url },
+    { label: 'Excluir', action: this.deleteCautelar.bind(this), icon: 'po-icon-delete', type: 'danger' }
   ];
 
   public readonly statusOptions: PoSelectOption[] = [
@@ -454,6 +535,12 @@ export class VeiculosComponent implements OnInit {
         this.sellData.troca_modelo_id = event.id;
         this.updateTrocaModelos();
         break;
+      case 'cautelar_banco_id':
+        this.cautelar.banco_id = event.id;
+        break;
+      case 'cautelar_centro_custo_id':
+        this.cautelar.centro_custo_id = event.id;
+        break;
     }
   }
 
@@ -547,7 +634,8 @@ export class VeiculosComponent implements OnInit {
       troca_quilometragem: null,
       troca_valor_fipe: null,
       troca_observacoes: '',
-      nota_fiscal_venda_chave: ''
+      nota_fiscal_venda_chave: '',
+      quilometragem: vehicle.quilometragem || null
     };
     this.sellModal.open();
   }
@@ -574,6 +662,116 @@ export class VeiculosComponent implements OnInit {
       totalRevenue: revenue,
       profit: revenue - expenses
     };
+  }
+
+  // Verifica, ao digitar o chassi de um veículo NOVO, se ele já passou pela loja antes
+  // (recompra) — evita cadastrar um registro desconectado do histórico anterior.
+  async verificarChassi() {
+    const chassi = this.vehicle.chassi?.trim();
+    if (!chassi || this.isEditing) return;
+
+    this.buscandoHistorico = true;
+    try {
+      const resultado: any = await firstValueFrom(this.db.http.get(`${this.db.apiUrl}/veiculos/historico/${chassi}`));
+      this.chassiVerificado = chassi;
+      this.estadiasAnterioresEncontradas = resultado?.estadias?.length || 0;
+      if (this.estadiasAnterioresEncontradas > 0) {
+        this.poNotification.warning(`Este chassi já passou pela loja ${this.estadiasAnterioresEncontradas}x. Veja o histórico antes de continuar.`);
+      }
+    } catch {
+      // Consulta best-effort: se falhar, não bloqueia o cadastro
+    } finally {
+      this.buscandoHistorico = false;
+    }
+  }
+
+  getEmptyCautelar() {
+    return {
+      veiculo_id: null,
+      empresa_realizadora: '',
+      data: new Date().toISOString().split('T')[0],
+      resultado: 'Aprovado',
+      laudo_url: '',
+      custo: null,
+      centro_custo_id: null,
+      banco_id: null,
+      observacoes: ''
+    };
+  }
+
+  async openHistorico(vehicle: any) {
+    if (!vehicle.chassi) {
+      this.poNotification.warning('Este veículo não tem chassi cadastrado.');
+      return;
+    }
+    this.vehicle = vehicle;
+    await this.loadHistorico(vehicle.chassi);
+    this.historicoModal.open();
+  }
+
+  async loadHistorico(chassi: string | undefined) {
+    if (!chassi) return;
+    this.buscandoHistorico = true;
+    try {
+      const resultado: any = await firstValueFrom(this.db.http.get(`${this.db.apiUrl}/veiculos/historico/${chassi}`));
+      this.historico = resultado || { estadias: [], km_historico: [], cautelares: [] };
+    } catch {
+      this.poNotification.error('Erro ao buscar histórico do veículo.');
+    } finally {
+      this.buscandoHistorico = false;
+    }
+  }
+
+  openNovaCautelar() {
+    this.cautelar = this.getEmptyCautelar();
+    this.cautelar.veiculo_id = this.vehicle.id;
+    this.cautelarModal.open();
+  }
+
+  onLaudoUploadSuccess(event: any) {
+    if (event?.body?.url) {
+      this.cautelar.laudo_url = event.body.url;
+    }
+  }
+
+  async saveCautelar() {
+    if (this.cautelarForm && this.cautelarForm.invalid) {
+      Object.values(this.cautelarForm.controls).forEach((c: any) => { c.markAsTouched(); c.markAsDirty(); });
+      this.poNotification.warning('Por favor, preencha os campos obrigatórios em vermelho.');
+      return;
+    }
+    if (this.cautelar.custo && (!this.cautelar.banco_id || !this.cautelar.centro_custo_id)) {
+      this.poNotification.warning('Cautelar com custo exige Banco/Conta e Centro de Custo.');
+      return;
+    }
+
+    this.isLoadingSaveCautelar = true;
+    try {
+      await this.db.insert('cautelares', this.cautelar);
+      this.poNotification.success('Cautelar registrada!');
+      this.cautelarModal.close();
+      await this.loadHistorico(this.vehicle.chassi);
+    } catch (error) {
+      this.poNotification.error('Erro ao registrar cautelar.');
+    } finally {
+      this.isLoadingSaveCautelar = false;
+    }
+  }
+
+  deleteCautelar(cautelar: any) {
+    this.poDialog.confirm({
+      title: 'Excluir Cautelar',
+      message: `Deseja excluir esta cautelar de ${cautelar.data ? new Date(cautelar.data).toLocaleDateString('pt-BR') : ''}?`,
+      confirm: async () => {
+        try {
+          await this.db.delete('cautelares', cautelar.id);
+          this.poNotification.warning('Cautelar excluída!');
+          await this.loadHistorico(this.vehicle.chassi);
+        } catch (error) {
+          this.poNotification.error('Erro ao excluir cautelar.');
+        }
+      }
+    });
   }
 
   private async getEmpresaNome(): Promise<string> {

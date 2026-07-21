@@ -18,6 +18,11 @@ Este arquivo centraliza o progresso do desenvolvimento e as próximas metas do p
 - [x] **Upload de Fotos em disco (21/07)**: a galeria de fotos havia se perdido num refactor anterior (só sobrava o campo `fotos` no tipo, sem UI). Reconstruída no formulário de Veículos usando `po-upload` (múltiplo, até 10MB/arquivo) + grade de thumbnails com remoção — arquivos gravados em `uploads/veiculos` (nome único por upload) em vez de Base64 no banco, resolvendo o item de "persistência de fotos" do backlog. Registros antigos em Base64 (se existirem) continuam renderizando normalmente.
 - [x] Lógica de status (Estoque, Vendido, Preparação, etc).
 - [x] **Novo: Sistema Hierárquico de Marcas e Modelos** (com anos e descrição).
+- [x] **Histórico do Veículo e Recompra (21/07)**: até então não existia nenhum controle disso — `quilometragem` era um valor único sobrescrito a cada edição, sem Cautelar/Vistoria, e uma recompra (veículo que a loja já vendeu antes e volta pro estoque) sempre virava uma linha nova em `veiculos` desconectada da anterior (mesmo chassi, histórico perdido).
+  - **Detecção de recompra**: botão "Verificar Histórico" ao lado do Chassi no cadastro de veículo novo — busca por `chassi` (`GET /api/veiculos/historico/:chassi`) e avisa se esse veículo já passou pela loja antes.
+  - **Histórico de quilometragem**: nova tabela `veiculo_km_historico` (não sobrescreve mais — cada leitura fica registrada, com origem Cadastro/Venda/Manual), populada automaticamente no cadastro, na edição (quando o KM muda) e na venda (novo campo "Km na Entrega").
+  - **Módulo de Cautelar/Vistoria**: nova tabela `cautelares` (empresa, data, resultado, laudo anexado, custo) — rotas em `server/src/routes/cautelares.ts`; se tiver custo + banco + centro de custo, gera o lançamento (Débito) automaticamente, igual ao padrão já usado na compra de veículo.
+  - **Tela de Histórico do Veículo**: nova ação "Histórico do Veículo" na listagem, abre modal com a linha do tempo completa por chassi — Proprietários (quem vendeu/comprou em cada passagem), Estadias na loja, Histórico de KM e Cautelares, cadastro de nova cautelar direto do modal.
 
 ### 🛰️ Preparação para integração RENAVE (21/07)
 Levantamento feito direto no schema real da API (`https://renave.estaleiro.serpro.gov.br/renave-ws`, grupo "Estabelecimento/Revenda"). Esta etapa cobre só **cadastro e base de dados** — a chamada às APIs do RENAVE (entrada/saída de estoque, autenticação via certificado digital e-CNPJ) ainda não foi implementada, fica para uma próxima fase.
@@ -92,6 +97,12 @@ Título em aberto (`status = Pendente`) que só vira lançamento de Banco/Caixa 
 - [ ] Autenticação com certificado digital e-CNPJ (A1/A3) — decidir onde/como guardar o certificado com segurança no servidor.
 - [ ] Guardar o protocolo/ID de estoque retornado pelo RENAVE (`renave_id_estoque`/`renave_status`, colunas já criadas em `veiculos`) e exibir o status da integração na tela de Veículos.
 - [ ] Tratamento de erros/pendências do RENAVE (ex: veículo com estoque já solicitado, aptidão de veículo reprovada).
+
+### 📧 Envio de E-mail (Propostas, Recibos, Publicidade)
+A tela de Configurações já tem campos de SMTP (host, porta, usuário, senha, remetente) com botão "Salvar", mas é uma funcionalidade fantasma: não existe coluna `smtp_*` no banco, `PUT /parametros` não os recebe, não há biblioteca de e-mail (`nodemailer` etc.) no backend, e nada dispara envio — Proposta Comercial e Recibos hoje são só PDF baixado no navegador.
+- [ ] Decidir: implementar o envio de fato (persistir SMTP, instalar `nodemailer`, endpoint de envio) ou remover os campos falsos da tela até ser implementado.
+- [ ] Se implementado: botão "Enviar por E-mail" na Proposta Comercial e nos Recibos (compra/venda), reaproveitando o PDF já gerado (jsPDF) como anexo.
+- [ ] Possível uso futuro para publicidade/campanhas (ex: notificar clientes/leads sobre veículos novos no estoque) — ainda não especificado, avaliar quando o envio básico estiver funcionando.
 
 ### 🛡️ Segurança e Dados
 - [x] ~~Migração para API~~: já concluído — backend Node/Express + PostgreSQL rodando em produção (o item antigo previa Node/Nest com banco local).

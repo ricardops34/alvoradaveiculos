@@ -148,6 +148,38 @@ async function seed() {
         movimento_id INTEGER REFERENCES movimentos(id) ON DELETE SET NULL
       );
 
+      -- Histórico de quilometragem: cada leitura fica registrada (não sobrescreve),
+      -- permitindo montar a timeline de KM de um veículo ao longo do tempo — inclusive
+      -- entre passagens diferentes pela loja (compra, venda, recompra).
+      CREATE TABLE IF NOT EXISTS veiculo_km_historico (
+        id SERIAL PRIMARY KEY,
+        veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE CASCADE,
+        data DATE NOT NULL DEFAULT CURRENT_DATE,
+        quilometragem INTEGER NOT NULL,
+        origem VARCHAR(20) NOT NULL DEFAULT 'Manual', -- Cadastro, Venda, Cautelar, Manual
+        observacao TEXT
+      );
+
+      -- Cautelar/Vistoria: laudo de terceiros que atesta a situação do veículo (furto,
+      -- adulteração de chassi, restrição/gravame, sinistro), usado sobretudo em recompras.
+      CREATE TABLE IF NOT EXISTS cautelares (
+        id SERIAL PRIMARY KEY,
+        veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE CASCADE,
+        empresa_realizadora VARCHAR(200),
+        data DATE NOT NULL DEFAULT CURRENT_DATE,
+        resultado VARCHAR(20), -- Aprovado, Reprovado, Restrição
+        laudo_url VARCHAR(255),
+        custo DECIMAL(15,2),
+        centro_custo_id INTEGER REFERENCES centros_custo(id) ON DELETE SET NULL,
+        banco_id INTEGER REFERENCES bancos(id) ON DELETE SET NULL,
+        movimento_id INTEGER REFERENCES movimentos(id) ON DELETE SET NULL,
+        observacoes TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_veiculos_chassi ON veiculos(chassi);
+      CREATE INDEX IF NOT EXISTS idx_km_historico_veiculo ON veiculo_km_historico(veiculo_id);
+      CREATE INDEX IF NOT EXISTS idx_cautelares_veiculo ON cautelares(veiculo_id);
+
       INSERT INTO parametros (id, empresa_nome, favicon_url, logo_url, background_url)
       VALUES (1, 'Alvorada Veículos', 'favicon.ico', 'icone.png', 'fundologin.png')
       ON CONFLICT (id) DO NOTHING;

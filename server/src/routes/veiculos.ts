@@ -98,6 +98,58 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+// GET - Histórico completo do veículo pelo chassi: todas as passagens dele pela loja
+// (compras/vendas), histórico de quilometragem e cautelares/vistorias — usado tanto para
+// detectar recompra ao cadastrar quanto para a tela de Histórico do Veículo.
+router.get('/historico/:chassi', async (req: Request, res: Response) => {
+  try {
+    const { chassi } = req.params;
+
+    const estadiasResult = await pool.query(`
+      SELECT v.*,
+             COALESCE(ma.nome, v.marca) as marca_nome,
+             COALESCE(mo.nome, v.modelo) as modelo_nome,
+             f.nome as fornecedor_nome,
+             c.nome as cliente_nome
+      FROM veiculos v
+      LEFT JOIN marcas ma ON v.marca_id = ma.id
+      LEFT JOIN modelos mo ON v.modelo_id = mo.id
+      LEFT JOIN pessoas f ON v.fornecedor_id = f.id
+      LEFT JOIN pessoas c ON v.cliente_id = c.id
+      WHERE v.chassi = $1
+      ORDER BY v.data_compra ASC NULLS LAST, v.id ASC
+    `, [chassi]);
+
+    const veiculoIds = estadiasResult.rows.map(v => v.id);
+    if (veiculoIds.length === 0) {
+      res.json({ estadias: [], km_historico: [], cautelares: [] });
+      return;
+    }
+
+    const kmResult = await pool.query(
+      `SELECT * FROM veiculo_km_historico WHERE veiculo_id = ANY($1::int[]) ORDER BY data ASC, id ASC`,
+      [veiculoIds]
+    );
+    const cautelaresResult = await pool.query(
+      `SELECT ca.*, cc.nome as centro_custo_nome, v.placa as veiculo_placa
+       FROM cautelares ca
+       LEFT JOIN centros_custo cc ON ca.centro_custo_id = cc.id
+       LEFT JOIN veiculos v ON ca.veiculo_id = v.id
+       WHERE ca.veiculo_id = ANY($1::int[]) ORDER BY ca.data ASC, ca.id ASC`,
+      [veiculoIds]
+    );
+
+    res.json({
+      estadias: estadiasResult.rows,
+      km_historico: kmResult.rows,
+      cautelares: cautelaresResult.rows
+    });
+  } catch (err) {
+    console.error('Erro ao buscar histórico do veículo:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -145,6 +197,13 @@ router.post('/', async (req: Request, res: Response) => {
 
     const vehicle = result.rows[0];
 
+    if (quilometragem !== undefined && quilometragem !== null) {
+      await client.query(
+        `INSERT INTO veiculo_km_historico (veiculo_id, data, quilometragem, origem) VALUES ($1, $2, $3, 'Cadastro')`,
+        [vehicle.id, data_compra || new Date().toISOString().split('T')[0], quilometragem]
+      );
+    }
+
     if (forma_compra === 'Banco' && banco_id && centro_custo_id && valor_compra) {
       await client.query(
         `INSERT INTO movimentos (data, banco_id, tipo, historico, valor, veiculo_id, pessoa_id, centro_custo_id)
@@ -165,27 +224,46 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 router.put('/:id', async (req: Request, res: Response) => {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     const { id } = req.params;
     const {
       placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais,
       tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave
     } = req.body;
-    const result = await pool.query(
+
+    const oldResult = await client.query('SELECT quilometragem FROM veiculos WHERE id = $1', [id]);
+    if (oldResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      res.status(404).json({ error: 'Veículo não encontrado' });
+      return;
+    }
+    const oldKm = oldResult.rows[0].quilometragem;
+
+    const result = await client.query(
       `UPDATE veiculos SET placa=$1, marca=$2, modelo=$3, marca_id=$4, modelo_id=$5, tipo_veiculo=$6, versao=$7, ano_fabricacao=$8, ano_modelo=$9, cor=$10, quilometragem=$11, valor_compra=$12, valor_avaliacao=$13, valor_venda=$14, data_compra=$15, status=$16, forma_compra=$17, banco_id=$18, fornecedor_id=$19, cliente_id=$20, fotos=$21, chassi=$22, renavam=$23, valor_fipe=$24, observacoes=$25, opcionais=$26,
        tipo_crv=$27, numero_crv=$28, codigo_seguranca_crv=$29, data_medicao_hodometro=$30, nota_fiscal_compra_chave=$31, nota_fiscal_venda_chave=$32
        WHERE id=$33 RETURNING *`,
       [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], chassi||null, renavam||null, valor_fipe||null, observacoes||null, opcionais||[],
        tipo_crv||null, numero_crv||null, codigo_seguranca_crv||null, data_medicao_hodometro||null, nota_fiscal_compra_chave||null, nota_fiscal_venda_chave||null, id]
     );
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Veículo não encontrado' });
-      return;
+
+    if (quilometragem !== undefined && quilometragem !== null && Number(quilometragem) !== Number(oldKm)) {
+      await client.query(
+        `INSERT INTO veiculo_km_historico (veiculo_id, data, quilometragem, origem) VALUES ($1, CURRENT_DATE, $2, 'Manual')`,
+        [id, quilometragem]
+      );
     }
+
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error('Erro ao atualizar veículo:', err);
     res.status(500).json({ error: 'Erro interno' });
+  } finally {
+    client.release();
   }
 });
 
@@ -208,7 +286,7 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
       cliente_id, data_venda, valor_venda, forma_venda, banco_id, centro_custo_id, vendedor_id,
       troca_placa, troca_marca_id, troca_modelo_id, troca_tipo_veiculo, troca_cor, troca_ano_fab, troca_ano_mod, troca_valor,
       troca_chassi, troca_quilometragem, troca_valor_fipe, troca_observacoes,
-      nota_fiscal_venda_chave
+      nota_fiscal_venda_chave, quilometragem
     } = req.body;
 
     await client.query('BEGIN');
@@ -224,9 +302,9 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
     }
 
     const result = await client.query(
-      `UPDATE veiculos SET status = 'Vendido', cliente_id = $1, valor_venda = $2, data_venda = $3, vendedor_id = $4, comissao_valor = $5, nota_fiscal_venda_chave = $6
-       WHERE id = $7 RETURNING *`,
-      [cliente_id, valor_venda, data_venda, vendedor_id || null, comissaoValor, nota_fiscal_venda_chave || null, id]
+      `UPDATE veiculos SET status = 'Vendido', cliente_id = $1, valor_venda = $2, data_venda = $3, vendedor_id = $4, comissao_valor = $5, nota_fiscal_venda_chave = $6, quilometragem = COALESCE($7, quilometragem)
+       WHERE id = $8 RETURNING *`,
+      [cliente_id, valor_venda, data_venda, vendedor_id || null, comissaoValor, nota_fiscal_venda_chave || null, quilometragem || null, id]
     );
 
     if (result.rows.length === 0) {
@@ -237,6 +315,13 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
 
     const vehicle = result.rows[0];
     const dataMov = data_venda || new Date().toISOString().split('T')[0];
+
+    if (quilometragem !== undefined && quilometragem !== null) {
+      await client.query(
+        `INSERT INTO veiculo_km_historico (veiculo_id, data, quilometragem, origem) VALUES ($1, $2, $3, 'Venda')`,
+        [vehicle.id, dataMov, quilometragem]
+      );
+    }
 
     async function getComissaoCentroId(): Promise<number> {
       const existente = await client.query(`SELECT id FROM centros_custo WHERE nome = 'Comissão de Vendas'`);
@@ -279,6 +364,13 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
         [troca_placa, troca_marca_id || null, troca_modelo_id || null, troca_tipo_veiculo || 'Carro', troca_cor || null, troca_ano_fab || null, troca_ano_mod || null, troca_valor, dataMov, cliente_id, troca_chassi || null, troca_quilometragem || null, troca_valor_fipe || null, troca_observacoes || null]
       );
       const veiculoTroca = trocaResult.rows[0];
+
+      if (troca_quilometragem !== undefined && troca_quilometragem !== null) {
+        await client.query(
+          `INSERT INTO veiculo_km_historico (veiculo_id, data, quilometragem, origem) VALUES ($1, $2, $3, 'Cadastro')`,
+          [veiculoTroca.id, dataMov, troca_quilometragem]
+        );
+      }
 
       // Lançamentos internos pela conta Caixa: registram a troca sem afetar o saldo bancário real
       await client.query(

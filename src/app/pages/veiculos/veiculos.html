@@ -75,9 +75,18 @@
 
     <div class="po-row">
       <po-input class="po-md-3" name="renavam" [(ngModel)]="vehicle.renavam" p-label="Renavam"></po-input>
-      <po-input class="po-md-5" name="chassi" [(ngModel)]="vehicle.chassi" p-label="Chassi"></po-input>
+      <div class="po-md-5" style="display: flex; gap: 8px;">
+        <po-input style="flex: 1" name="chassi" [(ngModel)]="vehicle.chassi" p-label="Chassi"></po-input>
+        <div *ngIf="!isEditing" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="secondary" p-icon="an an-magnifying-glass" p-tooltip="Verificar se este veículo já passou pela loja (recompra)" [p-loading]="buscandoHistorico" (p-click)="verificarChassi()"></po-button>
+        </div>
+      </div>
       <po-number class="po-md-2" name="ano_fabricacao" [(ngModel)]="vehicle.ano_fabricacao" p-label="Ano Fab."></po-number>
       <po-number class="po-md-2" name="ano_modelo" [(ngModel)]="vehicle.ano_modelo" p-label="Ano Mod."></po-number>
+    </div>
+
+    <div class="po-row" *ngIf="!isEditing && chassiVerificado === vehicle.chassi && estadiasAnterioresEncontradas > 0">
+      <po-info class="po-md-12" p-label="⚠ Recompra detectada" [p-value]="'Este chassi já passou pela loja ' + estadiasAnterioresEncontradas + 'x. Salve o cadastro e use a ação \'Histórico do Veículo\' na listagem para ver os detalhes.'"></po-info>
     </div>
 
     <po-divider p-label="Vínculos e Financeiro"></po-divider>
@@ -260,8 +269,9 @@
           <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='venda_cliente_id'; appQuickAdd.open('pessoas')"></po-button>
         </div>
       </div>
-      <po-datepicker class="po-md-3" name="data_venda" [(ngModel)]="sellData.data_venda" p-label="Data da Venda" p-required></po-datepicker>
-      <po-decimal class="po-md-3" name="valor_venda" [(ngModel)]="sellData.valor_venda" p-label="Valor da Venda" p-decimals="2" p-required></po-decimal>
+      <po-datepicker class="po-md-2" name="data_venda" [(ngModel)]="sellData.data_venda" p-label="Data da Venda" p-required></po-datepicker>
+      <po-decimal class="po-md-2" name="valor_venda" [(ngModel)]="sellData.valor_venda" p-label="Valor da Venda" p-decimals="2" p-required></po-decimal>
+      <po-number class="po-md-2" name="quilometragem_venda" [(ngModel)]="sellData.quilometragem" p-label="Km na Entrega" p-help="Registrado no histórico de KM do veículo."></po-number>
     </div>
 
     <div class="po-row po-mt-2">
@@ -363,6 +373,99 @@
         p-help="Se positivo, vira Conta a Receber do cliente. Se negativo, vira Conta a Pagar ao cliente. Só é lançado no banco/caixa quando a conta for baixada.">
       </po-info>
     </ng-container>
+  </form>
+</po-modal>
+
+<!-- Modal de Histórico do Veículo -->
+<po-modal #historicoModal
+  p-title="Histórico do Veículo"
+  p-size="xl"
+  [p-primary-action]="{ label: 'Fechar', action: historicoModal.close.bind(historicoModal) }">
+
+  <div class="po-row">
+    <po-info class="po-md-4" p-label="Chassi" [p-value]="vehicle.chassi"></po-info>
+    <po-info class="po-md-4" p-label="Placa Atual" [p-value]="vehicle.placa"></po-info>
+    <po-info class="po-md-4" p-label="Passagens pela Loja" [p-value]="historico.estadias.length"></po-info>
+  </div>
+
+  <po-divider p-label="Proprietários"></po-divider>
+  <po-table [p-columns]="proprietariosColumns" [p-items]="proprietarios" [p-loading]="buscandoHistorico"></po-table>
+
+  <po-divider p-label="Estadias na Loja (Compras/Vendas)"></po-divider>
+  <po-table [p-columns]="estadiasColumns" [p-items]="historico.estadias" [p-loading]="buscandoHistorico"></po-table>
+
+  <po-divider p-label="Histórico de Quilometragem"></po-divider>
+  <po-table [p-columns]="kmHistoricoColumns" [p-items]="historico.km_historico" [p-loading]="buscandoHistorico"></po-table>
+
+  <po-divider p-label="Cautelares / Vistorias"></po-divider>
+  <div class="po-row po-mb-1">
+    <po-button class="po-md-3" p-label="Nova Cautelar" p-kind="primary" p-icon="an an-plus" (p-click)="openNovaCautelar()"></po-button>
+  </div>
+  <po-table [p-columns]="cautelaresColumns" [p-items]="historico.cautelares" [p-actions]="cautelaresTableActions" [p-loading]="buscandoHistorico"></po-table>
+</po-modal>
+
+<!-- Modal de Nova Cautelar -->
+<po-modal #cautelarModal
+  p-title="Nova Cautelar / Vistoria"
+  p-size="lg"
+  [p-primary-action]="{ label: 'Salvar', action: saveCautelar.bind(this), loading: isLoadingSaveCautelar }"
+  [p-secondary-action]="{ label: 'Cancelar', action: cautelarModal.close.bind(cautelarModal) }">
+
+  <form #cautelarForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-5" name="empresa_realizadora" [(ngModel)]="cautelar.empresa_realizadora" p-label="Empresa Realizadora" p-required></po-input>
+      <po-datepicker class="po-md-3" name="data_cautelar" [(ngModel)]="cautelar.data" p-label="Data" p-required></po-datepicker>
+      <po-select class="po-md-4" name="resultado" [(ngModel)]="cautelar.resultado" p-label="Resultado" [p-options]="resultadoCautelarOptions" p-required></po-select>
+    </div>
+
+    <div class="po-row">
+      <po-upload
+        class="po-md-12"
+        name="laudo_file"
+        p-label="Anexar Laudo (PDF ou imagem)"
+        p-url="/api/cautelares/upload-laudo"
+        [p-headers]="uploadHeaders"
+        [p-restrictions]="laudoRestrictions"
+        (p-success)="onLaudoUploadSuccess($event)">
+      </po-upload>
+    </div>
+
+    <po-divider p-label="Custo (opcional)"></po-divider>
+    <div class="po-row">
+      <po-decimal class="po-md-3" name="custo" [(ngModel)]="cautelar.custo" p-label="Custo" p-decimals="2"></po-decimal>
+      <div class="po-md-4" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="cautelar_banco_id"
+          [(ngModel)]="cautelar.banco_id"
+          p-label="Banco/Conta (se houver custo)"
+          [p-filter-service]="bancosLookup"
+          p-field-label="nome"
+          p-field-value="id">
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='cautelar_banco_id'; appQuickAdd.open('bancos')"></po-button>
+        </div>
+      </div>
+      <div class="po-md-5" style="display: flex; gap: 8px;">
+        <po-lookup
+          style="flex: 1"
+          name="cautelar_centro_custo_id"
+          [(ngModel)]="cautelar.centro_custo_id"
+          p-label="Centro de Custo (se houver custo)"
+          [p-filter-service]="centrosCustoLookup"
+          p-field-label="nome"
+          p-field-value="id">
+        </po-lookup>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='cautelar_centro_custo_id'; appQuickAdd.open('centros-custo')"></po-button>
+        </div>
+      </div>
+    </div>
+
+    <div class="po-row">
+      <po-textarea class="po-md-12" name="observacoes_cautelar" [(ngModel)]="cautelar.observacoes" p-label="Observações"></po-textarea>
+    </div>
   </form>
 </po-modal>
 <app-quick-add #appQuickAdd (onAdded)="handleQuickAdd($event, currentQuickAddField)"></app-quick-add>

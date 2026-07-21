@@ -21,6 +21,7 @@ import modelosRoutes from './routes/modelos';
 import configRoutes from './routes/config';
 import vendedoresRoutes from './routes/vendedores';
 import contasRoutes from './routes/contas';
+import cautelaresRoutes from './routes/cautelares';
 import backupRoutes from './routes/backup';
 
 dotenv.config();
@@ -52,6 +53,7 @@ app.use('/api/usuarios', authMiddleware, requireRotina('usuarios'), usuariosRout
 app.use('/api/dashboard', authMiddleware, requireRotina('dashboard'), dashboardRoutes);
 app.use('/api/marcas', authMiddleware, requireRotina('veiculos'), marcasRoutes);
 app.use('/api/modelos', authMiddleware, requireRotina('veiculos'), modelosRoutes);
+app.use('/api/cautelares', authMiddleware, requireRotina('veiculos'), cautelaresRoutes);
 app.use('/api/vendedores', authMiddleware, requireRotina('relatorio_despesas'), vendedoresRoutes);
 app.use('/api/contas', authMiddleware, requireRotina('contas'), contasRoutes);
 app.use('/api/backup', authMiddleware, requireAdmin, backupRoutes);
