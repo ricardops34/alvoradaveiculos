@@ -9,7 +9,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = authService.getToken();
 
-  const authReq = token
+  // Só anexa o token em chamadas para a nossa própria API — URLs absolutas (ex: ViaCEP,
+  // MinhaReceita) são para serviços externos e não devem receber o Authorization, que
+  // além de desnecessário derruba o preflight de CORS deles.
+  const isExternal = /^https?:\/\//i.test(req.url);
+  const authReq = token && !isExternal
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
 

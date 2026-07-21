@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import seed from './seed';
 import { authMiddleware, requireRotina, requireAdmin } from './middleware/auth';
+import { UPLOADS_ROOT, ensureUploadsDir } from './uploads';
 
 // Rotas
 import authRoutes from './routes/auth';
@@ -31,6 +32,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
+
+// Uploads persistentes (logo/favicon/fundo de login, fotos de veículos) — pasta montada
+// como volume Docker em produção para sobreviver a redeploys (ver docker-compose.yml).
+ensureUploadsDir('.');
+app.use('/uploads', express.static(UPLOADS_ROOT));
 
 // Rotas da API
 // Cada módulo exige, além de um token válido, que o perfil do usuário tenha a rotina correspondente

@@ -10,13 +10,26 @@ Este arquivo centraliza o progresso do desenvolvimento e as próximas metas do p
 - [x] Configuração de build Angular para produção (ajuste de budgets 5MB).
 - [x] Deploy em Docker Swarm com suporte a Traefik.
 - [x] Identidade visual: Alteração do nome para "Alvorada" em todo o sistema.
+- [x] **Uploads persistentes (21/07)**: criado `server/src/uploads.ts` com pasta compartilhada de uploads (`server/uploads` em dev, `/app/uploads` em produção) e volume Docker nomeado (`alvorada_uploads`) no `docker-compose.yml`, para sobreviver a redeploys. Corrigido também um bug pré-existente: o `Dockerfile` de produção da API nunca copiava/criava a pasta `public` usada pelo multer, então o upload de logo/favicon/fundo de login e a movimentação de CSV de marcas/modelos (`/api/config/upload-csv`) estavam quebrados em produção (contagem errada de `..` no `path.join`). Corrigido em `config.ts`.
 
 ### 🚗 Módulo de Veículos
 - [x] Cadastro completo de veículos.
 - [x] Campo de **Valor de Avaliação**.
-- [x] Sistema de **Upload de Fotos** (Base64) com galeria de visualização.
+- [x] **Upload de Fotos em disco (21/07)**: a galeria de fotos havia se perdido num refactor anterior (só sobrava o campo `fotos` no tipo, sem UI). Reconstruída no formulário de Veículos usando `po-upload` (múltiplo, até 10MB/arquivo) + grade de thumbnails com remoção — arquivos gravados em `uploads/veiculos` (nome único por upload) em vez de Base64 no banco, resolvendo o item de "persistência de fotos" do backlog. Registros antigos em Base64 (se existirem) continuam renderizando normalmente.
 - [x] Lógica de status (Estoque, Vendido, Preparação, etc).
 - [x] **Novo: Sistema Hierárquico de Marcas e Modelos** (com anos e descrição).
+
+### 🛰️ Preparação para integração RENAVE (21/07)
+Levantamento feito direto no schema real da API (`https://renave.estaleiro.serpro.gov.br/renave-ws`, grupo "Estabelecimento/Revenda"). Esta etapa cobre só **cadastro e base de dados** — a chamada às APIs do RENAVE (entrada/saída de estoque, autenticação via certificado digital e-CNPJ) ainda não foi implementada, fica para uma próxima fase.
+- [x] **Veículos**: novos campos `tipo_crv` (Azul/Verde/Branco/Digital), `numero_crv`, `codigo_seguranca_crv`, `data_medicao_hodometro`, `nota_fiscal_compra_chave` (no cadastro) e `nota_fiscal_venda_chave` (no modal de Venda). Colunas de controle `renave_id_estoque`/`renave_status` já existem no banco, prontas para quando a integração ao vivo for implementada.
+- [x] **Pessoas**: endereço completo (CEP, logradouro, número, complemento, bairro, UF) + `codigo_municipio_ibge`, exigido pelo RENAVE nos dados do comprador. Botão de busca automática por **CEP (ViaCEP)** e, para Pessoa Jurídica, por **CNPJ (minhareceita.org)** — preenche nome/endereço/telefone automaticamente, incluindo o código IBGE do município.
+- [x] **Empresa (Configurações)**: novo campo CNPJ + endereço completo do estabelecimento, com os mesmos botões de busca por CEP e CNPJ.
+- [x] **Usuários**: campo CPF (útil como identificação geral do usuário do sistema).
+- [x] **Responsável e credenciais RENAVE (empresa/tenant)**: o manual confirma que o RENAVE autentica via **certificado digital e-CNPJ (mTLS, .p12/.pfx)** — não usuário/senha — e que o "operador responsável" de cada solicitação é uma pessoa física (normalmente o dono da loja), não necessariamente um usuário do sistema. Adicionado em Configurações: nome/CPF do responsável, upload do certificado digital e senha do certificado.
+  - O certificado é gravado em um diretório **privado** (`server/src/uploads.ts` → `PRIVATE_ROOT`), fora da pasta `/uploads` servida publicamente, com volume Docker próprio (`alvorada_private`) — nunca acessível via HTTP.
+  - A senha do certificado é *write-only*: `PUT /api/config/parametros` só a atualiza se um valor novo for enviado (senão preserva a atual) e nenhum endpoint a devolve — a tela de Configurações só recebe um indicador booleano de que já foi configurada.
+  - `GET /api/config/parametros` (usado pela tela de login, sem autenticação) agora devolve só nome/logo/favicon/fundo; um novo `GET /api/config/parametros/completo` (admin) devolve os demais dados da empresa/RENAVE — separação necessária para não expor esses dados e segredos futuros por um endpoint público.
+- [x] Corrigido de passagem: o interceptor HTTP anexava o token de autenticação em **toda** chamada, inclusive para APIs externas (ViaCEP, minhareceita.org) — isso derrubava o CORS preflight delas. Agora só anexa o token em chamadas para a própria API (`/api/...`).
 
 ### 🎨 Interface e Experiência (UX)
 - [x] Implementação do **Tema Dark** (Modo Noturno) via CSS Variables.
@@ -45,23 +58,27 @@ Fluxo: toda movimentação (despesa ou crédito) é lançada sempre vinculada a 
 - [x] **Geração de Proposta Comercial em PDF** e **Recibo de Compra/Venda em PDF** (tela de Veículos, jsPDF).
 - [x] **Auto-cadastro público desativado (21/07)**: removida a rota `/api/auth/register` e a tela de Registro — usuários agora só são criados por um Administrador (tela de Usuários). Limpou também `WelcomeComponent`/`AuthRoutingModule`, código órfão de antes da migração para standalone components.
 
-### 💵 Contas a Pagar e a Receber (novo módulo — em construção)
+### 💵 Contas a Pagar e a Receber
 Título em aberto (`status = Pendente`) que só vira lançamento de Banco/Caixa quando é dado baixa — ou seja, o valor não impacta o saldo bancário até ser efetivamente pago/recebido.
-- Tabela `contas`: `tipo` (Pagar/Receber), `descricao`, `valor`, `data_emissao`, `data_vencimento`, `status` (Pendente/Pago/Cancelado), `pessoa_id`, `veiculo_id`, `centro_custo_id`, e os campos preenchidos só na baixa: `banco_id`, `data_pagamento`, `movimento_id`.
-- Regra: título vinculado a veículo (ex: diferença de troca) exige veículo (placa como código) e centro de custo obrigatórios.
-- **Baixa** (`POST /api/contas/:id/baixar`): recebe banco/conta + centro de custo, gera o `movimento` (Débito se Pagar, Crédito se Receber) e marca o título como Pago.
-- **Integração com Venda por Troca**: ao vender um veículo do estoque recebendo outro em troca, a diferença de valor não é mais lançada na hora — vira um título:
+- [x] Tabela `contas`: `tipo` (Pagar/Receber), `descricao`, `valor`, `data_emissao`, `data_vencimento`, `status` (Pendente/Pago/Cancelado), `pessoa_id`, `veiculo_id`, `centro_custo_id`, e os campos preenchidos só na baixa: `banco_id`, `data_pagamento`, `movimento_id`.
+- [x] Regra: título vinculado a veículo (ex: diferença de troca) exige veículo (placa como código) e centro de custo obrigatórios.
+- [x] **Baixa** (`POST /api/contas/:id/baixar`): recebe banco/conta + centro de custo, gera o `movimento` (Débito se Pagar, Crédito se Receber) e marca o título como Pago.
+- [x] Tela `contas` (listagem com filtro por tipo/status, cadastro, edição, baixa) e item de menu, protegida pela rotina de perfil `contas` (Administrador e Financeiro por padrão; Vendedor não vê).
+- [x] **Integração com Venda por Troca**: ao vender um veículo do estoque recebendo outro em troca, a diferença de valor não é mais lançada na hora — vira um título:
   - Diferença positiva (o estoque vale mais que o veículo recebido) → **Conta a Receber** do cliente.
   - Diferença negativa (o veículo recebido vale mais) → **Conta a Pagar** ao cliente.
   - O valor do veículo recebido em troca em si (não a diferença) continua sendo lançado na hora, mas pela conta **Caixa** (débito na entrada do veículo recebido, crédito na baixa do vendido) — um lançamento interno que não mexe no saldo bancário real, só documenta a troca.
-- Rotina de perfil: `contas` (Administrador e Financeiro por padrão; Vendedor não vê).
+
+### 🔄 Venda por Troca
+- [x] Modal de Venda oferece "Banco" e "Troca" como forma de recebimento.
+- [x] Formulário de troca (placa, marca/modelo, ano, cor, km, chassi, valor FIPE, valor de negociação) e cálculo automático da diferença.
+- [x] Veículo recebido entra automaticamente no estoque (`status = Estoque`, `forma_compra = Troca`).
+- [x] Comissão do vendedor lançada mesmo em vendas por Troca (usa o Caixa como conta quando não há banco real envolvido).
 
 ---
 
 ## 🚧 Em Andamento / Melhorias Imediatas
-- [/] Refinamento da persistência de fotos (avaliação de impacto no LocalStorage).
-- [/] **Contas a Pagar e a Receber**: schema criado, implementação de rotas/tela em andamento (ver seção acima).
-- [/] **Venda por Troca**: sendo reativada com os campos do veículo recebido + integração com Contas a Pagar/Receber para a diferença (ver seção acima). Até isso ficar pronto, o modal de Venda só oferece "Banco" como forma de recebimento.
+*(nenhum item em andamento no momento)*
 
 ---
 
@@ -69,6 +86,12 @@ Título em aberto (`status = Pendente`) que só vira lançamento de Banco/Caixa 
 
 ### 📄 Documentos e Vendas
 - [ ] **Recibo de Compra/Venda vinculado a Contas a Pagar/Receber**: quando esse módulo estiver pronto, o recibo de veículos com título em aberto deveria indicar isso (ex: "Pago parcialmente, saldo a receber: R$X").
+
+### 🛰️ Integração RENAVE — próxima fase
+- [ ] Chamadas reais às APIs do RENAVE (`solicitacoes-entrada-estoque` na compra, `solicitacoes-saida-estoque` na venda, envio da nota fiscal) a partir dos fluxos de Compra/Venda de Veículos.
+- [ ] Autenticação com certificado digital e-CNPJ (A1/A3) — decidir onde/como guardar o certificado com segurança no servidor.
+- [ ] Guardar o protocolo/ID de estoque retornado pelo RENAVE (`renave_id_estoque`/`renave_status`, colunas já criadas em `veiculos`) e exibir o status da integração na tela de Veículos.
+- [ ] Tratamento de erros/pendências do RENAVE (ex: veículo com estoque já solicitado, aptidão de veículo reprovada).
 
 ### 🛡️ Segurança e Dados
 - [x] ~~Migração para API~~: já concluído — backend Node/Express + PostgreSQL rodando em produção (o item antigo previa Node/Nest com banco local).

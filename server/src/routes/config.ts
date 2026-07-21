@@ -3,31 +3,27 @@ import pool from '../db';
 import path from 'path';
 import fs from 'fs';
 import { parse } from 'csv-parse';
-import multer from 'multer';
 import { authMiddleware, requireAdmin } from '../middleware/auth';
+import { createPredictableUploadMiddleware, createPrivateUploadMiddleware } from '../uploads';
 
 const router = Router();
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, path.join(__dirname, '..', '..', '..', 'public'));
-  },
-  filename: (_req, file, cb) => {
-    // path.basename evita path traversal (ex: "../../etc/passwd") vindo do nome original do arquivo
-    cb(null, path.basename(file.originalname));
-  }
-});
+// Nome de arquivo previsível (mesmo nome original, sanitizado): um novo upload de logo/favicon/fundo
+// substitui o anterior. Gravado na pasta persistente de uploads (ver server/src/uploads.ts).
+const upload = createPredictableUploadMiddleware('config');
 
-const upload = multer({ storage });
+// Certificado digital do RENAVE (.p12/.pfx): segredo, gravado fora da pasta pública de uploads
+// (ver server/src/uploads.ts) — nunca acessível via HTTP.
+const uploadCertificado = createPrivateUploadMiddleware('renave', 'certificado.p12');
 
 // POST - Upload de arquivos de imagem
 router.post('/upload', authMiddleware, requireAdmin, upload.single('file'), (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
   }
-  res.json({ 
-    url: `/${req.file.filename}`,
-    filename: req.file.filename 
+  res.json({
+    url: `/uploads/config/${req.file.filename}`,
+    filename: req.file.filename
   });
 });
 
@@ -35,7 +31,7 @@ router.post('/upload', authMiddleware, requireAdmin, upload.single('file'), (req
 // e o botão de download do frontend abre a URL direto no navegador, sem enviar o token)
 router.get('/modelos-csv/:tipo', (req: Request, res: Response) => {
   const { tipo } = req.params;
-  const basePath = path.join(__dirname, '..', '..', '..', 'base', 'marcas-e-modelos');
+  const basePath = path.join(__dirname, '..', 'base', 'marcas-e-modelos');
   
   const files: any = {
     'marcas-carros': 'marcas-carros.csv',
@@ -62,7 +58,7 @@ router.post('/upload-csv', authMiddleware, requireAdmin, upload.single('file'), 
   // Mover o arquivo da pasta public para a pasta base/marcas-e-modelos.
   // path.basename evita path traversal vindo do nome original do arquivo.
   const srcPath = req.file.path;
-  const destPath = path.join(__dirname, '..', '..', '..', 'base', 'marcas-e-modelos', path.basename(req.file.originalname));
+  const destPath = path.join(__dirname, '..', 'base', 'marcas-e-modelos', path.basename(req.file.originalname));
 
   try {
     fs.renameSync(srcPath, destPath);
@@ -154,10 +150,13 @@ router.post('/importar-marcas-modelos', authMiddleware, requireAdmin, async (req
   }
 });
 
-// GET - Buscar parâmetros atuais
+// GET - Buscar parâmetros públicos (usado pela tela de login, sem autenticação — por isso só
+// expõe o estritamente necessário para montar a tela: nunca dados da empresa/RENAVE ou segredos).
 router.get('/parametros', async (_req: Request, res: Response) => {
   try {
-    const result = await pool.query('SELECT * FROM parametros WHERE id = 1');
+    const result = await pool.query(
+      'SELECT empresa_nome, favicon_url, logo_url, background_url FROM parametros WHERE id = 1'
+    );
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Erro ao buscar parâmetros:', err);
@@ -165,20 +164,67 @@ router.get('/parametros', async (_req: Request, res: Response) => {
   }
 });
 
+// GET - Parâmetros completos (tela de Configurações, admin). Segredos (senha do certificado)
+// nunca são devolvidos — só um indicador booleano de que já foram configurados.
+router.get('/parametros/completo', authMiddleware, requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, empresa_nome, favicon_url, logo_url, background_url,
+             cnpj, cep, logradouro, numero, complemento, bairro, cidade, estado, codigo_municipio_ibge,
+             renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo,
+             (renave_certificado_senha IS NOT NULL AND renave_certificado_senha <> '') as renave_certificado_senha_definida
+      FROM parametros WHERE id = 1
+    `);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar parâmetros completos:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
 // PUT - Atualizar parâmetros
 router.put('/parametros', authMiddleware, requireAdmin, async (req: Request, res: Response) => {
   try {
-    const { empresa_nome, favicon_url, logo_url, background_url } = req.body;
+    const {
+      empresa_nome, favicon_url, logo_url, background_url,
+      cnpj, cep, logradouro, numero, complemento, bairro, cidade, estado, codigo_municipio_ibge,
+      renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_senha
+    } = req.body;
     const result = await pool.query(
-      `UPDATE parametros 
-       SET empresa_nome = $1, favicon_url = $2, logo_url = $3, background_url = $4, updated_at = CURRENT_TIMESTAMP
-       WHERE id = 1 
-       RETURNING *`,
-      [empresa_nome, favicon_url, logo_url, background_url]
+      `UPDATE parametros
+       SET empresa_nome = $1, favicon_url = $2, logo_url = $3, background_url = $4,
+           cnpj = $5, cep = $6, logradouro = $7, numero = $8, complemento = $9, bairro = $10, cidade = $11, estado = $12, codigo_municipio_ibge = $13,
+           renave_responsavel_nome = $14, renave_responsavel_cpf = $15,
+           renave_certificado_senha = COALESCE(NULLIF($16, ''), renave_certificado_senha),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = 1
+       RETURNING id, empresa_nome, favicon_url, logo_url, background_url, cnpj, cep, logradouro, numero, complemento, bairro, cidade, estado, codigo_municipio_ibge, renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo`,
+      [empresa_nome, favicon_url, logo_url, background_url,
+       cnpj || null, cep || null, logradouro || null, numero || null, complemento || null, bairro || null, cidade || null, estado || null, codigo_municipio_ibge || null,
+       renave_responsavel_nome || null, renave_responsavel_cpf || null, renave_certificado_senha || '']
     );
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Erro ao atualizar parâmetros:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// POST - Upload do certificado digital do RENAVE (.p12/.pfx). Gravado em armazenamento privado
+// (nunca servido via HTTP) — só o nome original fica registrado, para exibição na tela.
+router.post('/parametros/renave-certificado', authMiddleware, requireAdmin, uploadCertificado.single('file'), async (req: Request, res: Response) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+    return;
+  }
+  try {
+    await pool.query(
+      'UPDATE parametros SET renave_certificado_nome_arquivo = $1, updated_at = CURRENT_TIMESTAMP WHERE id = 1',
+      [req.file.originalname]
+    );
+    res.json({ nome_arquivo: req.file.originalname });
+  } catch (err) {
+    console.error('Erro ao registrar certificado RENAVE:', err);
     res.status(500).json({ error: 'Erro interno' });
   }
 });

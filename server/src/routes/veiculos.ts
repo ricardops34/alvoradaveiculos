@@ -1,7 +1,33 @@
 import { Router, Request, Response } from 'express';
 import pool from '../db';
+import { createUploadMiddleware, deleteUploadedFile } from '../uploads';
 
 const router = Router();
+
+const uploadFoto = createUploadMiddleware('veiculos');
+
+// POST - Upload de uma foto de veículo (armazenada em disco, não mais em Base64 no banco)
+router.post('/upload-foto', uploadFoto.single('file'), (req: Request, res: Response) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+    return;
+  }
+  res.json({
+    url: `/uploads/veiculos/${req.file.filename}`,
+    filename: req.file.filename
+  });
+});
+
+// DELETE - Remove uma foto do disco (chamado quando o usuário retira a foto da galeria)
+router.delete('/upload-foto/:filename', (req: Request, res: Response) => {
+  try {
+    deleteUploadedFile('veiculos', String(req.params.filename));
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Erro ao excluir foto:', err);
+    res.status(500).json({ error: 'Erro ao excluir foto.' });
+  }
+});
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -105,12 +131,16 @@ router.post('/', async (req: Request, res: Response) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const { placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, centro_custo_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais } = req.body;
+    const {
+      placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, centro_custo_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais,
+      tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave
+    } = req.body;
 
     const result = await client.query(
-      `INSERT INTO veiculos (placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26) RETURNING *`,
-      [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], chassi||null, renavam||null, valor_fipe||null, observacoes||null, opcionais||[]]
+      `INSERT INTO veiculos (placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais, tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32) RETURNING *`,
+      [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], chassi||null, renavam||null, valor_fipe||null, observacoes||null, opcionais||[],
+       tipo_crv||null, numero_crv||null, codigo_seguranca_crv||null, data_medicao_hodometro||null, nota_fiscal_compra_chave||null, nota_fiscal_venda_chave||null]
     );
 
     const vehicle = result.rows[0];
@@ -137,11 +167,16 @@ router.post('/', async (req: Request, res: Response) => {
 router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais } = req.body;
+    const {
+      placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais,
+      tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave
+    } = req.body;
     const result = await pool.query(
-      `UPDATE veiculos SET placa=$1, marca=$2, modelo=$3, marca_id=$4, modelo_id=$5, tipo_veiculo=$6, versao=$7, ano_fabricacao=$8, ano_modelo=$9, cor=$10, quilometragem=$11, valor_compra=$12, valor_avaliacao=$13, valor_venda=$14, data_compra=$15, status=$16, forma_compra=$17, banco_id=$18, fornecedor_id=$19, cliente_id=$20, fotos=$21, chassi=$22, renavam=$23, valor_fipe=$24, observacoes=$25, opcionais=$26
-       WHERE id=$27 RETURNING *`,
-      [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], chassi||null, renavam||null, valor_fipe||null, observacoes||null, opcionais||[], id]
+      `UPDATE veiculos SET placa=$1, marca=$2, modelo=$3, marca_id=$4, modelo_id=$5, tipo_veiculo=$6, versao=$7, ano_fabricacao=$8, ano_modelo=$9, cor=$10, quilometragem=$11, valor_compra=$12, valor_avaliacao=$13, valor_venda=$14, data_compra=$15, status=$16, forma_compra=$17, banco_id=$18, fornecedor_id=$19, cliente_id=$20, fotos=$21, chassi=$22, renavam=$23, valor_fipe=$24, observacoes=$25, opcionais=$26,
+       tipo_crv=$27, numero_crv=$28, codigo_seguranca_crv=$29, data_medicao_hodometro=$30, nota_fiscal_compra_chave=$31, nota_fiscal_venda_chave=$32
+       WHERE id=$33 RETURNING *`,
+      [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], chassi||null, renavam||null, valor_fipe||null, observacoes||null, opcionais||[],
+       tipo_crv||null, numero_crv||null, codigo_seguranca_crv||null, data_medicao_hodometro||null, nota_fiscal_compra_chave||null, nota_fiscal_venda_chave||null, id]
     );
     if (result.rows.length === 0) {
       res.status(404).json({ error: 'Veículo não encontrado' });
@@ -172,7 +207,8 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
     const {
       cliente_id, data_venda, valor_venda, forma_venda, banco_id, centro_custo_id, vendedor_id,
       troca_placa, troca_marca_id, troca_modelo_id, troca_tipo_veiculo, troca_cor, troca_ano_fab, troca_ano_mod, troca_valor,
-      troca_chassi, troca_quilometragem, troca_valor_fipe, troca_observacoes
+      troca_chassi, troca_quilometragem, troca_valor_fipe, troca_observacoes,
+      nota_fiscal_venda_chave
     } = req.body;
 
     await client.query('BEGIN');
@@ -188,9 +224,9 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
     }
 
     const result = await client.query(
-      `UPDATE veiculos SET status = 'Vendido', cliente_id = $1, valor_venda = $2, data_venda = $3, vendedor_id = $4, comissao_valor = $5
-       WHERE id = $6 RETURNING *`,
-      [cliente_id, valor_venda, data_venda, vendedor_id || null, comissaoValor, id]
+      `UPDATE veiculos SET status = 'Vendido', cliente_id = $1, valor_venda = $2, data_venda = $3, vendedor_id = $4, comissao_valor = $5, nota_fiscal_venda_chave = $6
+       WHERE id = $7 RETURNING *`,
+      [cliente_id, valor_venda, data_venda, vendedor_id || null, comissaoValor, nota_fiscal_venda_chave || null, id]
     );
 
     if (result.rows.length === 0) {

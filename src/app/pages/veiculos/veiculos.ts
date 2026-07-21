@@ -1,22 +1,23 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { 
-  PoModule, 
-  PoPageAction, 
-  PoTableColumn, 
-  PoTableAction, 
-  PoModalComponent, 
-  PoNotificationService, 
+import {
+  PoModule,
+  PoPageAction,
+  PoTableColumn,
+  PoTableAction,
+  PoModalComponent,
+  PoNotificationService,
   PoSelectOption,
   PoCheckboxGroupOption,
   PoDialogService,
-  PoUploadFile 
+  PoUploadFileRestrictions
 } from '@po-ui/ng-components';
 import { firstValueFrom } from 'rxjs';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { DatabaseService } from '../../services/database';
+import { AuthService } from '../../services/auth';
 import { Vehicle } from '../../types/vehicle';
 import { QuickAddComponent } from '../../components/quick-add/quick-add.component';
 import { PessoasLookupService, BancosLookupService, CentrosCustoLookupService } from '../../services/lookups';
@@ -76,6 +77,13 @@ export class VeiculosComponent implements OnInit {
     { label: 'Náutica', value: 'Náutica' }
   ];
 
+  public readonly tipoCrvOptions: PoSelectOption[] = [
+    { label: 'Azul', value: 'AZUL' },
+    { label: 'Verde', value: 'VERDE' },
+    { label: 'Branco', value: 'BRANCO' },
+    { label: 'Digital', value: 'DIGITAL' }
+  ];
+
   public readonly opcionaisOptions: PoCheckboxGroupOption[] = [
     { label: 'Ar Condicionado', value: 'Ar Condicionado' },
     { label: 'Direção Hidráulica', value: 'Direção Hidráulica' },
@@ -104,6 +112,17 @@ export class VeiculosComponent implements OnInit {
     { label: 'Troca', value: 'Troca' }
   ];
 
+  public readonly fotoRestrictions: PoUploadFileRestrictions = {
+    allowedExtensions: ['.png', '.jpg', '.jpeg', '.webp'],
+    maxFileSize: 10 * 1024 * 1024
+  };
+
+  // O po-upload faz a requisição por fora do HttpClient (não passa pelo interceptor),
+  // então o token precisa ser anexado manualmente aqui (mesmo padrão de configuracoes.ts).
+  get uploadHeaders() {
+    return { Authorization: `Bearer ${this.authService.getToken()}` };
+  }
+
   // Statement data
   selectedVehicleStatement: any[] = [];
   vehicleSummary = { totalExpenses: 0, totalRevenue: 0, profit: 0 };
@@ -127,7 +146,8 @@ export class VeiculosComponent implements OnInit {
     troca_chassi: '',
     troca_quilometragem: null,
     troca_valor_fipe: null,
-    troca_observacoes: ''
+    troca_observacoes: '',
+    nota_fiscal_venda_chave: ''
   };
 
   public readonly pageActions: PoPageAction[] = [
@@ -201,6 +221,7 @@ export class VeiculosComponent implements OnInit {
     private db: DatabaseService,
     private poNotification: PoNotificationService,
     private poDialog: PoDialogService,
+    private authService: AuthService,
     public pessoasLookup: PessoasLookupService,
     public bancosLookup: BancosLookupService,
     public centrosCustoLookup: CentrosCustoLookupService
@@ -442,8 +463,26 @@ export class VeiculosComponent implements OnInit {
       tipo_veiculo: 'Carro',
       status: 'Estoque',
       valor_compra: 0,
-      opcionais: []
+      opcionais: [],
+      fotos: []
     };
+  }
+
+  onFotoUploadSuccess(event: any) {
+    if (event?.body?.url) {
+      this.vehicle.fotos = [...(this.vehicle.fotos || []), event.body.url];
+    }
+  }
+
+  removeFoto(index: number) {
+    const foto = this.vehicle.fotos?.[index];
+    this.vehicle.fotos = (this.vehicle.fotos || []).filter((_, i) => i !== index);
+
+    // Só existe arquivo em disco para excluir se for uma URL de upload (fotos antigas em Base64 não têm arquivo).
+    if (foto && foto.startsWith('/uploads/veiculos/')) {
+      const filename = foto.split('/').pop()!;
+      firstValueFrom(this.db.http.delete(`${this.db.apiUrl}/veiculos/upload-foto/${filename}`)).catch(() => {});
+    }
   }
 
   updateMarcas() {
@@ -507,7 +546,8 @@ export class VeiculosComponent implements OnInit {
       troca_chassi: '',
       troca_quilometragem: null,
       troca_valor_fipe: null,
-      troca_observacoes: ''
+      troca_observacoes: '',
+      nota_fiscal_venda_chave: ''
     };
     this.sellModal.open();
   }

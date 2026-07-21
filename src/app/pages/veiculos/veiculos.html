@@ -146,6 +146,45 @@
       <po-decimal class="po-md-3" name="valor_fipe" [(ngModel)]="vehicle.valor_fipe" p-label="Valor FIPE" p-decimals="2"></po-decimal>
     </div>
 
+    <po-divider p-label="Fotos do Veículo"></po-divider>
+
+    <div class="po-row">
+      <po-upload
+        class="po-md-12"
+        name="foto_file"
+        p-label="Adicionar Fotos"
+        p-help="Envie uma ou mais fotos do veículo (JPG/PNG/WEBP, até 10MB cada)."
+        p-url="/api/veiculos/upload-foto"
+        [p-headers]="uploadHeaders"
+        p-multiple
+        [p-restrictions]="fotoRestrictions"
+        (p-success)="onFotoUploadSuccess($event)">
+      </po-upload>
+    </div>
+
+    <div class="po-row po-mt-1" *ngIf="vehicle.fotos && vehicle.fotos.length">
+      <div class="po-md-2" *ngFor="let foto of vehicle.fotos; let i = index" style="position: relative; margin-bottom: 12px;">
+        <img [src]="foto" style="width: 100%; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;">
+        <po-button
+          p-icon="po-icon-delete"
+          p-kind="danger"
+          p-small
+          style="position: absolute; top: 2px; right: 2px;"
+          (p-click)="removeFoto(i)">
+        </po-button>
+      </div>
+    </div>
+
+    <po-divider p-label="RENAVE — Documento (CRV) e Hodômetro" p-help="Dados exigidos para a integração com o Registro Nacional de Veículos em Estoque."></po-divider>
+
+    <div class="po-row">
+      <po-select class="po-md-2" name="tipo_crv" [(ngModel)]="vehicle.tipo_crv" p-label="Tipo do CRV" [p-options]="tipoCrvOptions"></po-select>
+      <po-input class="po-md-3" name="numero_crv" [(ngModel)]="vehicle.numero_crv" p-label="Número do CRV"></po-input>
+      <po-input class="po-md-3" name="codigo_seguranca_crv" [(ngModel)]="vehicle.codigo_seguranca_crv" p-label="Código de Segurança do CRV"></po-input>
+      <po-datepicker class="po-md-2" name="data_medicao_hodometro" [(ngModel)]="vehicle.data_medicao_hodometro" p-label="Data da Aferição do Hodômetro"></po-datepicker>
+      <po-input class="po-md-2" name="nota_fiscal_compra_chave" [(ngModel)]="vehicle.nota_fiscal_compra_chave" p-label="Chave da NF-e (Compra)" p-maxlength="44"></po-input>
+    </div>
+
     <po-divider p-label="Opcionais e Observações"></po-divider>
 
     <div class="po-row">
@@ -277,6 +316,7 @@
           <po-button p-kind="primary" p-icon="an an-plus" (p-click)="currentQuickAddField='venda_vendedor_id'; appQuickAdd.open('pessoas')"></po-button>
         </div>
       </div>
+      <po-input class="po-md-6" name="nota_fiscal_venda_chave" [(ngModel)]="sellData.nota_fiscal_venda_chave" p-label="Chave da NF-e (Venda)" p-maxlength="44" p-help="Exigida pelo RENAVE após o registro da saída de estoque."></po-input>
     </div>
 
     <ng-container *ngIf="sellData.forma_venda === 'Troca'">

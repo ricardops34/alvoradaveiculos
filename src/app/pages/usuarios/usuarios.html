@@ -30,16 +30,20 @@
 
     <div class="po-row">
       <po-password class="po-md-6" name="senha" [(ngModel)]="user.senha" p-label="Senha" p-required></po-password>
-      <po-lookup 
-        class="po-md-6" 
-        name="perfil_id" 
-        [(ngModel)]="user.perfil_id" 
-        p-label="Perfil de Acesso" 
-        [p-filter-service]="perfisLookup" 
+      <po-lookup
+        class="po-md-6"
+        name="perfil_id"
+        [(ngModel)]="user.perfil_id"
+        p-label="Perfil de Acesso"
+        [p-filter-service]="perfisLookup"
         p-field-label="nome"
         p-field-value="id"
         p-required>
       </po-lookup>
+    </div>
+
+    <div class="po-row">
+      <po-input class="po-md-6" name="cpf" [(ngModel)]="user.cpf" p-label="CPF" p-mask="999.999.999-99" p-help="Operador responsável exigido pelo RENAVE em cada solicitação de estoque."></po-input>
     </div>
 
     <div class="po-row">

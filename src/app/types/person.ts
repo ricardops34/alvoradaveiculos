@@ -11,12 +11,13 @@ export interface Person {
   telefone?: string;
   email?: string;
   cep?: string;
-  endereco?: string;
+  logradouro?: string;
   numero?: string;
   complemento?: string;
   bairro?: string;
   cidade?: string;
   estado?: string;
+  codigo_municipio_ibge?: string; // preenchido automaticamente pela busca de CEP (usado pelo RENAVE)
   lead_status?: string;
   comissao_percentual?: number;
 }

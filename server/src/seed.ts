@@ -167,6 +167,46 @@ async function seed() {
       ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS lead_status VARCHAR(30) DEFAULT 'Novo';
       ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS comissao_percentual DECIMAL(5,2) DEFAULT 0;
 
+      -- Endereço completo (exigido pelo RENAVE nos dados do comprador na saída de estoque)
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS cep VARCHAR(9);
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS logradouro VARCHAR(200);
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS numero VARCHAR(20);
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS complemento VARCHAR(100);
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS bairro VARCHAR(100);
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS codigo_municipio_ibge VARCHAR(7);
+
+      -- Dados do CRV, hodômetro e controle de integração RENAVE
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS tipo_crv VARCHAR(10);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS numero_crv VARCHAR(20);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS codigo_seguranca_crv VARCHAR(20);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS data_medicao_hodometro DATE;
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS nota_fiscal_compra_chave VARCHAR(44);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS nota_fiscal_venda_chave VARCHAR(44);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS renave_id_estoque VARCHAR(50);
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS renave_status VARCHAR(30);
+
+      -- Dados da empresa exigidos pelo RENAVE (CNPJ do estabelecimento + endereço)
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS cnpj VARCHAR(18);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS cep VARCHAR(9);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS logradouro VARCHAR(200);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS numero VARCHAR(20);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS complemento VARCHAR(100);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS bairro VARCHAR(100);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS cidade VARCHAR(100);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS estado VARCHAR(2);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS codigo_municipio_ibge VARCHAR(7);
+
+      -- Responsável e credenciais RENAVE (o operador responsável é o dono/responsável legal da loja,
+      -- não um usuário qualquer do sistema — exigido pelo RENAVE em toda solicitação de estoque).
+      -- A senha do certificado nunca é devolvida pela API (campo write-only, como uma senha de usuário).
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS renave_responsavel_nome VARCHAR(200);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS renave_responsavel_cpf VARCHAR(14);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS renave_certificado_nome_arquivo VARCHAR(255);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS renave_certificado_senha VARCHAR(255);
+
+      -- CPF do operador responsável (exigido pelo RENAVE em toda solicitação de entrada/saída de estoque)
+      ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cpf VARCHAR(14);
+
       CREATE INDEX IF NOT EXISTS idx_marcas_tipo ON marcas(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_tipo ON modelos(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_marca ON modelos(marca_id);

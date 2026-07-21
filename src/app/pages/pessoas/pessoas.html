@@ -28,7 +28,12 @@
     <div class="po-row">
       <po-input class="po-md-6" name="nome" [(ngModel)]="person.nome" p-label="Nome Completo / Razão Social" p-required></po-input>
       <po-select class="po-md-3" name="tipo_pessoa" [(ngModel)]="person.tipo_pessoa" p-label="Tipo" [p-options]="typeOptions" p-required></po-select>
-      <po-input class="po-md-3" name="documento" [(ngModel)]="person.documento" p-label="CPF / CNPJ" [p-mask]="documentMask" p-required></po-input>
+      <div class="po-md-3" style="display: flex; gap: 8px;">
+        <po-input style="flex: 1" name="documento" [(ngModel)]="person.documento" p-label="CPF / CNPJ" [p-mask]="documentMask" p-required></po-input>
+        <div *ngIf="person.tipo_pessoa === 'Jurídica'" style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="secondary" p-icon="an an-magnifying-glass" p-tooltip="Buscar dados pelo CNPJ" [p-loading]="buscandoCnpj" (p-click)="buscarCnpj()"></po-button>
+        </div>
+      </div>
     </div>
 
     <div class="po-row">
@@ -51,13 +56,25 @@
           <po-button p-kind="secondary" p-icon="an an-whatsapp-logo" p-tooltip="Conversar no WhatsApp" (p-click)="openWhatsapp(person)"></po-button>
         </div>
       </div>
-      <po-input class="po-md-4" name="cep" [(ngModel)]="person.cep" p-label="CEP" p-mask="99999-999"></po-input>
+      <div class="po-md-4" style="display: flex; gap: 8px;">
+        <po-input style="flex: 1" name="cep" [(ngModel)]="person.cep" p-label="CEP" p-mask="99999-999"></po-input>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="secondary" p-icon="an an-magnifying-glass" p-tooltip="Buscar endereço pelo CEP" [p-loading]="buscandoCep" (p-click)="buscarCep()"></po-button>
+        </div>
+      </div>
     </div>
 
     <div class="po-row">
-      <po-input class="po-md-6" name="endereco" [(ngModel)]="person.endereco" p-label="Endereço"></po-input>
+      <po-input class="po-md-5" name="logradouro" [(ngModel)]="person.logradouro" p-label="Endereço (Logradouro)"></po-input>
       <po-input class="po-md-2" name="numero" [(ngModel)]="person.numero" p-label="Número"></po-input>
+      <po-input class="po-md-3" name="complemento" [(ngModel)]="person.complemento" p-label="Complemento"></po-input>
+      <po-input class="po-md-2" name="bairro" [(ngModel)]="person.bairro" p-label="Bairro"></po-input>
+    </div>
+
+    <div class="po-row">
       <po-input class="po-md-4" name="cidade" [(ngModel)]="person.cidade" p-label="Cidade"></po-input>
+      <po-input class="po-md-1" name="estado" [(ngModel)]="person.estado" p-label="UF" p-maxlength="2" style="text-transform: uppercase;"></po-input>
+      <po-input class="po-md-3" name="codigo_municipio_ibge" [(ngModel)]="person.codigo_municipio_ibge" p-label="Cód. IBGE do Município" p-disabled p-help="Preenchido automaticamente pela busca de CEP/CNPJ. Exigido pelo RENAVE."></po-input>
     </div>
 
     <div class="po-row" *ngIf="roles.includes('cliente') || roles.includes('vendedor')">

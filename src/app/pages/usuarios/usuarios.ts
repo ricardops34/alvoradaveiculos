@@ -34,7 +34,7 @@ export class UsuariosComponent implements OnInit {
   page: number = 1;
   pageSize: number = 20;
   currentFilter: string = '';
-  user: any = { nome: '', email: '', senha: '', perfil_id: null };
+  user: any = { nome: '', email: '', senha: '', cpf: '', perfil_id: null };
   isEditing: boolean = false;
 
   public profileOptions: PoSelectOption[] = [];
@@ -118,7 +118,7 @@ export class UsuariosComponent implements OnInit {
 
   openNew() {
     this.isEditing = false;
-    this.user = { nome: '', email: '', senha: '', perfil_id: 2 }; // Default to 'Vendedor'
+    this.user = { nome: '', email: '', senha: '', cpf: '', perfil_id: 2 }; // Default to 'Vendedor'
     this.userModal.open();
   }
 

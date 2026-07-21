@@ -25,11 +25,20 @@ export interface Vehicle {
   fornecedor_id?: number;
   cliente_id?: number;
   status: string;
-  fotos?: string[]; // Array de strings Base64
+  fotos?: string[]; // URLs de arquivos em /uploads/veiculos (registros antigos podem ter strings Base64)
   valor_fipe?: number;
   observacoes?: string;
   opcionais?: string[];
   vendedor_id?: number;
   vendedor_nome?: string;
   comissao_valor?: number;
+  // Dados exigidos pelo RENAVE (Registro Nacional de Veículos em Estoque)
+  tipo_crv?: 'AZUL' | 'VERDE' | 'BRANCO' | 'DIGITAL';
+  numero_crv?: string;
+  codigo_seguranca_crv?: string;
+  data_medicao_hodometro?: string;
+  nota_fiscal_compra_chave?: string;
+  nota_fiscal_venda_chave?: string;
+  renave_id_estoque?: string;
+  renave_status?: string;
 }

@@ -15,6 +15,12 @@ yarn-error.log
 # Backend compiled output
 /server/dist
 
+# Uploads persistentes (logo/favicon/fundo de login, fotos de veículos) — gerados em runtime
+/server/uploads
+
+# Armazenamento privado (certificado digital do RENAVE) — nunca deve ir para o controle de versão
+/server/private
+
 # IDEs and editors
 .idea/
 .project

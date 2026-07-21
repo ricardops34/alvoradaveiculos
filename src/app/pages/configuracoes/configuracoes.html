@@ -28,7 +28,7 @@
               </po-upload>
               <div class="preview-container po-mt-1" *ngIf="parametros.logo_url">
                 <p class="po-font-text-smaller">Preview Logo:</p>
-                <img [src]="'/' + parametros.logo_url" class="img-preview-mini">
+                <img [src]="parametros.logo_url" class="img-preview-mini">
               </div>
             </div>
             <div class="po-md-6">
@@ -42,7 +42,7 @@
               </po-upload>
               <div class="preview-container po-mt-1" *ngIf="parametros.favicon_url">
                 <p class="po-font-text-smaller">Preview Favicon:</p>
-                <img [src]="'/' + parametros.favicon_url" class="img-preview-mini">
+                <img [src]="parametros.favicon_url" class="img-preview-mini">
               </div>
             </div>
           </div>
@@ -58,7 +58,7 @@
               </po-upload>
               <div class="preview-container po-mt-1" *ngIf="parametros.background_url">
                 <p class="po-font-text-smaller">Preview Fundo:</p>
-                <img [src]="'/' + parametros.background_url" class="img-preview-bg">
+                <img [src]="parametros.background_url" class="img-preview-bg">
               </div>
             </div>
           </div>
@@ -133,6 +133,80 @@
         <p *ngIf="marcasCount > 0" class="po-font-text-smaller po-mt-1" style="color: green;">
           ✅ Os dados já estão carregados no banco de dados.
         </p>
+      </po-widget>
+    </div>
+  </div>
+
+  <div class="po-row po-mt-2">
+    <div class="po-md-12">
+      <po-widget p-title="Dados da Empresa (exigidos pela integração RENAVE)">
+        <form #formEmpresa="ngForm">
+          <div class="po-row">
+            <div class="po-md-3" style="display: flex; gap: 8px;">
+              <po-input style="flex: 1" name="cnpj" [(ngModel)]="parametros.cnpj" p-label="CNPJ" p-mask="99.999.999/9999-99"></po-input>
+              <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                <po-button p-kind="secondary" p-icon="an an-magnifying-glass" p-tooltip="Buscar dados pelo CNPJ" [p-loading]="buscandoCnpj" (p-click)="buscarCnpj()"></po-button>
+              </div>
+            </div>
+            <div class="po-md-3" style="display: flex; gap: 8px;">
+              <po-input style="flex: 1" name="cep_empresa" [(ngModel)]="parametros.cep" p-label="CEP" p-mask="99999-999"></po-input>
+              <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+                <po-button p-kind="secondary" p-icon="an an-magnifying-glass" p-tooltip="Buscar endereço pelo CEP" [p-loading]="buscandoCep" (p-click)="buscarCep()"></po-button>
+              </div>
+            </div>
+            <po-input class="po-md-3" name="logradouro_empresa" [(ngModel)]="parametros.logradouro" p-label="Endereço (Logradouro)"></po-input>
+            <po-input class="po-md-3" name="numero_empresa" [(ngModel)]="parametros.numero" p-label="Número"></po-input>
+          </div>
+          <div class="po-row">
+            <po-input class="po-md-3" name="complemento_empresa" [(ngModel)]="parametros.complemento" p-label="Complemento"></po-input>
+            <po-input class="po-md-3" name="bairro_empresa" [(ngModel)]="parametros.bairro" p-label="Bairro"></po-input>
+            <po-input class="po-md-3" name="cidade_empresa" [(ngModel)]="parametros.cidade" p-label="Cidade"></po-input>
+            <po-input class="po-md-1" name="estado_empresa" [(ngModel)]="parametros.estado" p-label="UF" p-maxlength="2" style="text-transform: uppercase;"></po-input>
+            <po-input class="po-md-2" name="codigo_municipio_ibge_empresa" [(ngModel)]="parametros.codigo_municipio_ibge" p-label="Cód. IBGE" p-disabled></po-input>
+          </div>
+          <div class="po-row po-mt-1">
+            <po-button class="po-md-4" p-label="Salvar Dados da Empresa" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="loading" (p-click)="salvarParametros()"></po-button>
+          </div>
+        </form>
+      </po-widget>
+    </div>
+  </div>
+
+  <div class="po-row po-mt-2">
+    <div class="po-md-12">
+      <po-widget p-title="RENAVE — Responsável e Credenciais">
+        <p class="po-font-text-smaller po-mb-2">
+          O RENAVE exige o CPF de um responsável legal em toda solicitação de estoque (normalmente o
+          proprietário da loja) e autentica as chamadas via certificado digital e-CNPJ (.p12/.pfx),
+          não por usuário e senha.
+        </p>
+        <form #formRenave="ngForm">
+          <div class="po-row">
+            <po-input class="po-md-6" name="renave_responsavel_nome" [(ngModel)]="parametros.renave_responsavel_nome" p-label="Nome do Responsável"></po-input>
+            <po-input class="po-md-3" name="renave_responsavel_cpf" [(ngModel)]="parametros.renave_responsavel_cpf" p-label="CPF do Responsável" p-mask="999.999.999-99"></po-input>
+          </div>
+          <div class="po-row">
+            <div class="po-md-6">
+              <po-upload
+                name="renave_certificado_file"
+                p-label="Certificado Digital (.p12 / .pfx)"
+                p-url="/api/config/parametros/renave-certificado"
+                [p-headers]="uploadHeaders"
+                [p-restrictions]="{ allowedExtensions: ['.p12', '.pfx'] }"
+                (p-success)="onCertificadoUploadSuccess($event)">
+              </po-upload>
+              <p class="po-font-text-smaller po-mt-1" *ngIf="parametros.renave_certificado_nome_arquivo">
+                Arquivo atual: <b>{{ parametros.renave_certificado_nome_arquivo }}</b>
+              </p>
+            </div>
+            <po-password class="po-md-3" name="renave_certificado_senha" [(ngModel)]="parametros.renave_certificado_senha" p-label="Senha do Certificado"
+              [p-help]="parametros.renave_certificado_senha_definida ? 'Já configurada. Deixe em branco para manter.' : 'Senha que protege a chave privada do certificado.'">
+            </po-password>
+          </div>
+          <div class="po-row po-mt-1">
+            <po-button class="po-md-4" p-label="Salvar Responsável e Senha" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="loading" (p-click)="salvarParametros()"></po-button>
+          </div>
+        </form>
       </po-widget>
     </div>
   </div>

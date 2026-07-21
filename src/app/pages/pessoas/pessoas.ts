@@ -13,6 +13,8 @@ import {
   PoDialogService
 } from '@po-ui/ng-components';
 import { DatabaseService } from '../../services/database';
+import { CepService } from '../../services/cep';
+import { CnpjService } from '../../services/cnpj';
 import { Person } from '../../types/person';
 
 @Component({
@@ -98,10 +100,15 @@ export class PessoasComponent implements OnInit {
     { label: 'Perdido', value: 'Perdido' }
   ];
 
+  buscandoCep = false;
+  buscandoCnpj = false;
+
   constructor(
     private db: DatabaseService,
     private poNotification: PoNotificationService,
-    private poDialog: PoDialogService
+    private poDialog: PoDialogService,
+    private cepService: CepService,
+    private cnpjService: CnpjService
   ) {}
 
   async ngOnInit() {
@@ -265,5 +272,54 @@ export class PessoasComponent implements OnInit {
 
   get documentMask(): string {
     return this.person.tipo_pessoa === 'Física' ? '999.999.999-99' : '99.999.999/9999-99';
+  }
+
+  async buscarCep() {
+    if (!this.person.cep) return;
+    this.buscandoCep = true;
+    try {
+      const endereco = await this.cepService.buscar(this.person.cep);
+      if (!endereco) {
+        this.poNotification.warning('CEP não encontrado.');
+        return;
+      }
+      this.person.logradouro = endereco.logradouro;
+      this.person.bairro = endereco.bairro;
+      this.person.cidade = endereco.localidade;
+      this.person.estado = endereco.uf;
+      this.person.codigo_municipio_ibge = endereco.ibge;
+    } catch {
+      this.poNotification.error('Erro ao consultar o CEP.');
+    } finally {
+      this.buscandoCep = false;
+    }
+  }
+
+  async buscarCnpj() {
+    if (!this.person.documento) return;
+    this.buscandoCnpj = true;
+    try {
+      const dados = await this.cnpjService.buscar(this.person.documento);
+      if (!dados) {
+        this.poNotification.warning('CNPJ não encontrado.');
+        return;
+      }
+      this.person.nome = dados.nome_fantasia || dados.razao_social;
+      this.person.telefone = dados.ddd_telefone_1 || this.person.telefone;
+      this.person.email = dados.email || this.person.email;
+      this.person.cep = dados.cep;
+      this.person.logradouro = dados.logradouro;
+      this.person.numero = dados.numero;
+      this.person.complemento = dados.complemento;
+      this.person.bairro = dados.bairro;
+      this.person.cidade = dados.municipio;
+      this.person.estado = dados.uf;
+      this.person.codigo_municipio_ibge = String(dados.codigo_municipio_ibge);
+      this.poNotification.success(`CNPJ encontrado: ${dados.razao_social}`);
+    } catch {
+      this.poNotification.error('Erro ao consultar o CNPJ.');
+    } finally {
+      this.buscandoCnpj = false;
+    }
   }
 }

@@ -15,7 +15,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const total = parseInt(totalResult.rows[0].count);
 
     const result = await pool.query(
-      `SELECT u.id, u.nome, u.email, u.perfil_id, u.theme, p.nome as perfil_nome
+      `SELECT u.id, u.nome, u.email, u.cpf, u.perfil_id, u.theme, p.nome as perfil_nome
        FROM usuarios u LEFT JOIN perfis p ON u.perfil_id = p.id
        ORDER BY u.id LIMIT $1 OFFSET $2`,
       [Number(limit), offset]
@@ -41,11 +41,11 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const { nome, email, senha, perfil_id, theme } = req.body;
+    const { nome, email, senha, cpf, perfil_id, theme } = req.body;
     const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
     const result = await pool.query(
-      'INSERT INTO usuarios (nome, email, senha, perfil_id, theme) VALUES ($1,$2,$3,$4,$5) RETURNING id, nome, email, perfil_id, theme',
-      [nome, email, senhaHash, perfil_id, theme || 'light']
+      'INSERT INTO usuarios (nome, email, senha, cpf, perfil_id, theme) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, nome, email, cpf, perfil_id, theme',
+      [nome, email, senhaHash, cpf || null, perfil_id, theme || 'light']
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -57,7 +57,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 router.put('/:id', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { nome, email, senha, theme } = req.body;
+    const { nome, email, senha, cpf, theme } = req.body;
     const isAdmin = req.user?.perfil_id === ADMIN_PERFIL_ID;
 
     // Só o Administrador pode alterar o perfil de um usuário (evita auto-promoção).
@@ -76,8 +76,8 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
     if (senha) {
       const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
       const result = await pool.query(
-        'UPDATE usuarios SET nome=$1, email=$2, senha=$3, perfil_id=$4, theme=$5 WHERE id=$6 RETURNING id, nome, email, perfil_id, theme',
-        [nome, email, senhaHash, perfil_id, theme, id]
+        'UPDATE usuarios SET nome=$1, email=$2, senha=$3, cpf=$4, perfil_id=$5, theme=$6 WHERE id=$7 RETURNING id, nome, email, cpf, perfil_id, theme',
+        [nome, email, senhaHash, cpf || null, perfil_id, theme, id]
       );
       if (result.rows.length === 0) {
         res.status(404).json({ error: 'Usuário não encontrado' });
@@ -86,8 +86,8 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       res.json(result.rows[0]);
     } else {
       const result = await pool.query(
-        'UPDATE usuarios SET nome=$1, email=$2, perfil_id=$3, theme=$4 WHERE id=$5 RETURNING id, nome, email, perfil_id, theme',
-        [nome, email, perfil_id, theme, id]
+        'UPDATE usuarios SET nome=$1, email=$2, cpf=$3, perfil_id=$4, theme=$5 WHERE id=$6 RETURNING id, nome, email, cpf, perfil_id, theme',
+        [nome, email, cpf || null, perfil_id, theme, id]
       );
       if (result.rows.length === 0) {
         res.status(404).json({ error: 'Usuário não encontrado' });
