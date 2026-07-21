@@ -44,6 +44,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/marcas/modelos/modelos').then(m => m.ModelosComponent)
       },
       {
+        path: 'opcionais',
+        loadComponent: () => import('./pages/opcionais/opcionais').then(m => m.OpcionaisComponent)
+      },
+      {
+        path: 'localizacao',
+        loadComponent: () => import('./pages/localizacao/localizacao').then(m => m.LocalizacaoComponent)
+      },
+      {
         path: 'bancos',
         loadComponent: () => import('./pages/bancos/bancos').then(m => m.BancosComponent)
       },

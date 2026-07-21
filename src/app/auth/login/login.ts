@@ -22,8 +22,8 @@ export class LoginComponent implements OnInit {
 
   parametros: any = {
     empresa_nome: 'Alvorada Veículos',
-    logo_url: 'icone.png',
-    background_url: 'fundologin.png'
+    logo_url: 'logo-alvorada-horizontal.png',
+    background_url: 'fachada-alvorada-login-v2.png'
   };
 
   constructor(
@@ -46,9 +46,10 @@ export class LoginComponent implements OnInit {
       if (p) {
         this.parametros = {
           ...p,
-          empresa_nome: p.empresa_nome || 'BJ Software',
-          logo_url: p.logo_url || 'iconebj.png',
-          favicon_url: p.favicon_url || 'faviconbj.ico'
+          empresa_nome: p.empresa_nome || 'Alvorada Veículos',
+          logo_url: p.logo_url || 'logo-alvorada-horizontal.png',
+          background_url: p.background_url || 'fachada-alvorada-login-v2.png',
+          favicon_url: p.favicon_url || 'favicon.ico'
         };
         this.atualizarFavicon(this.parametros.favicon_url);
       }

@@ -15,9 +15,9 @@ export interface Person {
   numero?: string;
   complemento?: string;
   bairro?: string;
-  cidade?: string;
-  estado?: string;
-  codigo_municipio_ibge?: string; // preenchido automaticamente pela busca de CEP (usado pelo RENAVE)
+  pais_id?: number;
+  estado_id?: number; // UF, exigido pelo RENAVE nos dados do comprador
+  municipio_id?: number; // Município, código IBGE fica no cadastro de Localização
   lead_status?: string;
   comissao_percentual?: number;
 }

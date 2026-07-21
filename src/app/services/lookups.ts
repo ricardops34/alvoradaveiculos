@@ -10,7 +10,7 @@ export class GenericLookupService implements PoLookupFilter {
     return from(this.db.getAll(this.table, { limit: 1000000 }).then(response => {
       const all = response?.items || response || [];
       const filter = filteredParams.filter ? filteredParams.filter.toLowerCase() : '';
-      const params = (filteredParams as any).params || {};
+      const params = filteredParams.filterParams || {};
 
       const filtered = all.filter((item: any) => {
          // Filtro por texto
@@ -66,4 +66,34 @@ export class PerfisLookupService extends GenericLookupService {
 @Injectable({ providedIn: 'root' })
 export class VeiculosLookupService extends GenericLookupService {
   constructor(db: DatabaseService) { super(db, 'veiculos', 'placa'); }
+}
+
+// Município é sub-recurso de Localização (não tem entrada no mapa de endpoints do
+// DatabaseService) e precisa de busca server-side (~5.500 registros no Brasil todo),
+// filtrada pela UF escolhida no formulário — por isso não usa o GenericLookupService.
+@Injectable({ providedIn: 'root' })
+export class MunicipiosLookupService implements PoLookupFilter {
+  constructor(private db: DatabaseService) {}
+
+  getFilteredItems(filteredParams: PoLookupFilteredItemsParams): Observable<any> {
+    const extraParams = filteredParams.filterParams || {};
+    return from(this.db.http.get<any>('/api/localizacao/municipios', {
+      params: {
+        filter: filteredParams.filter || '',
+        estado_id: extraParams.estado_id || '',
+        limit: 50
+      }
+    }).toPromise().then((response: any) => {
+      const items = (response?.items || []).map((m: any) => ({ ...m, value: m.id, label: `${m.nome} - ${m.estado_sigla}` }));
+      return { items, hasNext: false };
+    }));
+  }
+
+  getObjectByValue(value: string | any[]): Observable<any> {
+    const id = Array.isArray(value) ? value[0] : value;
+    return from(this.db.http.get<any>(`/api/localizacao/municipios/${id}`).toPromise().then((m: any) => {
+      if (!m) return null;
+      return { ...m, value: m.id, label: `${m.nome} - ${m.estado_sigla}` };
+    }).catch(() => null));
+  }
 }

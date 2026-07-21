@@ -1,10 +1,63 @@
 import { Router, Request, Response } from 'express';
 import pool from '../db';
 import { createUploadMiddleware, deleteUploadedFile } from '../uploads';
+import { solicitarEntradaEstoque, solicitarSaidaEstoque, renaveEstaConfigurado } from '../services/renave';
 
 const router = Router();
 
 const uploadFoto = createUploadMiddleware('veiculos');
+
+async function getPessoaRenave(pessoaId: number | null) {
+  if (!pessoaId) return null;
+  const result = await pool.query(
+    `SELECT p.documento, p.nome, p.cep, p.logradouro, p.numero, p.complemento, p.bairro,
+            m.codigo_ibge as municipio_codigo_ibge, e.sigla as estado_sigla
+     FROM pessoas p
+     LEFT JOIN municipios m ON p.municipio_id = m.id
+     LEFT JOIN estados e ON p.estado_id = e.id
+     WHERE p.id = $1`,
+    [pessoaId]
+  );
+  return result.rows[0] || null;
+}
+
+// Dispara a solicitação de entrada/saída de estoque no RENAVE de forma assíncrona (não bloqueia
+// a resposta da compra/venda — um problema de rede ou indisponibilidade do RENAVE não pode travar
+// uma venda real). O resultado (protocolo/erro) fica registrado em `renave_status`/`renave_id_estoque`
+// e pode ser consultado/reenviado depois pela tela de Veículos.
+async function processarEntradaEstoqueRenave(veiculoId: number) {
+  try {
+    if (!(await renaveEstaConfigurado())) return;
+
+    const veiculoResult = await pool.query('SELECT * FROM veiculos WHERE id = $1', [veiculoId]);
+    const veiculo = veiculoResult.rows[0];
+    if (!veiculo || !veiculo.chassi) return; // RENAVE exige chassi — sem ele, não há o que enviar
+
+    const vendedor = await getPessoaRenave(veiculo.fornecedor_id);
+    const resultado = await solicitarEntradaEstoque(veiculo, vendedor);
+    await pool.query('UPDATE veiculos SET renave_id_estoque = $1, renave_status = $2 WHERE id = $3', [resultado.protocolo, resultado.status, veiculoId]);
+  } catch (err: any) {
+    console.error('Erro ao solicitar entrada de estoque no RENAVE:', err);
+    await pool.query('UPDATE veiculos SET renave_status = $1 WHERE id = $2', [`Erro: ${String(err?.message || err).slice(0, 250)}`, veiculoId]).catch(() => {});
+  }
+}
+
+async function processarSaidaEstoqueRenave(veiculoId: number) {
+  try {
+    if (!(await renaveEstaConfigurado())) return;
+
+    const veiculoResult = await pool.query('SELECT * FROM veiculos WHERE id = $1', [veiculoId]);
+    const veiculo = veiculoResult.rows[0];
+    if (!veiculo || !veiculo.chassi) return;
+
+    const comprador = await getPessoaRenave(veiculo.cliente_id);
+    const resultado = await solicitarSaidaEstoque(veiculo, comprador);
+    await pool.query('UPDATE veiculos SET renave_status = $1 WHERE id = $2', [resultado.status, veiculoId]);
+  } catch (err: any) {
+    console.error('Erro ao solicitar saída de estoque no RENAVE:', err);
+    await pool.query('UPDATE veiculos SET renave_status = $1 WHERE id = $2', [`Erro: ${String(err?.message || err).slice(0, 250)}`, veiculoId]).catch(() => {});
+  }
+}
 
 // POST - Upload de uma foto de veículo (armazenada em disco, não mais em Base64 no banco)
 router.post('/upload-foto', uploadFoto.single('file'), (req: Request, res: Response) => {
@@ -31,7 +84,7 @@ router.delete('/upload-foto/:filename', (req: Request, res: Response) => {
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, status, marca_id, tipo_veiculo } = req.query;
+    const { page = 1, limit = 20, status, marca_id, modelo_id, tipo_veiculo, opcionais, filter } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let whereClause = 'WHERE 1=1';
@@ -51,14 +104,38 @@ router.get('/', async (req: Request, res: Response) => {
       }
     }
 
+    if (tipo_veiculo) {
+      const tipoList = (tipo_veiculo as string).split(',');
+      if (tipoList.length === 1) {
+        params.push(tipoList[0]);
+        whereClause += ` AND v.tipo_veiculo = $${params.length}`;
+      } else {
+        const placeholders = tipoList.map((_, i) => {
+          params.push(tipoList[i]);
+          return `$${params.length}`;
+        }).join(',');
+        whereClause += ` AND v.tipo_veiculo IN (${placeholders})`;
+      }
+    }
+
     if (marca_id) {
       params.push(marca_id);
       whereClause += ` AND v.marca_id = $${params.length}`;
     }
 
-    if (tipo_veiculo) {
-      params.push(tipo_veiculo);
-      whereClause += ` AND v.tipo_veiculo = $${params.length}`;
+    if (modelo_id) {
+      params.push(modelo_id);
+      whereClause += ` AND v.modelo_id = $${params.length}`;
+    }
+
+    if (opcionais) {
+      params.push((opcionais as string).split(','));
+      whereClause += ` AND v.opcionais && $${params.length}`;
+    }
+
+    if (filter) {
+      params.push(`%${filter}%`);
+      whereClause += ` AND (v.placa ILIKE $${params.length} OR v.chassi ILIKE $${params.length})`;
     }
 
     const queryBase = `
@@ -213,6 +290,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     await client.query('COMMIT');
+    processarEntradaEstoqueRenave(vehicle.id).catch(() => {});
     res.status(201).json(vehicle);
   } catch (err) {
     await client.query('ROLLBACK');
@@ -415,6 +493,7 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
     }
 
     await client.query('COMMIT');
+    processarSaidaEstoqueRenave(vehicle.id).catch(() => {});
     res.json(vehicle);
   } catch (err) {
     await client.query('ROLLBACK');
@@ -422,6 +501,31 @@ router.post('/:id/vender', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Erro interno' });
   } finally {
     client.release();
+  }
+});
+
+// POST - Reenvia manualmente a solicitação ao RENAVE (retry após erro/pendência, ou primeiro
+// envio caso a integração tenha sido configurada depois da compra/venda já ter sido registrada).
+router.post('/:id/renave/reenviar', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const veiculoResult = await pool.query('SELECT status FROM veiculos WHERE id = $1', [id]);
+    if (veiculoResult.rows.length === 0) {
+      res.status(404).json({ error: 'Veículo não encontrado' });
+      return;
+    }
+
+    if (veiculoResult.rows[0].status === 'Vendido') {
+      await processarSaidaEstoqueRenave(Number(id));
+    } else {
+      await processarEntradaEstoqueRenave(Number(id));
+    }
+
+    const atualizado = await pool.query('SELECT renave_id_estoque, renave_status FROM veiculos WHERE id = $1', [id]);
+    res.json(atualizado.rows[0]);
+  } catch (err) {
+    console.error('Erro ao reenviar ao RENAVE:', err);
+    res.status(500).json({ error: 'Erro ao reenviar ao RENAVE.' });
   }
 });
 

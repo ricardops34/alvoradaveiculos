@@ -5,6 +5,7 @@ import fs from 'fs';
 import { parse } from 'csv-parse';
 import { authMiddleware, requireAdmin } from '../middleware/auth';
 import { createPredictableUploadMiddleware, createPrivateUploadMiddleware } from '../uploads';
+import { enviarEmail, testarSmtp } from '../services/email';
 
 const router = Router();
 
@@ -170,9 +171,11 @@ router.get('/parametros/completo', authMiddleware, requireAdmin, async (_req: Re
   try {
     const result = await pool.query(`
       SELECT id, empresa_nome, favicon_url, logo_url, background_url,
-             cnpj, cep, logradouro, numero, complemento, bairro, cidade, estado, codigo_municipio_ibge,
+             cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id,
              renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo,
-             (renave_certificado_senha IS NOT NULL AND renave_certificado_senha <> '') as renave_certificado_senha_definida
+             (renave_certificado_senha IS NOT NULL AND renave_certificado_senha <> '') as renave_certificado_senha_definida,
+             smtp_host, smtp_port, smtp_user, smtp_from,
+             (smtp_pass IS NOT NULL AND smtp_pass <> '') as smtp_pass_definida
       FROM parametros WHERE id = 1
     `);
     res.json(result.rows[0]);
@@ -187,21 +190,25 @@ router.put('/parametros', authMiddleware, requireAdmin, async (req: Request, res
   try {
     const {
       empresa_nome, favicon_url, logo_url, background_url,
-      cnpj, cep, logradouro, numero, complemento, bairro, cidade, estado, codigo_municipio_ibge,
-      renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_senha
+      cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id,
+      renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_senha,
+      smtp_host, smtp_port, smtp_user, smtp_from, smtp_pass
     } = req.body;
     const result = await pool.query(
       `UPDATE parametros
        SET empresa_nome = $1, favicon_url = $2, logo_url = $3, background_url = $4,
-           cnpj = $5, cep = $6, logradouro = $7, numero = $8, complemento = $9, bairro = $10, cidade = $11, estado = $12, codigo_municipio_ibge = $13,
+           cnpj = $5, cep = $6, logradouro = $7, numero = $8, complemento = $9, bairro = $10, pais_id = $11, estado_id = $12, municipio_id = $13,
            renave_responsavel_nome = $14, renave_responsavel_cpf = $15,
            renave_certificado_senha = COALESCE(NULLIF($16, ''), renave_certificado_senha),
+           smtp_host = $17, smtp_port = $18, smtp_user = $19, smtp_from = $20,
+           smtp_pass = COALESCE(NULLIF($21, ''), smtp_pass),
            updated_at = CURRENT_TIMESTAMP
        WHERE id = 1
-       RETURNING id, empresa_nome, favicon_url, logo_url, background_url, cnpj, cep, logradouro, numero, complemento, bairro, cidade, estado, codigo_municipio_ibge, renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo`,
+       RETURNING id, empresa_nome, favicon_url, logo_url, background_url, cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id, renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo, smtp_host, smtp_port, smtp_user, smtp_from`,
       [empresa_nome, favicon_url, logo_url, background_url,
-       cnpj || null, cep || null, logradouro || null, numero || null, complemento || null, bairro || null, cidade || null, estado || null, codigo_municipio_ibge || null,
-       renave_responsavel_nome || null, renave_responsavel_cpf || null, renave_certificado_senha || '']
+       cnpj || null, cep || null, logradouro || null, numero || null, complemento || null, bairro || null, pais_id || null, estado_id || null, municipio_id || null,
+       renave_responsavel_nome || null, renave_responsavel_cpf || null, renave_certificado_senha || '',
+       smtp_host || null, smtp_port || null, smtp_user || null, smtp_from || null, smtp_pass || '']
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -226,6 +233,46 @@ router.post('/parametros/renave-certificado', authMiddleware, requireAdmin, uplo
   } catch (err) {
     console.error('Erro ao registrar certificado RENAVE:', err);
     res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+// POST - Envia um e-mail de teste para validar as credenciais de SMTP configuradas (admin,
+// tela de Configurações > E-mail).
+router.post('/testar-email', authMiddleware, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { destinatario } = req.body;
+    if (!destinatario) {
+      res.status(400).json({ error: 'Informe um e-mail de destino para o teste.' });
+      return;
+    }
+    await testarSmtp(destinatario);
+    res.json({ message: `E-mail de teste enviado para ${destinatario}!` });
+  } catch (err: any) {
+    console.error('Erro ao testar SMTP:', err);
+    res.status(500).json({ error: err?.message || 'Erro ao enviar e-mail de teste. Verifique as credenciais SMTP.' });
+  }
+});
+
+// POST - Envia um documento (Proposta Comercial, Recibo de Compra/Venda) por e-mail, reaproveitando
+// o PDF já gerado no navegador (jsPDF) como anexo. Usa o SMTP configurado pelo Administrador;
+// qualquer usuário autenticado pode enviar (é uma ação de venda do dia a dia, não administrativa).
+router.post('/enviar-email', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { destinatario, assunto, corpo, anexo_base64, anexo_nome } = req.body;
+    if (!destinatario || !assunto || !anexo_base64) {
+      res.status(400).json({ error: 'Destinatário, assunto e anexo são obrigatórios.' });
+      return;
+    }
+    await enviarEmail({
+      destinatario,
+      assunto,
+      corpo: corpo || '',
+      anexo: { filename: anexo_nome || 'documento.pdf', contentBase64: anexo_base64 }
+    });
+    res.json({ message: `E-mail enviado para ${destinatario}!` });
+  } catch (err: any) {
+    console.error('Erro ao enviar e-mail:', err);
+    res.status(500).json({ error: err?.message || 'Erro ao enviar e-mail.' });
   }
 });
 

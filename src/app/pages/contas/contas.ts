@@ -25,6 +25,7 @@ import { PessoasLookupService, BancosLookupService, CentrosCustoLookupService, V
 export class ContasComponent implements OnInit {
   @ViewChild('contaModal', { static: true }) contaModal!: PoModalComponent;
   @ViewChild('baixaModal', { static: true }) baixaModal!: PoModalComponent;
+  @ViewChild('advancedFilterModal', { static: true }) advancedFilterModal!: PoModalComponent;
   @ViewChild('contaForm', { static: false }) contaForm!: any;
   @ViewChild('baixaForm', { static: false }) baixaForm!: any;
   @ViewChild('appQuickAdd') appQuickAdd!: QuickAddComponent;
@@ -37,6 +38,7 @@ export class ContasComponent implements OnInit {
   isLoading: boolean = true;
   isLoadingSave: boolean = false;
   currentQuickAddField: string = '';
+  currentFilter: string = '';
 
   conta: any = this.getEmptyConta();
   baixaData: any = { banco_id: null, centro_custo_id: null, data_pagamento: '' };
@@ -64,6 +66,18 @@ export class ContasComponent implements OnInit {
   public readonly actions: PoPageAction[] = [
     { label: 'Novo', action: this.openNew.bind(this), icon: 'an an-plus' }
   ];
+
+  public readonly filterSettings: any = {
+    action: this.filterContas.bind(this),
+    advancedAction: this.openAdvancedFilter.bind(this),
+    placeholder: 'Pesquisar contas...'
+  };
+
+  public disclaimerGroup: any = {
+    title: 'Filtros',
+    disclaimers: [{ label: 'Status: Pendente', property: 'status', value: 'Pendente' }],
+    change: this.onChangeDisclaimer.bind(this)
+  };
 
   public readonly columns: PoTableColumn[] = [
     { property: 'tipo', label: 'Tipo', type: 'label', labels: [
@@ -123,7 +137,8 @@ export class ContasComponent implements OnInit {
         page: this.page,
         limit: this.pageSize,
         tipo: this.filtro.tipo,
-        status: this.filtro.status
+        status: this.filtro.status,
+        filter: this.currentFilter
       });
 
       if (response && response.items) {
@@ -136,6 +151,31 @@ export class ContasComponent implements OnInit {
     } finally {
       this.loadingShowMore = false;
     }
+  }
+
+  filterContas(filter: string) {
+    this.currentFilter = filter || '';
+    this.load();
+  }
+
+  openAdvancedFilter() {
+    this.advancedFilterModal.open();
+  }
+
+  applyFilters() {
+    const disclaimers: any[] = [];
+    if (this.filtro.tipo) disclaimers.push({ label: 'Tipo: ' + this.filtro.tipo, property: 'tipo', value: this.filtro.tipo });
+    if (this.filtro.status) disclaimers.push({ label: 'Status: ' + this.filtro.status, property: 'status', value: this.filtro.status });
+    this.disclaimerGroup.disclaimers = disclaimers;
+    this.advancedFilterModal.close();
+    this.load();
+  }
+
+  onChangeDisclaimer(disclaimers: any[]) {
+    const properties = disclaimers.map(d => d.property);
+    if (!properties.includes('tipo')) this.filtro.tipo = '';
+    if (!properties.includes('status')) this.filtro.status = '';
+    this.load();
   }
 
   getEmptyConta() {

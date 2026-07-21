@@ -73,7 +73,8 @@ export class LayoutComponent implements OnInit {
       const veiculoItems: Array<PoMenuItem> = [];
       veiculoItems.push({ label: 'Gerenciar Veículos', link: '/home/veiculos', icon: 'an an-car' });
       veiculoItems.push({ label: 'Marcas e Modelos', link: '/home/marcas', icon: 'an an-tag' });
-      
+      veiculoItems.push({ label: 'Opcionais', link: '/home/opcionais', icon: 'an an-list-checks' });
+
       allMenus.push({ label: 'Veículos', icon: 'an an-car', shortLabel: 'Veículos', subItems: veiculoItems });
     }
 
@@ -109,6 +110,9 @@ export class LayoutComponent implements OnInit {
       const configItems: Array<PoMenuItem> = [];
       configItems.push({ label: 'Perfis de Acesso', link: '/home/perfis', icon: 'an an-shield-check' });
       configItems.push({ label: 'Usuários', link: '/home/usuarios', icon: 'an an-user' });
+      if (permissions.includes('localizacao') || user.role === 'admin') {
+        configItems.push({ label: 'Localização (País/UF/Município)', link: '/home/localizacao', icon: 'an an-map-pin' });
+      }
       if (user.role === 'admin') {
         configItems.push({ label: 'Configurações de Sistema', link: '/home/configuracoes', icon: 'an an-gear' });
       }

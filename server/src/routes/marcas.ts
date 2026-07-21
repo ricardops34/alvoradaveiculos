@@ -6,26 +6,28 @@ const router = Router();
 // GET - Listar todos (pode filtrar por tipo_veiculo e suporta paginação)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { tipo_veiculo, page = 1, limit = 20 } = req.query;
+    const { tipo_veiculo, filter, page = 1, limit = 20 } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
-    
-    let query = 'SELECT * FROM marcas';
-    let params: any[] = [];
-    let paramIndex = 1;
+
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
 
     if (tipo_veiculo) {
-      query += ` WHERE tipo_veiculo = $${paramIndex++}`;
       params.push(tipo_veiculo);
+      whereClause += ` AND tipo_veiculo = $${params.length}`;
     }
-    
-    // Contagem total para o frontend saber se tem mais
-    const totalResult = await pool.query(`SELECT COUNT(*) FROM marcas ${tipo_veiculo ? 'WHERE tipo_veiculo = $1' : ''}`, params);
+    if (filter) {
+      params.push(`%${filter}%`);
+      whereClause += ` AND nome ILIKE $${params.length}`;
+    }
+
+    const totalResult = await pool.query(`SELECT COUNT(*) FROM marcas ${whereClause}`, params);
     const total = parseInt(totalResult.rows[0].count);
 
-    query += ` ORDER BY nome LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
-    params.push(Number(limit), offset);
-
-    const result = await pool.query(query, params);
+    const result = await pool.query(
+      `SELECT * FROM marcas ${whereClause} ORDER BY nome LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, Number(limit), offset]
+    );
     
     res.json({
       items: result.rows,

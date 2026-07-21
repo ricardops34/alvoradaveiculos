@@ -57,8 +57,6 @@ export class VeiculosComponent implements OnInit {
   
   cachedPeople: any[] = [];
   
-  selectedTipos: string[] = [];
-  selectedStatus: string[] = [];
   currentSearchTerm: string = '';
 
   peopleOptions: PoSelectOption[] = [];
@@ -66,12 +64,14 @@ export class VeiculosComponent implements OnInit {
   clientOptions: PoSelectOption[] = [];
   bankOptions: PoSelectOption[] = [];
   costCenterOptions: PoSelectOption[] = [];
-  
+
   marcasOptions: PoSelectOption[] = [];
   allMarcas: any[] = [];
   modelosOptions: PoSelectOption[] = [];
   allModelos: any[] = [];
   trocaModelosOptions: PoSelectOption[] = [];
+  filterModelosOptions: PoSelectOption[] = [];
+  allOpcionais: any[] = [];
 
   public tipoVeiculoOptions: PoSelectOption[] = [
     { label: 'Carro', value: 'Carro' },
@@ -87,23 +87,9 @@ export class VeiculosComponent implements OnInit {
     { label: 'Digital', value: 'DIGITAL' }
   ];
 
-  public readonly opcionaisOptions: PoCheckboxGroupOption[] = [
-    { label: 'Ar Condicionado', value: 'Ar Condicionado' },
-    { label: 'Direção Hidráulica', value: 'Direção Hidráulica' },
-    { label: 'Vidro Elétrico', value: 'Vidro Elétrico' },
-    { label: 'Trava Elétrica', value: 'Trava Elétrica' },
-    { label: 'Alarme', value: 'Alarme' },
-    { label: 'Som/Multimídia', value: 'Som/Multimídia' },
-    { label: 'Bancos de Couro', value: 'Bancos de Couro' },
-    { label: 'Teto Solar', value: 'Teto Solar' },
-    { label: 'Câmera de Ré', value: 'Câmera de Ré' },
-    { label: 'Sensor de Estacionamento', value: 'Sensor de Estacionamento' },
-    { label: 'Airbag', value: 'Airbag' },
-    { label: 'ABS', value: 'ABS' },
-    { label: 'Piloto Automático', value: 'Piloto Automático' },
-    { label: 'Rodas de Liga Leve', value: 'Rodas de Liga Leve' },
-    { label: 'GNV', value: 'GNV' }
-  ];
+  // Carregado do catálogo administrável (tabela `opcionais`, tela Veículos > Opcionais)
+  // em vez de uma lista fixa no código — ver loadOpcionais() no ngOnInit.
+  opcionaisOptions: PoCheckboxGroupOption[] = [];
 
   public formaCompraOptions: PoCheckboxGroupOption[] = [
     { label: 'Troca', value: 'Troca' },
@@ -196,8 +182,12 @@ export class VeiculosComponent implements OnInit {
     { label: 'Extrato/Custos', action: this.openStatement.bind(this), icon: 'po-icon-finance-secure' },
     { label: 'Histórico do Veículo', action: this.openHistorico.bind(this), icon: 'an an-clock-counter-clockwise' },
     { label: 'Gerar Proposta Comercial', action: this.gerarProposta.bind(this), icon: 'an an-file-text', visible: (row: any) => row.status === 'Estoque' || row.status === 'Preparação' },
+    { label: 'Enviar Proposta por E-mail', action: this.enviarProposta.bind(this), icon: 'an an-envelope', visible: (row: any) => row.status === 'Estoque' || row.status === 'Preparação' },
     { label: 'Recibo de Compra', action: (row: any) => this.gerarRecibo(row, 'compra'), icon: 'an an-receipt' },
+    { label: 'Enviar Recibo de Compra por E-mail', action: (row: any) => this.enviarRecibo(row, 'compra'), icon: 'an an-envelope' },
     { label: 'Recibo de Venda', action: (row: any) => this.gerarRecibo(row, 'venda'), icon: 'an an-receipt', visible: (row: any) => row.status === 'Vendido' },
+    { label: 'Enviar Recibo de Venda por E-mail', action: (row: any) => this.enviarRecibo(row, 'venda'), icon: 'an an-envelope', visible: (row: any) => row.status === 'Vendido' },
+    { label: 'Reenviar ao RENAVE', action: this.reenviarRenave.bind(this), icon: 'an an-arrows-clockwise', visible: (row: any) => !!row.chassi && (!row.renave_status || row.renave_status.startsWith('Erro')) },
     { label: 'Excluir', action: this.delete.bind(this), icon: 'po-icon-delete', type: 'danger' }
   ];
 
@@ -217,7 +207,11 @@ export class VeiculosComponent implements OnInit {
       { value: 'Vendido', color: 'color-11', label: 'Vendido' },
       { value: 'Manutenção', color: 'color-07', label: 'Manutenção' },
       { value: 'Preparação', color: 'color-01', label: 'Preparação' }
-    ]}
+    ]},
+    { property: 'renave_status', label: 'RENAVE', type: 'label', labels: [
+      { value: 'Enviado', color: 'color-10', label: 'Enviado' },
+      { value: 'Aprovado', color: 'color-10', label: 'Aprovado' }
+    ] }
   ];
 
   public readonly statementColumns: PoTableColumn[] = [
@@ -291,9 +285,11 @@ export class VeiculosComponent implements OnInit {
   ];
 
   advancedFilters: any = {
-    status: [],
+    tipo_veiculo: [] as string[],
+    status: [] as string[],
     marca_id: null,
-    tipo_veiculo: null
+    modelo_id: null,
+    opcionais: [] as string[]
   };
 
   @ViewChild('advancedFilterModal') advancedFilterModal!: PoModalComponent;
@@ -313,14 +309,17 @@ export class VeiculosComponent implements OnInit {
     await this.db.init();
     
     // Otimização: carregar tudo em paralelo
-    const [peopleRes, banksRes, centersRes] = await Promise.all([
+    const [peopleRes, banksRes, centersRes, opcionaisRes] = await Promise.all([
       this.db.getAll('pessoas', { limit: 1000000 }),
       this.db.getAll('bancos', { limit: 1000000 }),
-      this.db.getAll('centros_custo', { limit: 1000000 })
+      this.db.getAll('centros_custo', { limit: 1000000 }),
+      this.db.getAll('opcionais', { limit: 1000000 })
     ]);
     const people = peopleRes?.items || peopleRes || [];
     const banks = banksRes?.items || banksRes || [];
     const centers = centersRes?.items || centersRes || [];
+    this.allOpcionais = opcionaisRes?.items || opcionaisRes || [];
+    this.opcionaisOptions = this.allOpcionais.map((o: any) => ({ label: o.nome, value: o.nome }));
 
     this.cachedPeople = people;
 
@@ -351,12 +350,15 @@ export class VeiculosComponent implements OnInit {
   private async fetchData() {
     this.loadingShowMore = true;
     try {
-      const response = await this.db.getAll('veiculos', { 
-        page: this.page, 
-        limit: this.pageSize,
-        filter: this.currentFilter,
-        advanced: this.advancedFilters
-      });
+      const params: any = { page: this.page, limit: this.pageSize };
+      if (this.currentFilter) params.filter = this.currentFilter;
+      if (this.advancedFilters.tipo_veiculo.length) params.tipo_veiculo = this.advancedFilters.tipo_veiculo.join(',');
+      if (this.advancedFilters.status.length) params.status = this.advancedFilters.status.join(',');
+      if (this.advancedFilters.marca_id) params.marca_id = this.advancedFilters.marca_id;
+      if (this.advancedFilters.modelo_id) params.modelo_id = this.advancedFilters.modelo_id;
+      if (this.advancedFilters.opcionais.length) params.opcionais = this.advancedFilters.opcionais.join(',');
+
+      const response = await this.db.getAll('veiculos', params);
 
       if (response && response.items) {
         this.vehicles = [...this.vehicles, ...response.items];
@@ -380,19 +382,39 @@ export class VeiculosComponent implements OnInit {
     this.advancedFilterModal.open();
   }
 
+  updateFilterModelos() {
+    this.advancedFilters.modelo_id = null;
+    this.filterModelosOptions = [];
+    if (this.advancedFilters.marca_id) {
+      this.db.getAll('modelos', { marca_id: this.advancedFilters.marca_id, limit: 1000000 }).then(response => {
+        const modelos = response?.items || response || [];
+        this.filterModelosOptions = modelos.map((m: any) => ({ label: m.nome, value: m.id }));
+      });
+    }
+  }
+
   applyFilters() {
+    const marca = this.allMarcas.find(m => m.id === this.advancedFilters.marca_id);
+    const modelo = this.filterModelosOptions.find(m => m.value === this.advancedFilters.modelo_id);
+
     this.disclaimerGroup.disclaimers = [
-      ...this.advancedFilters.status.map((s: string) => ({ label: s, property: 'status', value: s })),
-      ...(this.advancedFilters.marca_id ? [{ label: `Marca ID: ${this.advancedFilters.marca_id}`, property: 'marca_id', value: this.advancedFilters.marca_id }] : [])
+      ...this.advancedFilters.tipo_veiculo.map((t: string) => ({ label: `Tipo: ${t}`, property: 'tipo_veiculo', value: t })),
+      ...this.advancedFilters.status.map((s: string) => ({ label: `Status: ${s}`, property: 'status', value: s })),
+      ...(marca ? [{ label: `Marca: ${marca.nome}`, property: 'marca_id', value: this.advancedFilters.marca_id }] : []),
+      ...(modelo ? [{ label: `Modelo: ${modelo.label}`, property: 'modelo_id', value: this.advancedFilters.modelo_id }] : []),
+      ...this.advancedFilters.opcionais.map((o: string) => ({ label: `Opcional: ${o}`, property: 'opcionais', value: o }))
     ];
     this.advancedFilterModal.close();
     this.loadVehicles();
   }
 
   onChangeDisclaimer(disclaimers: any[]) {
-    // Sincroniza filtros avançados com disclaimers
+    // Sincroniza filtros avançados com os disclaimers (chips) exibidos na listagem
+    this.advancedFilters.tipo_veiculo = disclaimers.filter(d => d.property === 'tipo_veiculo').map(d => d.value);
     this.advancedFilters.status = disclaimers.filter(d => d.property === 'status').map(d => d.value);
+    this.advancedFilters.opcionais = disclaimers.filter(d => d.property === 'opcionais').map(d => d.value);
     this.advancedFilters.marca_id = disclaimers.find(d => d.property === 'marca_id')?.value || null;
+    this.advancedFilters.modelo_id = disclaimers.find(d => d.property === 'modelo_id')?.value || null;
     this.loadVehicles();
   }
 
@@ -435,6 +457,20 @@ export class VeiculosComponent implements OnInit {
       this.poNotification.error('Erro ao salvar veículo.');
     } finally {
       this.isLoadingSave = false;
+    }
+  }
+
+  async reenviarRenave(vehicle: any) {
+    try {
+      const resultado: any = await firstValueFrom(this.db.http.post(`${this.db.apiUrl}/veiculos/${vehicle.id}/renave/reenviar`, {}));
+      if (resultado.renave_status?.startsWith('Erro')) {
+        this.poNotification.error(resultado.renave_status);
+      } else {
+        this.poNotification.success(`RENAVE: ${resultado.renave_status || 'processado'}.`);
+      }
+      await this.loadVehicles();
+    } catch {
+      this.poNotification.error('Erro ao reenviar ao RENAVE.');
     }
   }
 
@@ -783,7 +819,7 @@ export class VeiculosComponent implements OnInit {
     }
   }
 
-  async gerarProposta(vehicle: any) {
+  private async buildPropostaPdf(vehicle: any): Promise<{ doc: jsPDF; filename: string }> {
     const empresaNome = await this.getEmpresaNome();
     const valor = vehicle.valor_avaliacao || vehicle.valor_venda || vehicle.valor_compra || 0;
     const veiculoNome = `${vehicle.marca_nome || vehicle.marca || ''} ${vehicle.modelo_nome || vehicle.modelo || ''} ${vehicle.versao || ''}`.trim();
@@ -815,13 +851,24 @@ export class VeiculosComponent implements OnInit {
     doc.setFontSize(9);
     doc.text('Proposta válida por 7 dias, sujeita à disponibilidade do veículo em estoque.', 14, priceY + 12);
 
-    doc.save(`Proposta_${vehicle.placa || vehicle.id}.pdf`);
+    return { doc, filename: `Proposta_${vehicle.placa || vehicle.id}.pdf` };
   }
 
-  async gerarRecibo(vehicle: any, tipo: 'compra' | 'venda') {
+  async gerarProposta(vehicle: any) {
+    const { doc, filename } = await this.buildPropostaPdf(vehicle);
+    doc.save(filename);
+  }
+
+  async enviarProposta(vehicle: any) {
+    const { doc, filename } = await this.buildPropostaPdf(vehicle);
+    const email = this.cachedPeople.find((p: any) => p.id === vehicle.cliente_id)?.email;
+    this.abrirModalEnvioEmail(doc, filename, `Proposta Comercial — ${vehicle.placa || ''}`, email);
+  }
+
+  private async buildReciboPdf(vehicle: any, tipo: 'compra' | 'venda'): Promise<{ doc: jsPDF; filename: string } | null> {
     if (tipo === 'venda' && !vehicle.valor_venda) {
       this.poNotification.warning('Este veículo ainda não foi vendido.');
-      return;
+      return null;
     }
 
     const empresaNome = await this.getEmpresaNome();
@@ -830,6 +877,13 @@ export class VeiculosComponent implements OnInit {
     const valor = isVenda ? vehicle.valor_venda : vehicle.valor_compra;
     const data = isVenda ? vehicle.data_venda : vehicle.data_compra;
     const veiculoNome = `${vehicle.marca_nome || vehicle.marca || ''} ${vehicle.modelo_nome || vehicle.modelo || ''}`.trim();
+
+    // Título em aberto (Contas a Pagar/Receber) vinculado a este veículo — ex: diferença de troca
+    // ainda não paga/recebida. O recibo precisa deixar isso explícito, em vez de parecer quitado.
+    const contasResponse = await this.db.getAll('contas', { veiculo_id: vehicle.id, status: 'Pendente', limit: 100 });
+    const titulosAbertos: any[] = (contasResponse?.items || contasResponse || []).filter((c: any) => c.status === 'Pendente');
+    const saldoAberto = titulosAbertos.reduce((acc, c) => acc + Number(c.valor || 0), 0);
+    const tipoTituloAberto = titulosAbertos[0]?.tipo; // 'Pagar' ou 'Receber'
 
     const doc = new jsPDF();
     doc.setFontSize(18);
@@ -846,6 +900,13 @@ export class VeiculosComponent implements OnInit {
     if (!isVenda && vehicle.forma_compra) {
       rows.push(['Forma de Pagamento', vehicle.forma_compra]);
     }
+    if (titulosAbertos.length > 0) {
+      const saldoFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(saldoAberto);
+      rows.push([
+        'Situação',
+        `Pago parcialmente — saldo ${tipoTituloAberto === 'Pagar' ? 'a pagar' : 'a receber'}: ${saldoFormatado} (pendente em Contas a ${tipoTituloAberto === 'Pagar' ? 'Pagar' : 'Receber'})`
+      ]);
+    }
 
     autoTable(doc, {
       startY: 38,
@@ -860,6 +921,57 @@ export class VeiculosComponent implements OnInit {
     doc.text('_________________________________', 120, sigY);
     doc.text(empresaNome, 120, sigY + 6);
 
-    doc.save(`Recibo_${isVenda ? 'Venda' : 'Compra'}_${vehicle.placa || vehicle.id}.pdf`);
+    return { doc, filename: `Recibo_${isVenda ? 'Venda' : 'Compra'}_${vehicle.placa || vehicle.id}.pdf` };
+  }
+
+  async gerarRecibo(vehicle: any, tipo: 'compra' | 'venda') {
+    const built = await this.buildReciboPdf(vehicle, tipo);
+    if (!built) return;
+    built.doc.save(built.filename);
+  }
+
+  async enviarRecibo(vehicle: any, tipo: 'compra' | 'venda') {
+    const built = await this.buildReciboPdf(vehicle, tipo);
+    if (!built) return;
+    const pessoaId = tipo === 'venda' ? vehicle.cliente_id : vehicle.fornecedor_id;
+    const email = this.cachedPeople.find((p: any) => p.id === pessoaId)?.email;
+    this.abrirModalEnvioEmail(built.doc, built.filename, `Recibo de ${tipo === 'venda' ? 'Venda' : 'Compra'} — ${vehicle.placa || ''}`, email);
+  }
+
+  // Modal de envio por e-mail, compartilhado entre Proposta e Recibos (compra/venda) — reaproveita
+  // o mesmo PDF já gerado (jsPDF) como anexo, sem duplicar a lógica de layout do documento.
+  @ViewChild('emailModal') emailModal!: PoModalComponent;
+  emailPendente: { doc: jsPDF; filename: string; assunto: string } | null = null;
+  emailData = { destinatario: '', assunto: '' };
+  enviandoEmail = false;
+
+  private abrirModalEnvioEmail(doc: jsPDF, filename: string, assunto: string, emailSugerido?: string) {
+    this.emailPendente = { doc, filename, assunto };
+    this.emailData = { destinatario: emailSugerido || '', assunto };
+    this.emailModal.open();
+  }
+
+  async confirmarEnvioEmail() {
+    if (!this.emailPendente || !this.emailData.destinatario) {
+      this.poNotification.warning('Informe o e-mail de destino.');
+      return;
+    }
+    this.enviandoEmail = true;
+    try {
+      const base64 = this.emailPendente.doc.output('datauristring');
+      await firstValueFrom(this.db.http.post('/api/config/enviar-email', {
+        destinatario: this.emailData.destinatario,
+        assunto: this.emailData.assunto,
+        corpo: `<p>Segue em anexo: ${this.emailPendente.assunto}.</p>`,
+        anexo_base64: base64,
+        anexo_nome: this.emailPendente.filename
+      }));
+      this.poNotification.success(`E-mail enviado para ${this.emailData.destinatario}!`);
+      this.emailModal.close();
+    } catch (e: any) {
+      this.poNotification.error(e?.error?.error || 'Erro ao enviar e-mail.');
+    } finally {
+      this.enviandoEmail = false;
+    }
   }
 }

@@ -101,13 +101,13 @@ async function seedTeste() {
     const bancoCaixa = bancoCaixaResult.rows[0]?.id;
 
     const centroCompra = (await client.query(
-      `INSERT INTO centros_custo (nome, tipo) VALUES ('Compra de Veículos', 'Despesa') RETURNING id`
+      `INSERT INTO centros_custo (codigo, nome, tipo) VALUES ('CPV', 'Compra de Veículos', 'Despesa') RETURNING id`
     )).rows[0].id;
     const centroAdmin = (await client.query(
-      `INSERT INTO centros_custo (nome, tipo) VALUES ('Despesas Administrativas', 'Despesa') RETURNING id`
+      `INSERT INTO centros_custo (codigo, nome, tipo) VALUES ('ADM', 'Despesas Administrativas', 'Despesa') RETURNING id`
     )).rows[0].id;
     const centroCautelar = (await client.query(
-      `INSERT INTO centros_custo (nome, tipo) VALUES ('Documentação e Cautelar', 'Despesa') RETURNING id`
+      `INSERT INTO centros_custo (codigo, nome, tipo) VALUES ('DOC', 'Documentação e Cautelar', 'Despesa') RETURNING id`
     )).rows[0].id;
     const centroVendaResult = await client.query(`SELECT id FROM centros_custo WHERE nome = 'Venda de Veículos' LIMIT 1`);
     const centroVenda = centroVendaResult.rows[0]?.id;

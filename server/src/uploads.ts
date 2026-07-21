@@ -12,6 +12,15 @@ export const UPLOADS_ROOT = path.join(__dirname, '..', 'uploads');
 // Usado para segredos que só o backend deve ler (ex: certificado digital do RENAVE).
 export const PRIVATE_ROOT = path.join(__dirname, '..', 'private');
 
+// Diretório dos backups automáticos (dump JSON diário, ver server/src/backup-scheduler.ts).
+// Mesma lógica de persistência via volume Docker nomeado; nunca servido via HTTP.
+export const BACKUPS_ROOT = path.join(__dirname, '..', 'backups');
+
+export function ensureBackupsDir(): string {
+  fs.mkdirSync(BACKUPS_ROOT, { recursive: true });
+  return BACKUPS_ROOT;
+}
+
 export function ensureUploadsDir(subdir: string): string {
   const dir = path.join(UPLOADS_ROOT, subdir);
   fs.mkdirSync(dir, { recursive: true });

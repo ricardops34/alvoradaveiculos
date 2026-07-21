@@ -72,9 +72,19 @@
     </div>
 
     <div class="po-row">
-      <po-input class="po-md-4" name="cidade" [(ngModel)]="person.cidade" p-label="Cidade"></po-input>
-      <po-input class="po-md-1" name="estado" [(ngModel)]="person.estado" p-label="UF" p-maxlength="2" style="text-transform: uppercase;"></po-input>
-      <po-input class="po-md-3" name="codigo_municipio_ibge" [(ngModel)]="person.codigo_municipio_ibge" p-label="Cód. IBGE do Município" p-disabled p-help="Preenchido automaticamente pela busca de CEP/CNPJ. Exigido pelo RENAVE."></po-input>
+      <po-select class="po-md-4" name="estado_id" [(ngModel)]="person.estado_id" p-label="UF" [p-options]="estadoOptions" (p-change)="person.municipio_id = undefined"></po-select>
+      <po-lookup
+        class="po-md-5"
+        name="municipio_id"
+        [(ngModel)]="person.municipio_id"
+        p-label="Município"
+        [p-disabled]="!person.estado_id"
+        [p-filter-service]="municipiosLookup"
+        [p-filter-params]="{ estado_id: person.estado_id }"
+        p-field-label="nome"
+        p-field-value="id"
+        p-help="Exigido pelo RENAVE nos dados do comprador.">
+      </po-lookup>
     </div>
 
     <div class="po-row" *ngIf="roles.includes('cliente') || roles.includes('vendedor')">

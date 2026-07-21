@@ -17,6 +17,23 @@
   </po-table>
 </po-page-list>
 
+<!-- Modal de Envio de Documento por E-mail (Proposta/Recibos) -->
+<po-modal #emailModal
+  p-title="Enviar por E-mail"
+  p-size="sm"
+  [p-primary-action]="{ label: 'Enviar', action: confirmarEnvioEmail.bind(this), loading: enviandoEmail }"
+  [p-secondary-action]="{ label: 'Cancelar', action: emailModal.close.bind(emailModal) }">
+
+  <form #emailForm="ngForm">
+    <div class="po-row">
+      <po-email class="po-md-12" name="email_destinatario" [(ngModel)]="emailData.destinatario" p-label="Destinatário" p-required></po-email>
+    </div>
+    <div class="po-row">
+      <po-input class="po-md-12" name="email_assunto" [(ngModel)]="emailData.assunto" p-label="Assunto"></po-input>
+    </div>
+  </form>
+</po-modal>
+
 <!-- Modal de Busca Avançada -->
 <po-modal #advancedFilterModal 
   p-title="Busca Avançada"
@@ -29,7 +46,7 @@
       p-label="Filtrar por Tipo"
       p-columns="2"
       [p-options]="tipoVeiculoOptions"
-      [(ngModel)]="selectedTipos">
+      [(ngModel)]="advancedFilters.tipo_veiculo">
     </po-checkbox-group>
   </div>
   <div class="po-row po-mt-2">
@@ -39,7 +56,35 @@
       p-label="Filtrar por Status"
       p-columns="2"
       [p-options]="statusOptions"
-      [(ngModel)]="selectedStatus">
+      [(ngModel)]="advancedFilters.status">
+    </po-checkbox-group>
+  </div>
+  <div class="po-row po-mt-2">
+    <po-select
+      class="po-md-6"
+      name="marca_filter"
+      p-label="Marca"
+      [p-options]="marcasOptions"
+      [(ngModel)]="advancedFilters.marca_id"
+      (p-change)="updateFilterModelos()">
+    </po-select>
+    <po-select
+      class="po-md-6"
+      name="modelo_filter"
+      p-label="Modelo"
+      [p-options]="filterModelosOptions"
+      [p-disabled]="!advancedFilters.marca_id"
+      [(ngModel)]="advancedFilters.modelo_id">
+    </po-select>
+  </div>
+  <div class="po-row po-mt-2">
+    <po-checkbox-group
+      class="po-md-12"
+      name="opcionais_filter"
+      p-label="Filtrar por Opcionais"
+      p-columns="3"
+      [p-options]="opcionaisOptions"
+      [(ngModel)]="advancedFilters.opcionais">
     </po-checkbox-group>
   </div>
 </po-modal>

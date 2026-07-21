@@ -21,6 +21,9 @@ yarn-error.log
 # Armazenamento privado (certificado digital do RENAVE) — nunca deve ir para o controle de versão
 /server/private
 
+# Backups automáticos diários (dump JSON) — gerados em runtime, não versionar
+/server/backups
+
 # IDEs and editors
 .idea/
 .project

@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, tipo, status, pessoa_id, veiculo_id } = req.query;
+    const { page = 1, limit = 20, tipo, status, pessoa_id, veiculo_id, filter } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     let whereClause = 'WHERE 1=1';
@@ -26,6 +26,10 @@ router.get('/', async (req: Request, res: Response) => {
     if (veiculo_id) {
       params.push(veiculo_id);
       whereClause += ` AND c.veiculo_id = $${params.length}`;
+    }
+    if (filter) {
+      params.push(`%${filter}%`);
+      whereClause += ` AND (c.descricao ILIKE $${params.length} OR p.nome ILIKE $${params.length} OR v.placa ILIKE $${params.length})`;
     }
 
     const queryBase = `

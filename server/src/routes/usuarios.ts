@@ -8,17 +8,25 @@ const router = Router();
 
 router.get('/', async (req: AuthRequest, res: Response) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, filter } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    const totalResult = await pool.query('SELECT COUNT(*) FROM usuarios');
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+    if (filter) {
+      params.push(`%${filter}%`);
+      whereClause += ` AND (u.nome ILIKE $${params.length} OR u.email ILIKE $${params.length})`;
+    }
+
+    const totalResult = await pool.query(`SELECT COUNT(*) FROM usuarios u ${whereClause}`, params);
     const total = parseInt(totalResult.rows[0].count);
 
     const result = await pool.query(
       `SELECT u.id, u.nome, u.email, u.cpf, u.perfil_id, u.theme, p.nome as perfil_nome
        FROM usuarios u LEFT JOIN perfis p ON u.perfil_id = p.id
-       ORDER BY u.id LIMIT $1 OFFSET $2`,
-      [Number(limit), offset]
+       ${whereClause}
+       ORDER BY u.id LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, Number(limit), offset]
     );
 
     res.json({

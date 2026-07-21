@@ -9,6 +9,7 @@ services:
     volumes:
       - alvorada_uploads:/app/uploads
       - alvorada_private:/app/private
+      - alvorada_backups:/app/backups
     networks:
       - network_db
       - network_public
@@ -48,6 +49,7 @@ services:
 volumes:
   alvorada_uploads:
   alvorada_private:
+  alvorada_backups:
 
 networks:
   network_db:

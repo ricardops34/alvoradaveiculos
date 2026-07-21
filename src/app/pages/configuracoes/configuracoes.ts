@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PoModule, PoNotificationService, PoDialogService } from '@po-ui/ng-components';
+import { PoModule, PoNotificationService, PoDialogService, PoSelectOption } from '@po-ui/ng-components';
 import { firstValueFrom } from 'rxjs';
 import { DatabaseService } from '../../services/database';
 import { AuthService } from '../../services/auth';
 import { CepService } from '../../services/cep';
 import { CnpjService } from '../../services/cnpj';
+import { MunicipiosLookupService } from '../../services/lookups';
 
 @Component({
   selector: 'app-configuracoes',
@@ -22,6 +23,7 @@ export class ConfiguracoesComponent implements OnInit {
   backupLoading = false;
   buscandoCep = false;
   buscandoCnpj = false;
+  estadoOptions: PoSelectOption[] = [];
 
   constructor(
     private db: DatabaseService,
@@ -29,7 +31,8 @@ export class ConfiguracoesComponent implements OnInit {
     private authService: AuthService,
     private poDialog: PoDialogService,
     private cepService: CepService,
-    private cnpjService: CnpjService
+    private cnpjService: CnpjService,
+    public municipiosLookup: MunicipiosLookupService
   ) {}
 
   // Os componentes po-upload fazem a requisição por fora do HttpClient (não passam
@@ -47,6 +50,7 @@ export class ConfiguracoesComponent implements OnInit {
     smtp_port: null,
     smtp_user: '',
     smtp_pass: '',
+    smtp_pass_definida: false,
     smtp_from: '',
     cnpj: '',
     cep: '',
@@ -54,9 +58,9 @@ export class ConfiguracoesComponent implements OnInit {
     numero: '',
     complemento: '',
     bairro: '',
-    cidade: '',
-    estado: '',
-    codigo_municipio_ibge: '',
+    pais_id: 1,
+    estado_id: null,
+    municipio_id: null,
     renave_responsavel_nome: '',
     renave_responsavel_cpf: '',
     renave_certificado_nome_arquivo: '',
@@ -64,15 +68,52 @@ export class ConfiguracoesComponent implements OnInit {
     renave_certificado_senha: ''
   };
 
+  backupsAutomaticos: any[] = [];
+
   async ngOnInit() {
     await this.checkData();
+    await this.carregarEstados();
     await this.carregarParametros();
+    await this.carregarBackupsAutomaticos();
+  }
+
+  async carregarBackupsAutomaticos() {
+    try {
+      const response: any = await firstValueFrom(this.db.http.get('/api/backup/automaticos'));
+      this.backupsAutomaticos = response?.items || [];
+    } catch (e) {
+      console.error('Erro ao listar backups automáticos', e);
+    }
+  }
+
+  restaurarBackupAutomatico(item: any) {
+    this.poDialog.confirm({
+      title: 'Restaurar Backup',
+      message: `Restaurar o backup de ${new Date(item.criado_em).toLocaleString('pt-BR')}? Isso atualiza os registros existentes com os dados desse backup (não apaga nada).`,
+      confirm: async () => {
+        this.backupLoading = true;
+        try {
+          const response: any = await firstValueFrom(this.db.http.post(`/api/backup/automaticos/${item.filename}/restaurar`, {}));
+          this.poNotification.success(response.message || 'Backup restaurado com sucesso!');
+        } catch (e: any) {
+          this.poNotification.error(e?.error?.error || 'Erro ao restaurar backup.');
+        } finally {
+          this.backupLoading = false;
+        }
+      }
+    });
+  }
+
+  async carregarEstados() {
+    const response: any = await this.db.getAll('localizacao/estados', {});
+    const estados = response?.items || response || [];
+    this.estadoOptions = estados.map((e: any) => ({ label: `${e.sigla} - ${e.nome}`, value: e.id }));
   }
 
   async carregarParametros() {
     try {
       const dados: any = await this.db.http.get('/api/config/parametros/completo').toPromise();
-      this.parametros = { ...this.parametros, ...dados, renave_certificado_senha: '' };
+      this.parametros = { ...this.parametros, ...dados, renave_certificado_senha: '', smtp_pass: '' };
     } catch (e) {
       console.error('Erro ao carregar parâmetros', e);
     }
@@ -80,18 +121,41 @@ export class ConfiguracoesComponent implements OnInit {
 
   async salvarParametros() {
     const senhaFoiAlterada = !!this.parametros.renave_certificado_senha;
+    const smtpSenhaFoiAlterada = !!this.parametros.smtp_pass;
     this.loading = true;
     try {
       const salvo: any = await this.db.http.put('/api/config/parametros', this.parametros).toPromise();
-      this.parametros = { ...this.parametros, ...salvo, renave_certificado_senha: '' };
+      this.parametros = { ...this.parametros, ...salvo, renave_certificado_senha: '', smtp_pass: '' };
       if (senhaFoiAlterada) {
         this.parametros.renave_certificado_senha_definida = true;
+      }
+      if (smtpSenhaFoiAlterada) {
+        this.parametros.smtp_pass_definida = true;
       }
       this.poNotification.success('Configurações salvas com sucesso!');
     } catch (e) {
       this.poNotification.error('Erro ao salvar configurações.');
     } finally {
       this.loading = false;
+    }
+  }
+
+  testeEmailDestino = '';
+  testandoEmail = false;
+
+  async testarEmail() {
+    if (!this.testeEmailDestino) {
+      this.poNotification.warning('Informe um e-mail de destino para o teste.');
+      return;
+    }
+    this.testandoEmail = true;
+    try {
+      const response: any = await firstValueFrom(this.db.http.post('/api/config/testar-email', { destinatario: this.testeEmailDestino }));
+      this.poNotification.success(response.message || 'E-mail de teste enviado!');
+    } catch (e: any) {
+      this.poNotification.error(e?.error?.error || 'Erro ao enviar e-mail de teste.');
+    } finally {
+      this.testandoEmail = false;
     }
   }
 
@@ -118,9 +182,11 @@ export class ConfiguracoesComponent implements OnInit {
       }
       this.parametros.logradouro = endereco.logradouro;
       this.parametros.bairro = endereco.bairro;
-      this.parametros.cidade = endereco.localidade;
-      this.parametros.estado = endereco.uf;
-      this.parametros.codigo_municipio_ibge = endereco.ibge;
+      this.parametros.estado_id = endereco.estado_id || null;
+      this.parametros.municipio_id = endereco.municipio_id || null;
+      if (!endereco.municipio_id) {
+        this.poNotification.warning(`Endereço preenchido, mas "${endereco.municipio_nome}" ainda não está na base de Localização. Sincronize com o IBGE em Configurações > Localização.`);
+      }
     } catch {
       this.poNotification.error('Erro ao consultar o CEP.');
     } finally {
@@ -142,9 +208,12 @@ export class ConfiguracoesComponent implements OnInit {
       this.parametros.numero = dados.numero;
       this.parametros.complemento = dados.complemento;
       this.parametros.bairro = dados.bairro;
-      this.parametros.cidade = dados.municipio;
-      this.parametros.estado = dados.uf;
-      this.parametros.codigo_municipio_ibge = String(dados.codigo_municipio_ibge);
+      const municipio = await this.cepService.resolverMunicipioPorIbge(dados.codigo_municipio_ibge);
+      this.parametros.estado_id = municipio?.estado_id || null;
+      this.parametros.municipio_id = municipio?.municipio_id || null;
+      if (!municipio) {
+        this.poNotification.warning(`Endereço preenchido, mas "${dados.municipio}" ainda não está na base de Localização. Sincronize com o IBGE em Configurações > Localização.`);
+      }
       this.poNotification.success(`CNPJ encontrado: ${dados.razao_social}. Endereço preenchido automaticamente.`);
     } catch {
       this.poNotification.error('Erro ao consultar o CNPJ.');

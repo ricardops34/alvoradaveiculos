@@ -176,12 +176,61 @@ async function seed() {
         observacoes TEXT
       );
 
+      -- Cadastros básicos de localização (País/UF/Município), usados como referência em
+      -- Pessoas e Empresa (Configurações) em vez de texto livre. UF e Município são
+      -- populados via sincronização com a API do IBGE (ver server/src/routes/localizacao.ts);
+      -- País por enquanto só tem o Brasil (pré-cadastrado abaixo).
+      CREATE TABLE IF NOT EXISTS paises (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL,
+        sigla VARCHAR(5)
+      );
+
+      CREATE TABLE IF NOT EXISTS estados (
+        id SERIAL PRIMARY KEY,
+        pais_id INTEGER REFERENCES paises(id) ON DELETE SET NULL,
+        nome VARCHAR(100) NOT NULL,
+        sigla VARCHAR(2) NOT NULL,
+        codigo_ibge VARCHAR(2) UNIQUE
+      );
+
+      CREATE TABLE IF NOT EXISTS municipios (
+        id SERIAL PRIMARY KEY,
+        estado_id INTEGER REFERENCES estados(id) ON DELETE CASCADE,
+        nome VARCHAR(150) NOT NULL,
+        codigo_ibge VARCHAR(7) UNIQUE
+      );
+
+      -- Cache de CEPs já consultados (ViaCEP), alimentado incrementalmente a cada busca
+      -- feita pelas telas de Pessoas/Configurações — evita repetir a chamada externa.
+      CREATE TABLE IF NOT EXISTS ceps (
+        cep VARCHAR(9) PRIMARY KEY,
+        logradouro VARCHAR(200),
+        bairro VARCHAR(100),
+        municipio_id INTEGER REFERENCES municipios(id) ON DELETE SET NULL,
+        atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      -- Catálogo de opcionais de veículo (antes uma lista fixa no código do frontend, sem tela de admin)
+      CREATE TABLE IF NOT EXISTS opcionais (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(100) NOT NULL UNIQUE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_estados_pais ON estados(pais_id);
+      CREATE INDEX IF NOT EXISTS idx_municipios_estado ON municipios(estado_id);
       CREATE INDEX IF NOT EXISTS idx_km_historico_veiculo ON veiculo_km_historico(veiculo_id);
       CREATE INDEX IF NOT EXISTS idx_cautelares_veiculo ON cautelares(veiculo_id);
 
       INSERT INTO parametros (id, empresa_nome, favicon_url, logo_url, background_url)
-      VALUES (1, 'Alvorada Veículos', 'favicon.ico', 'icone.png', 'fundologin.png')
+      VALUES (1, 'Alvorada Veículos', 'favicon.ico', 'logo-alvorada-horizontal.png', 'fachada-alvorada-login-v2.png')
       ON CONFLICT (id) DO NOTHING;
+
+      -- Instalações já existentes (banco provisionado antes do redesign da tela de login) ainda têm
+      -- os valores antigos ('icone.png'/'fundologin.png') gravados — atualiza só quem nunca foi
+      -- customizado pelo Administrador, pra não sobrescrever um logo/fundo que já foi trocado.
+      UPDATE parametros SET logo_url = 'logo-alvorada-horizontal.png' WHERE id = 1 AND logo_url = 'icone.png';
+      UPDATE parametros SET background_url = 'fachada-alvorada-login-v2.png' WHERE id = 1 AND background_url = 'fundologin.png';
 
       ALTER TABLE modelos ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
       ALTER TABLE marcas ADD COLUMN IF NOT EXISTS tipo_veiculo VARCHAR(20) DEFAULT 'Carro';
@@ -239,6 +288,25 @@ async function seed() {
       -- CPF do operador responsável (exigido pelo RENAVE em toda solicitação de entrada/saída de estoque)
       ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cpf VARCHAR(14);
 
+      -- Endereço por lookup (País/UF/Município) em vez de texto livre. Os campos antigos
+      -- (cidade, estado, codigo_municipio_ibge) permanecem na tabela só para não perder dados
+      -- já digitados antes desta versão; a tela não os usa mais.
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS pais_id INTEGER REFERENCES paises(id) ON DELETE SET NULL;
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS estado_id INTEGER REFERENCES estados(id) ON DELETE SET NULL;
+      ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS municipio_id INTEGER REFERENCES municipios(id) ON DELETE SET NULL;
+
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS pais_id INTEGER REFERENCES paises(id) ON DELETE SET NULL;
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS estado_id INTEGER REFERENCES estados(id) ON DELETE SET NULL;
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS municipio_id INTEGER REFERENCES municipios(id) ON DELETE SET NULL;
+
+      -- Envio de e-mail (Proposta Comercial / Recibos) via SMTP configurado pelo Administrador.
+      -- smtp_pass é write-only, mesmo padrão da senha do certificado do RENAVE.
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_host VARCHAR(255);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_port INTEGER;
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_user VARCHAR(255);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_pass VARCHAR(255);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_from VARCHAR(255);
+
       CREATE INDEX IF NOT EXISTS idx_marcas_tipo ON marcas(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_tipo ON modelos(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_marca ON modelos(marca_id);
@@ -274,7 +342,7 @@ async function seed() {
 
     await client.query(`
       INSERT INTO perfis (id, nome, rotinas) VALUES
-      (1, 'Administrador', '{dashboard,veiculos,bancos,pessoas,centros_custo,movimentos,extrato_bancario,extrato_veiculo,relatorio_despesas,usuarios,perfis,contas}'),
+      (1, 'Administrador', '{dashboard,veiculos,bancos,pessoas,centros_custo,movimentos,extrato_bancario,extrato_veiculo,relatorio_despesas,usuarios,perfis,contas,localizacao}'),
       (2, 'Vendedor', '{dashboard,veiculos,pessoas}'),
       (3, 'Financeiro', '{dashboard,bancos,movimentos,extrato_bancario,extrato_veiculo,relatorio_despesas,contas}')
       ON CONFLICT (id) DO NOTHING
@@ -286,6 +354,15 @@ async function seed() {
       WHERE id IN (1, 3) AND NOT ('contas' = ANY(rotinas));
     `);
 
+    // Opcionais é sub-recurso de Veículos (mesma rotina de Marcas/Modelos). 'localizacao' só
+    // controla a visibilidade do menu de Estados/Municípios (tela restrita a Administrador);
+    // a leitura de país/UF/município/CEP fica liberada pra qualquer usuário autenticado, pois
+    // é usada nos formulários de Pessoas e Configurações independente do perfil.
+    await client.query(`
+      UPDATE perfis SET rotinas = array_append(rotinas, 'localizacao')
+      WHERE id = 1 AND NOT ('localizacao' = ANY(rotinas));
+    `);
+
     const adminHash = await bcrypt.hash('admin123', SALT_ROUNDS);
     await client.query(`
       INSERT INTO usuarios (id, nome, email, senha, perfil_id, theme) VALUES
@@ -294,10 +371,10 @@ async function seed() {
     `, [adminHash]);
 
     await client.query(`
-      INSERT INTO centros_custo (id, nome, tipo) VALUES
-      (1, 'Venda de Veículos', 'Receita'),
-      (2, 'Manutenção de Estoque', 'Despesa'),
-      (3, 'Comissão de Vendas', 'Despesa')
+      INSERT INTO centros_custo (id, codigo, nome, tipo) VALUES
+      (1, 'VND', 'Venda de Veículos', 'Receita'),
+      (2, 'MNT', 'Manutenção de Estoque', 'Despesa'),
+      (3, 'COM', 'Comissão de Vendas', 'Despesa')
       ON CONFLICT (id) DO NOTHING
     `);
 
@@ -305,6 +382,22 @@ async function seed() {
       INSERT INTO bancos (id, nome, tipo, saldo_inicial) VALUES
       (1, 'Caixa', 'Caixa', 0)
       ON CONFLICT (id) DO NOTHING
+    `);
+
+    await client.query(`
+      INSERT INTO paises (id, nome, sigla) VALUES (1, 'Brasil', 'BRA')
+      ON CONFLICT (id) DO NOTHING
+    `);
+
+    // Catálogo inicial de opcionais — mesma lista que antes ficava fixa no código do
+    // formulário de Veículos, agora administrável pela tela de Opcionais.
+    await client.query(`
+      INSERT INTO opcionais (nome) VALUES
+      ('Ar Condicionado'), ('Direção Hidráulica'), ('Vidro Elétrico'), ('Trava Elétrica'),
+      ('Alarme'), ('Som/Multimídia'), ('Bancos de Couro'), ('Teto Solar'), ('Câmera de Ré'),
+      ('Sensor de Estacionamento'), ('Airbag'), ('ABS'), ('Piloto Automático'),
+      ('Rodas de Liga Leve'), ('GNV')
+      ON CONFLICT (nome) DO NOTHING
     `);
 
     // A importação de Marcas e Modelos agora é feita manualmente via painel administrativo (Rota: /api/config/importar-marcas-modelos)
@@ -344,6 +437,8 @@ async function seed() {
       SELECT setval('modelos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM modelos));
       SELECT setval('centros_custo_id_seq', (SELECT COALESCE(MAX(id), 1) FROM centros_custo));
       SELECT setval('bancos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM bancos));
+      SELECT setval('paises_id_seq', (SELECT COALESCE(MAX(id), 1) FROM paises));
+      SELECT setval('opcionais_id_seq', (SELECT COALESCE(MAX(id), 1) FROM opcionais));
     `);
 
   } catch (err) {

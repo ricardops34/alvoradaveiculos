@@ -1,0 +1,31 @@
+<po-page-list
+  p-title="Opcionais de Veículo"
+  [p-actions]="actions"
+  [p-filter]="filterSettings">
+
+  <po-table
+    class="po-mt-1 po-mb-5"
+    p-sort="true"
+    [p-columns]="columns"
+    [p-items]="opcionais"
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
+    (p-show-more)="showMore()">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #opcionalModal
+  [p-title]="opcional.id ? 'Editar Opcional' : 'Novo Opcional'"
+  p-size="sm"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: opcionalModal.close.bind(opcionalModal) }">
+
+  <form #opcionalForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-12" name="nome" [(ngModel)]="opcional.nome" p-label="Nome do Opcional" p-required></po-input>
+    </div>
+  </form>
+</po-modal>

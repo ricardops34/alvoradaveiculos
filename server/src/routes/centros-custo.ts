@@ -5,13 +5,23 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, filter } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
-    const totalResult = await pool.query('SELECT COUNT(*) FROM centros_custo');
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+    if (filter) {
+      params.push(`%${filter}%`);
+      whereClause += ` AND (nome ILIKE $${params.length} OR codigo ILIKE $${params.length})`;
+    }
+
+    const totalResult = await pool.query(`SELECT COUNT(*) FROM centros_custo ${whereClause}`, params);
     const total = parseInt(totalResult.rows[0].count);
 
-    const result = await pool.query('SELECT * FROM centros_custo ORDER BY id DESC LIMIT $1 OFFSET $2', [Number(limit), offset]);
+    const result = await pool.query(
+      `SELECT * FROM centros_custo ${whereClause} ORDER BY id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, Number(limit), offset]
+    );
     
     res.json({
       items: result.rows,

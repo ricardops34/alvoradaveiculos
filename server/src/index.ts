@@ -5,6 +5,7 @@ import path from 'path';
 import seed from './seed';
 import { authMiddleware, requireRotina, requireAdmin } from './middleware/auth';
 import { UPLOADS_ROOT, ensureUploadsDir } from './uploads';
+import { startBackupScheduler } from './backup-scheduler';
 
 // Rotas
 import authRoutes from './routes/auth';
@@ -23,6 +24,8 @@ import vendedoresRoutes from './routes/vendedores';
 import contasRoutes from './routes/contas';
 import cautelaresRoutes from './routes/cautelares';
 import backupRoutes from './routes/backup';
+import opcionaisRoutes from './routes/opcionais';
+import localizacaoRoutes from './routes/localizacao';
 
 dotenv.config();
 
@@ -57,6 +60,11 @@ app.use('/api/cautelares', authMiddleware, requireRotina('veiculos'), cautelares
 app.use('/api/vendedores', authMiddleware, requireRotina('relatorio_despesas'), vendedoresRoutes);
 app.use('/api/contas', authMiddleware, requireRotina('contas'), contasRoutes);
 app.use('/api/backup', authMiddleware, requireAdmin, backupRoutes);
+app.use('/api/opcionais', authMiddleware, requireRotina('veiculos'), opcionaisRoutes);
+// País/UF/Município/CEP ficam liberados pra qualquer usuário autenticado (usados nos formulários
+// de Pessoas e Configurações independente do perfil); só a sincronização com o IBGE exige admin
+// (checado dentro da própria rota — ver localizacao.ts).
+app.use('/api/localizacao', authMiddleware, localizacaoRoutes);
 // /api/config protege cada rota individualmente (GET /parametros fica público para a tela de login,
 // o resto exige perfil Administrador — ver config.ts)
 app.use('/api/config', configRoutes);
@@ -72,6 +80,8 @@ async function start() {
     // Executar seed (cria tabelas e dados se necessário)
     await seed();
     console.log('✅ Banco de dados inicializado.');
+
+    startBackupScheduler();
 
     app.listen(PORT, () => {
       console.log(`🚀 Alvorada API rodando na porta ${PORT}`);

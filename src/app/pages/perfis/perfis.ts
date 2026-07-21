@@ -38,7 +38,9 @@ export class PerfisComponent implements OnInit {
     { label: 'Extrato por Veículo', value: 'extrato_veiculo' },
     { label: 'Relatório de Despesas', value: 'relatorio_despesas' },
     { label: 'Gestão de Usuários', value: 'usuarios' },
-    { label: 'Gestão de Perfis', value: 'perfis' }
+    { label: 'Gestão de Perfis', value: 'perfis' },
+    { label: 'Contas a Pagar/Receber', value: 'contas' },
+    { label: 'Localização (País/UF/Município)', value: 'localizacao' }
   ];
 
   public readonly actions: PoPageAction[] = [

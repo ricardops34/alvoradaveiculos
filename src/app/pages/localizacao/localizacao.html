@@ -1,0 +1,36 @@
+<po-page-default
+  p-title="Localização (País, UF e Município)"
+  [p-actions]="[{ label: 'Sincronizar com IBGE', action: sincronizarIbge.bind(this), icon: 'an an-arrows-clockwise', loading: sincronizando }]">
+
+  <po-container>
+    <p class="po-text-color-08">
+      Estados e Municípios são importados automaticamente da API pública do IBGE. Use o botão
+      "Sincronizar com IBGE" sempre que precisar atualizar a base (primeira configuração do
+      sistema ou após criação de novos municípios). O CEP é preenchido automaticamente conforme
+      as telas de Pessoas e Configurações forem consultando (não precisa de sincronização manual).
+    </p>
+    <div class="po-row po-mt-2">
+      <po-info class="po-md-3" p-label="Estados cadastrados" [p-value]="totalEstados"></po-info>
+      <po-info class="po-md-3" p-label="Municípios cadastrados" [p-value]="totalMunicipios"></po-info>
+    </div>
+  </po-container>
+
+  <po-container class="po-mt-2">
+    <div class="po-row">
+      <po-input class="po-md-4" name="filtroNome" [(ngModel)]="filtroNome" p-label="Buscar Município" p-clean (p-change)="load()"></po-input>
+      <po-select class="po-md-4" name="filtroEstado" [(ngModel)]="filtroEstadoId" p-label="Estado (UF)" [p-options]="estadoOptions" p-clean (p-change)="load()"></po-select>
+    </div>
+  </po-container>
+
+  <po-table
+    class="po-mt-2"
+    p-sort="true"
+    [p-columns]="municipiosColumns"
+    [p-items]="municipios"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
+    (p-show-more)="showMore()">
+  </po-table>
+
+</po-page-default>

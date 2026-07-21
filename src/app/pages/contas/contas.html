@@ -1,11 +1,8 @@
-<po-page-default p-title="Contas a Pagar e a Receber" [p-actions]="actions">
-
-  <po-container>
-    <div class="po-row">
-      <po-select class="po-md-3" name="filtro_tipo" [(ngModel)]="filtro.tipo" p-label="Tipo" [p-options]="tipoFiltroOptions" (p-change)="load()"></po-select>
-      <po-select class="po-md-3" name="filtro_status" [(ngModel)]="filtro.status" p-label="Status" [p-options]="statusFiltroOptions" (p-change)="load()"></po-select>
-    </div>
-  </po-container>
+<po-page-list
+  p-title="Contas a Pagar e a Receber"
+  [p-actions]="actions"
+  [p-filter]="filterSettings"
+  [p-disclaimer-group]="disclaimerGroup">
 
   <po-table
     class="po-mt-1 po-mb-5"
@@ -19,7 +16,15 @@
     (p-show-more)="showMore()">
   </po-table>
 
-</po-page-default>
+</po-page-list>
+
+<!-- Modal de Filtros Avançados -->
+<po-modal #advancedFilterModal p-title="Filtros" [p-primary-action]="{ label: 'Aplicar filtros', action: applyFilters.bind(this) }">
+  <div class="po-row">
+    <po-select class="po-md-6" name="filtro_tipo" [(ngModel)]="filtro.tipo" p-label="Tipo" [p-options]="tipoFiltroOptions"></po-select>
+    <po-select class="po-md-6" name="filtro_status" [(ngModel)]="filtro.status" p-label="Status" [p-options]="statusFiltroOptions"></po-select>
+  </div>
+</po-modal>
 
 <!-- Modal de Cadastro/Edição -->
 <po-modal #contaModal

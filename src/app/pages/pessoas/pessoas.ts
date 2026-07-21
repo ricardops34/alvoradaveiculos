@@ -15,6 +15,7 @@ import {
 import { DatabaseService } from '../../services/database';
 import { CepService } from '../../services/cep';
 import { CnpjService } from '../../services/cnpj';
+import { MunicipiosLookupService } from '../../services/lookups';
 import { Person } from '../../types/person';
 
 @Component({
@@ -84,8 +85,10 @@ export class PessoasComponent implements OnInit {
       { value: 'Perdido', color: 'color-11', label: 'Perdido' }
     ]},
     { property: 'telefone', label: 'Telefone' },
-    { property: 'cidade', label: 'Cidade' }
+    { property: 'municipio_nome', label: 'Cidade' }
   ];
+
+  estadoOptions: PoSelectOption[] = [];
 
   public readonly typeOptions: PoSelectOption[] = [
     { label: 'Física', value: 'Física' },
@@ -108,14 +111,22 @@ export class PessoasComponent implements OnInit {
     private poNotification: PoNotificationService,
     private poDialog: PoDialogService,
     private cepService: CepService,
-    private cnpjService: CnpjService
+    private cnpjService: CnpjService,
+    public municipiosLookup: MunicipiosLookupService
   ) {}
 
   async ngOnInit() {
     this.isLoading = true;
     await this.db.init();
+    await this.carregarEstados();
     await this.loadPeople();
     this.isLoading = false;
+  }
+
+  async carregarEstados() {
+    const response = await this.db.getAll('localizacao/estados', {});
+    const estados = response?.items || response || [];
+    this.estadoOptions = estados.map((e: any) => ({ label: `${e.sigla} - ${e.nome}`, value: e.id }));
   }
 
   async loadPeople() {
@@ -178,7 +189,7 @@ export class PessoasComponent implements OnInit {
       is_fornecedor: false,
       is_vendedor: false,
       is_socio: false,
-      estado: '',
+      pais_id: 1,
       lead_status: 'Novo',
       comissao_percentual: 0
     };
@@ -285,9 +296,11 @@ export class PessoasComponent implements OnInit {
       }
       this.person.logradouro = endereco.logradouro;
       this.person.bairro = endereco.bairro;
-      this.person.cidade = endereco.localidade;
-      this.person.estado = endereco.uf;
-      this.person.codigo_municipio_ibge = endereco.ibge;
+      this.person.estado_id = endereco.estado_id || undefined;
+      this.person.municipio_id = endereco.municipio_id || undefined;
+      if (!endereco.municipio_id) {
+        this.poNotification.warning(`Endereço preenchido, mas "${endereco.municipio_nome}" ainda não está na base de Localização. Sincronize com o IBGE em Configurações > Localização.`);
+      }
     } catch {
       this.poNotification.error('Erro ao consultar o CEP.');
     } finally {
@@ -312,9 +325,12 @@ export class PessoasComponent implements OnInit {
       this.person.numero = dados.numero;
       this.person.complemento = dados.complemento;
       this.person.bairro = dados.bairro;
-      this.person.cidade = dados.municipio;
-      this.person.estado = dados.uf;
-      this.person.codigo_municipio_ibge = String(dados.codigo_municipio_ibge);
+      const municipio = await this.cepService.resolverMunicipioPorIbge(dados.codigo_municipio_ibge);
+      this.person.estado_id = municipio?.estado_id;
+      this.person.municipio_id = municipio?.municipio_id;
+      if (!municipio) {
+        this.poNotification.warning(`Endereço preenchido, mas "${dados.municipio}" ainda não está na base de Localização. Sincronize com o IBGE em Configurações > Localização.`);
+      }
       this.poNotification.success(`CNPJ encontrado: ${dados.razao_social}`);
     } catch {
       this.poNotification.error('Erro ao consultar o CNPJ.');

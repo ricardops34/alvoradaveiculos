@@ -1,17 +1,19 @@
 <main
   class="login-page"
-  [style.--login-background]="'url(\'fachada-alvorada-login-v2.png\')'"
+  [style.--login-background]="'url(\'' + (parametros.background_url || 'fachada-alvorada-login-v2.png') + '\')'"
 >
+  <section class="brand-panel"></section>
+
   <section class="access-panel">
     <div class="login-card">
       <div class="logo-section">
         <div class="logo-frame">
-          <img src="logo-alvorada-horizontal.png" alt="Alvorada Veículos" class="logo-img">
+          <img [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome" class="logo-img">
         </div>
       </div>
 
       <div class="welcome-copy">
-        <h3></h3>
+        <h3>Bem-vindo de volta</h3>
         <p>Entre com seus dados para acessar o sistema.</p>
       </div>
 
