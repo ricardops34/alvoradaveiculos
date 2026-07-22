@@ -1,9 +1,17 @@
-<div class="loja-page">
+<div class="loja-page" [style.--primary]="parametros.loja_cor_primaria">
   <header class="loja-header">
     <div class="loja-header-inner">
       <a routerLink="/" class="loja-logo-link">
-        <img class="loja-logo" [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome">
+        <div class="loja-logo-badge">
+          <img class="loja-logo" [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome">
+        </div>
       </a>
+
+      <nav class="loja-nav">
+        <a routerLink="/" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }">Início</a>
+        <a routerLink="/noticias" routerLinkActive="ativo">Notícias</a>
+      </nav>
+
       <div class="loja-header-acoes">
         <a routerLink="/" class="loja-btn-ghost">← Voltar ao estoque</a>
         <a routerLink="/auth/login" class="loja-btn-entrar">🔒 Entrar</a>
@@ -22,6 +30,9 @@
         <div class="detalhe-foto-principal">
           <img *ngIf="veiculo.fotos?.length" [src]="veiculo.fotos[fotoAtual]" [alt]="veiculo.marca_nome + ' ' + veiculo.modelo_nome">
           <div class="detalhe-sem-foto" *ngIf="!veiculo.fotos?.length">Sem foto disponível</div>
+          <div class="detalhe-marca-dagua" *ngIf="veiculo.fotos?.length && parametros.loja_marca_dagua_ativa && parametros.loja_marca_dagua_url">
+            <img [src]="parametros.loja_marca_dagua_url" [style.opacity]="(parametros.loja_marca_dagua_opacidade || 30) / 100" alt="">
+          </div>
         </div>
         <div class="detalhe-miniaturas" *ngIf="veiculo.fotos?.length > 1">
           <button
@@ -30,6 +41,9 @@
             [class.ativa]="i === fotoAtual"
             (click)="fotoAtual = i">
             <img [src]="foto" alt="">
+            <div class="detalhe-marca-dagua" *ngIf="parametros.loja_marca_dagua_ativa && parametros.loja_marca_dagua_url">
+              <img [src]="parametros.loja_marca_dagua_url" [style.opacity]="(parametros.loja_marca_dagua_opacidade || 30) / 100" alt="">
+            </div>
           </button>
         </div>
       </div>
@@ -56,6 +70,19 @@
         <a class="detalhe-whatsapp" [href]="linkWhatsapp" target="_blank" rel="noopener">
           💬 Tenho interesse — falar no WhatsApp
         </a>
+
+        <section class="detalhe-secao" *ngIf="estatisticas?.total > 1">
+          <h2>Tabela de Valores</h2>
+          <p class="detalhe-valores-escopo">
+            Comparado com {{ estatisticas.total }} anúncios de
+            {{ estatisticasEscopo === 'modelo' ? (veiculo.marca_nome + ' ' + veiculo.modelo_nome) : veiculo.marca_nome }}
+          </p>
+          <div class="detalhe-valores-grid">
+            <div><span>Maior valor anunciado</span><strong>{{ estatisticas.maior | currency:'BRL' }}</strong></div>
+            <div><span>Valor médio anunciado</span><strong>{{ estatisticas.media | currency:'BRL' }}</strong></div>
+            <div><span>Menor valor anunciado</span><strong>{{ estatisticas.menor | currency:'BRL' }}</strong></div>
+          </div>
+        </section>
 
         <section class="detalhe-secao" *ngIf="veiculo.opcionais?.length">
           <h2>Opcionais</h2>
@@ -88,7 +115,7 @@
   </main>
 
   <footer class="loja-footer">
-    <p>{{ parametros.empresa_nome }} — Sistema de Gestão Alvorada</p>
+    <p>{{ parametros.loja_rodape_texto }}</p>
   </footer>
 </div>
 

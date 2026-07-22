@@ -3,5 +3,10 @@
     "target": "http://alvorada-api:3000",
     "secure": false,
     "changeOrigin": true
+  },
+  "/uploads": {
+    "target": "http://alvorada-api:3000",
+    "secure": false,
+    "changeOrigin": true
   }
 }

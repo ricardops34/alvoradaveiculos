@@ -323,6 +323,49 @@
             <po-switch class="po-md-4" name="loja_ativa" [(ngModel)]="parametros.loja_ativa" p-label="Loja Pública Ativa" p-label-on="Ativa" p-label-off="Desativada"></po-switch>
             <po-input class="po-md-8" name="telefone_contato" [(ngModel)]="parametros.telefone" p-label="Telefone de Contato (WhatsApp)" p-mask="(99) 99999-9999" p-no-autocomplete p-help="Exibido no botão 'Falar no WhatsApp' da página do veículo."></po-input>
           </div>
+
+          <po-divider p-label="Aparência"></po-divider>
+          <div class="po-row">
+            <div class="po-md-3">
+              <label class="po-font-text-small po-mb-1 cor-primaria-label">Cor de Destaque</label>
+              <div class="cor-primaria-linha">
+                <input type="color" name="loja_cor_primaria_picker" [(ngModel)]="parametros.loja_cor_primaria">
+                <po-input name="loja_cor_primaria" [(ngModel)]="parametros.loja_cor_primaria" p-no-autocomplete></po-input>
+              </div>
+            </div>
+            <po-select class="po-md-3" name="loja_estilo_lista" [(ngModel)]="parametros.loja_estilo_lista" p-label="Estilo da Listagem" [p-options]="estiloListaOptions"></po-select>
+          </div>
+          <div class="po-row">
+            <po-input class="po-md-6" name="loja_hero_titulo" [(ngModel)]="parametros.loja_hero_titulo" p-label="Título de Destaque (capa da loja)" p-help="Texto grande no topo da vitrine pública."></po-input>
+            <po-input class="po-md-6" name="loja_hero_subtitulo" [(ngModel)]="parametros.loja_hero_subtitulo" p-label="Subtítulo (capa da loja)"></po-input>
+          </div>
+          <div class="po-row">
+            <po-input class="po-md-12" name="loja_rodape_texto" [(ngModel)]="parametros.loja_rodape_texto" p-label="Texto do Rodapé"></po-input>
+          </div>
+
+          <po-divider p-label="Marca d'Água nas Fotos"></po-divider>
+          <p class="po-font-text-smaller po-mb-2">
+            Sobrepõe uma imagem (ex: sua logo) sobre as fotos dos veículos exibidas na loja pública.
+            É só um efeito visual do site — as fotos originais não são alteradas.
+          </p>
+          <div class="po-row">
+            <po-switch class="po-md-3" name="loja_marca_dagua_ativa" [(ngModel)]="parametros.loja_marca_dagua_ativa" p-label="Marca d'Água" p-label-on="Ativa" p-label-off="Desativada"></po-switch>
+            <po-number class="po-md-3" name="loja_marca_dagua_opacidade" [(ngModel)]="parametros.loja_marca_dagua_opacidade" p-label="Opacidade (%)" [p-min]="5" [p-max]="100"></po-number>
+            <div class="po-md-6">
+              <po-upload
+                name="marca_dagua_file"
+                p-label="Imagem da Marca d'Água"
+                p-help="PNG transparente recomendado."
+                p-url="/api/config/upload"
+                [p-headers]="uploadHeaders"
+                (p-success)="onUploadSuccess($event, 'loja_marca_dagua_url')">
+              </po-upload>
+              <div class="preview-container po-mt-1" *ngIf="parametros.loja_marca_dagua_url">
+                <img [src]="parametros.loja_marca_dagua_url" class="img-preview-mini">
+              </div>
+            </div>
+          </div>
+
           <div class="po-row po-mt-1">
             <po-button class="po-md-12" p-label="Salvar" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="loading" (p-click)="salvarParametros()"></po-button>
           </div>

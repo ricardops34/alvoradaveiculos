@@ -23,3 +23,28 @@
   flex-direction: column;
   gap: 4px;
 }
+
+.cor-primaria-label {
+  display: block;
+  color: #666;
+}
+
+.cor-primaria-linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input[type='color'] {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  po-input {
+    flex: 1;
+  }
+}

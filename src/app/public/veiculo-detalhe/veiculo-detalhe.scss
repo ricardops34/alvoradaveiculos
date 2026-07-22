@@ -1,16 +1,18 @@
 :host {
-  --yellow: #f5c400;
-  --yellow-light: #ffdb3d;
-  --ink: #0c0d10;
-  --ink-soft: #16171c;
-  --card: #1a1b20;
+  --primary: #f5c400;
+  --bg: #f6f6f8;
+  --card: #ffffff;
+  --border: rgba(15, 15, 20, 0.08);
+  --text: #1a1b20;
+  --text-muted: #62636b;
+  --text-soft: #8a8c94;
   display: block;
 }
 
 .loja-page {
   min-height: 100vh;
-  background: var(--ink);
-  color: #e6e7ea;
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* Header (mesmo visual da landing) */
@@ -18,9 +20,9 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(12, 13, 16, 0.92);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(245, 196, 0, 0.18);
+  border-bottom: 1px solid var(--border);
 }
 
 .loja-header-inner {
@@ -37,9 +39,36 @@
   display: block;
 }
 
+.loja-logo-badge {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #0c0d10;
+}
+
 .loja-logo {
-  height: 42px;
+  height: 32px;
   object-fit: contain;
+  display: block;
+}
+
+.loja-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.loja-nav a {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.loja-nav a:hover,
+.loja-nav a.ativo {
+  color: var(--text);
 }
 
 .loja-header-acoes {
@@ -51,9 +80,9 @@
 .loja-btn-ghost {
   padding: 9px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--border);
   background: transparent;
-  color: #e6e7ea;
+  color: var(--text);
   font-size: 13px;
   font-weight: 650;
   text-decoration: none;
@@ -61,15 +90,15 @@
 }
 
 .loja-btn-ghost:hover {
-  border-color: var(--yellow);
-  color: var(--yellow-light);
+  border-color: var(--primary);
+  color: color-mix(in srgb, var(--primary) 65%, black);
 }
 
 .loja-btn-entrar {
   padding: 9px 18px;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--yellow-light), var(--yellow));
-  color: #111;
+  background: var(--primary);
+  color: #17181c;
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
@@ -79,9 +108,9 @@
 .loja-footer {
   padding: 24px;
   text-align: center;
-  color: #5c5e66;
+  color: var(--text-soft);
   font-size: 12.5px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border);
 }
 
 /* Conteúdo do veículo */
@@ -94,11 +123,11 @@
 .detalhe-nao-encontrado {
   text-align: center;
   padding: 60px 0;
-  color: #96989f;
+  color: var(--text-muted);
 }
 
 .detalhe-nao-encontrado a {
-  color: var(--yellow-light);
+  color: color-mix(in srgb, var(--primary) 65%, black);
   margin-left: 6px;
 }
 
@@ -115,10 +144,11 @@
 }
 
 .detalhe-foto-principal {
+  position: relative;
   aspect-ratio: 4 / 3;
   border-radius: 14px;
   overflow: hidden;
-  background: #232530;
+  background: #e9eaee;
 }
 
 .detalhe-foto-principal img {
@@ -132,7 +162,7 @@
   height: 100%;
   display: grid;
   place-items: center;
-  color: #5c5e66;
+  color: var(--text-soft);
 }
 
 .detalhe-miniaturas {
@@ -144,6 +174,7 @@
 }
 
 .detalhe-miniaturas button {
+  position: relative;
   flex: 0 0 64px;
   width: 64px;
   height: 64px;
@@ -152,11 +183,11 @@
   border: 2px solid transparent;
   overflow: hidden;
   cursor: pointer;
-  background: #232530;
+  background: #e9eaee;
 }
 
 .detalhe-miniaturas button.ativa {
-  border-color: var(--yellow);
+  border-color: var(--primary);
 }
 
 .detalhe-miniaturas img {
@@ -174,8 +205,8 @@
   margin-bottom: 8px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(245, 196, 0, 0.14);
-  color: var(--yellow-light);
+  background: color-mix(in srgb, var(--primary) 16%, white);
+  color: color-mix(in srgb, var(--primary) 70%, black);
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -186,11 +217,12 @@
   margin: 0;
   font-size: 26px;
   line-height: 1.2;
+  color: var(--text);
 }
 
 .detalhe-versao {
   margin: 4px 0 0;
-  color: #96989f;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -199,7 +231,7 @@
   flex-wrap: wrap;
   gap: 16px;
   margin: 16px 0;
-  color: #b7b9be;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -210,35 +242,35 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 16px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 .detalhe-preco {
   font-size: 28px;
   font-weight: 800;
-  color: var(--yellow-light);
+  color: var(--text);
 }
 
 .detalhe-preco-consulta {
   font-size: 18px;
-  color: #96989f;
+  color: var(--text-soft);
 }
 
 .detalhe-favorito {
   padding: 9px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--border);
   background: transparent;
-  color: #e6e7ea;
+  color: var(--text);
   font-size: 13px;
   font-weight: 650;
   cursor: pointer;
 }
 
 .detalhe-favorito.ativo {
-  border-color: var(--yellow);
-  color: var(--yellow);
+  border-color: var(--primary);
+  color: color-mix(in srgb, var(--primary) 70%, black);
 }
 
 .detalhe-whatsapp {
@@ -260,7 +292,7 @@
 .detalhe-secao h2 {
   margin: 0 0 12px;
   font-size: 16px;
-  color: var(--yellow-light);
+  color: var(--text);
 }
 
 .detalhe-opcionais {
@@ -273,8 +305,31 @@
   padding: 6px 12px;
   border-radius: 999px;
   background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   font-size: 12.5px;
+}
+
+.detalhe-valores-escopo {
+  margin: -6px 0 12px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.detalhe-valores-grid > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.detalhe-valores-grid > div:last-child {
+  border-bottom: 0;
+}
+
+.detalhe-valores-grid span {
+  color: var(--text-muted);
 }
 
 .detalhe-ficha {
@@ -287,20 +342,39 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border);
   font-size: 13.5px;
 }
 
 .detalhe-ficha span {
-  color: #96989f;
+  color: var(--text-muted);
 }
 
 .detalhe-observacoes {
   margin: 0;
-  color: #c3c5ca;
+  color: var(--text-muted);
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
+}
+
+/* Marca d'água (overlay visual sobre as fotos) */
+.detalhe-marca-dagua {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.detalhe-marca-dagua img {
+  width: 40%;
+  max-width: 220px;
+  object-fit: contain;
+}
+
+.detalhe-miniaturas .detalhe-marca-dagua img {
+  max-width: 32px;
 }
 
 @media (max-width: 860px) {

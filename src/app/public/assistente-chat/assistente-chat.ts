@@ -46,8 +46,9 @@ export class AssistenteChatComponent {
       const historico = this.mensagens.map(m => ({ role: m.role, content: m.content }));
       const resposta = await this.loja.perguntarAssistente(texto, historico);
       this.mensagens.push({ role: 'assistant', content: resposta });
-    } catch {
-      this.mensagens.push({ role: 'assistant', content: 'Não consegui responder agora — tente novamente em instantes.' });
+    } catch (e: any) {
+      const motivo = e?.error?.error || 'tente novamente em instantes.';
+      this.mensagens.push({ role: 'assistant', content: `Não consegui responder agora — ${motivo}` });
     } finally {
       this.enviando = false;
     }

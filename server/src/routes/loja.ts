@@ -14,7 +14,7 @@ const SALT_ROUNDS = 10;
 const CAMPOS_PUBLICOS = `
   v.id, v.tipo_veiculo, v.versao, v.ano_fabricacao, v.ano_modelo, v.cor, v.quilometragem,
   v.valor_avaliacao, v.valor_fipe, v.fotos, v.opcionais, v.observacoes, v.status,
-  ma.nome as marca_nome, mo.nome as modelo_nome
+  v.marca_id, v.modelo_id, ma.nome as marca_nome, mo.nome as modelo_nome
 `;
 
 router.get('/veiculos', async (req: Request, res: Response) => {
@@ -69,18 +69,44 @@ router.get('/veiculos', async (req: Request, res: Response) => {
 });
 
 // Tabela de valores: maior/médio/menor preço anunciado no momento — referência rápida pro
-// visitante, calculada só em cima do que está publicado.
-router.get('/veiculos/estatisticas', async (_req: Request, res: Response) => {
+// visitante, calculada em cima do mesmo recorte (Tipo/Marca/Modelo/texto) que a busca de
+// veículos, pra refletir o filtro ativo em vez do estoque publicado inteiro.
+router.get('/veiculos/estatisticas', async (req: Request, res: Response) => {
   try {
-    const result = await pool.query(`
-      SELECT MAX(COALESCE(valor_avaliacao, valor_fipe)) as maior,
-             AVG(COALESCE(valor_avaliacao, valor_fipe)) as media,
-             MIN(COALESCE(valor_avaliacao, valor_fipe)) as menor,
-             COUNT(*) as total
-      FROM veiculos
-      WHERE publicado = true AND status IN ('Estoque', 'Preparação')
-        AND COALESCE(valor_avaliacao, valor_fipe) IS NOT NULL
-    `);
+    const { tipo_veiculo, marca_id, modelo_id, filter } = req.query;
+
+    let whereClause = `WHERE v.publicado = true AND v.status IN ('Estoque', 'Preparação')
+      AND COALESCE(v.valor_avaliacao, v.valor_fipe) IS NOT NULL`;
+    const params: any[] = [];
+
+    if (tipo_veiculo) {
+      params.push(tipo_veiculo);
+      whereClause += ` AND v.tipo_veiculo = $${params.length}`;
+    }
+    if (marca_id) {
+      params.push(marca_id);
+      whereClause += ` AND v.marca_id = $${params.length}`;
+    }
+    if (modelo_id) {
+      params.push(modelo_id);
+      whereClause += ` AND v.modelo_id = $${params.length}`;
+    }
+    if (filter) {
+      params.push(`%${filter}%`);
+      whereClause += ` AND (ma.nome ILIKE $${params.length} OR mo.nome ILIKE $${params.length} OR v.versao ILIKE $${params.length})`;
+    }
+
+    const result = await pool.query(
+      `SELECT MAX(COALESCE(v.valor_avaliacao, v.valor_fipe)) as maior,
+              AVG(COALESCE(v.valor_avaliacao, v.valor_fipe)) as media,
+              MIN(COALESCE(v.valor_avaliacao, v.valor_fipe)) as menor,
+              COUNT(*) as total
+       FROM veiculos v
+       LEFT JOIN marcas ma ON v.marca_id = ma.id
+       LEFT JOIN modelos mo ON v.modelo_id = mo.id
+       ${whereClause}`,
+      params
+    );
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Erro ao calcular estatísticas da loja:', err);
@@ -176,6 +202,23 @@ router.get('/noticias', async (req: Request, res: Response) => {
     res.json({ items: result.rows });
   } catch (err) {
     console.error('Erro ao listar notícias da loja:', err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+});
+
+router.get('/noticias/:id', async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM noticias WHERE id = $1 AND ativo = true`,
+      [req.params.id]
+    );
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Notícia não encontrada' });
+      return;
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Erro ao buscar notícia da loja:', err);
     res.status(500).json({ error: 'Erro interno' });
   }
 });

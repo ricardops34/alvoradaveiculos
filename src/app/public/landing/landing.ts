@@ -16,7 +16,15 @@ import { AssistenteChatComponent } from '../assistente-chat/assistente-chat';
 export class LandingComponent implements OnInit {
   parametros: any = {
     empresa_nome: 'Alvorada Veículos',
-    logo_url: 'logo-alvorada-horizontal.png'
+    logo_url: 'logo-alvorada-horizontal.png',
+    loja_cor_primaria: '#f5c400',
+    loja_hero_titulo: 'Encontre o veículo ideal',
+    loja_hero_subtitulo: 'Estoque atualizado, direto da loja.',
+    loja_rodape_texto: 'Sistema de Gestão Alvorada',
+    loja_estilo_lista: 'grid',
+    loja_marca_dagua_ativa: false,
+    loja_marca_dagua_url: null,
+    loja_marca_dagua_opacidade: 30
   };
 
   veiculos: any[] = [];
@@ -24,7 +32,6 @@ export class LandingComponent implements OnInit {
   modelos: any[] = [];
   anuncios: any[] = [];
   noticias: any[] = [];
-  estatisticas: any = null;
   assistenteAtivo = false;
   favoritosIds = new Set<number>();
   mostrarAuth = false;
@@ -33,32 +40,44 @@ export class LandingComponent implements OnInit {
   page = 1;
   pageSize = 12;
   hasNext = false;
+  totalVeiculos = 0;
   carregando = true;
   carregandoMais = false;
 
   filtro = { tipo_veiculo: '', marca_id: '', modelo_id: '', texto: '' };
 
   public readonly tiposVeiculo = ['Carro', 'Moto', 'Caminhão', 'Náutica'];
+  public readonly tipoIcones: Record<string, string> = {
+    Carro: '🚗',
+    Moto: '🏍️',
+    Caminhão: '🚚',
+    Náutica: '🚤'
+  };
 
   constructor(private loja: LojaService) {}
 
   async ngOnInit() {
-    const [parametros, marcas, anuncios, noticias, estatisticas, assistenteAtivo] = await Promise.all([
+    const [parametros, marcas, anuncios, noticias, assistenteAtivo] = await Promise.all([
       this.loja.getParametros(),
       this.loja.listarMarcas(),
       this.loja.listarAnuncios('lateral'),
       this.loja.listarNoticias(3),
-      this.loja.estatisticas(),
       this.loja.assistenteStatus()
     ]);
     if (parametros) this.parametros = { ...this.parametros, ...parametros };
     this.marcas = marcas;
     this.anuncios = anuncios;
     this.noticias = noticias;
-    this.estatisticas = estatisticas;
     this.assistenteAtivo = assistenteAtivo;
+    this.atualizarFavicon(this.parametros.favicon_url);
     await this.carregarFavoritos();
     await this.buscar();
+  }
+
+  private atualizarFavicon(url: string) {
+    if (!url) return;
+    const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+    if (link) link.href = url;
   }
 
   get clienteLogado() {
@@ -108,6 +127,16 @@ export class LandingComponent implements OnInit {
     await this.buscar();
   }
 
+  async selecionarTipo(tipo: string) {
+    this.filtro.tipo_veiculo = tipo;
+    await this.buscar();
+  }
+
+  async selecionarMarca(marcaId: number | string) {
+    this.filtro.marca_id = marcaId ? String(marcaId) : '';
+    await this.onMarcaChange();
+  }
+
   async buscar() {
     this.page = 1;
     this.veiculos = [];
@@ -132,6 +161,7 @@ export class LandingComponent implements OnInit {
     const response = await this.loja.listarVeiculos(params);
     this.veiculos = [...this.veiculos, ...(response.items || [])];
     this.hasNext = response.hasNext || false;
+    this.totalVeiculos = response.total || 0;
     this.carregando = false;
     this.carregandoMais = false;
   }

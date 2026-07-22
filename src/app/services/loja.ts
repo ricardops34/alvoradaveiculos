@@ -29,9 +29,9 @@ export class LojaService {
     }
   }
 
-  async estatisticas(): Promise<any> {
+  async estatisticas(params: any = {}): Promise<any> {
     try {
-      return await firstValueFrom(this.http.get<any>('/api/loja/veiculos/estatisticas'));
+      return await firstValueFrom(this.http.get<any>('/api/loja/veiculos/estatisticas', { params }));
     } catch {
       return null;
     }
@@ -70,6 +70,14 @@ export class LojaService {
       return response?.items || [];
     } catch {
       return [];
+    }
+  }
+
+  async buscarNoticia(id: number | string): Promise<any> {
+    try {
+      return await firstValueFrom(this.http.get<any>(`/api/loja/noticias/${id}`));
+    } catch {
+      return null;
     }
   }
 

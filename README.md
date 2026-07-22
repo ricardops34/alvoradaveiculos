@@ -92,6 +92,32 @@ evitar poluir um banco de produção por engano).
 Usuários extras criados: `vendedor@teste.alvorada.com` e
 `financeiro@teste.alvorada.com`, senha `teste123`.
 
+### Estoque real para demonstração (Seed-Estoque)
+
+Popula o banco com o estoque real da loja (28 veículos, com marca/modelo,
+opcionais e fotos — extraído em `server/src/base/estoque/alvorada.json`),
+publicados e prontos pra aparecer na vitrine pública. Ao rodar, ele **remove**
+os dados fictícios do seed-teste (veículos, pessoas e usuários de teste) e
+qualquer veículo já importado por uma execução anterior deste mesmo script,
+antes de inserir a lista atual — seguro rodar mais de uma vez.
+
+```bash
+docker compose -f docker-compose.dev.yml exec alvorada-api npm run seed:estoque
+```
+
+Em produção (VPS), rode dentro do container publicado (usa o `dist/` já
+compilado, sem `ts-node`):
+
+```bash
+docker exec <container_alvorada-api> node dist/seed-estoque.js
+```
+
+Os preços do JSON de origem viram `valor_avaliacao` (o campo usado na loja
+pública), não `valor_venda` — os veículos entram como Estoque, não vendidos.
+Combustível e câmbio, que não têm coluna própria (ficha técnica é por Modelo,
+não por unidade), ficam registrados no início das Observações de cada
+veículo.
+
 ### Ambiente de desenvolvimento com hot reload
 
 Use a configuração de desenvolvimento para refletir automaticamente as

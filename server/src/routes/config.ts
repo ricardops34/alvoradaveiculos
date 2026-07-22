@@ -157,7 +157,10 @@ router.post('/importar-marcas-modelos', authMiddleware, requireAdmin, async (req
 router.get('/parametros', async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT empresa_nome, favicon_url, logo_url, background_url, telefone, loja_ativa FROM parametros WHERE id = 1'
+      `SELECT empresa_nome, favicon_url, logo_url, background_url, telefone, loja_ativa,
+              loja_cor_primaria, loja_hero_titulo, loja_hero_subtitulo, loja_rodape_texto,
+              loja_estilo_lista, loja_marca_dagua_ativa, loja_marca_dagua_url, loja_marca_dagua_opacidade
+       FROM parametros WHERE id = 1`
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -179,7 +182,9 @@ router.get('/parametros/completo', authMiddleware, requireAdmin, async (_req: Re
              (smtp_pass IS NOT NULL AND smtp_pass <> '') as smtp_pass_definida,
              telefone, loja_ativa, grok_ativo,
              (grok_api_key IS NOT NULL AND grok_api_key <> '') as grok_api_key_definida,
-             (invertexto_token IS NOT NULL AND invertexto_token <> '') as invertexto_token_definido
+             (invertexto_token IS NOT NULL AND invertexto_token <> '') as invertexto_token_definido,
+             loja_cor_primaria, loja_hero_titulo, loja_hero_subtitulo, loja_rodape_texto,
+             loja_estilo_lista, loja_marca_dagua_ativa, loja_marca_dagua_url, loja_marca_dagua_opacidade
       FROM parametros WHERE id = 1
     `);
     res.json(result.rows[0]);
@@ -197,7 +202,9 @@ router.put('/parametros', authMiddleware, requireAdmin, async (req: Request, res
       cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id,
       renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_senha,
       smtp_host, smtp_port, smtp_user, smtp_from, smtp_pass,
-      telefone, loja_ativa, grok_ativo, grok_api_key, invertexto_token
+      telefone, loja_ativa, grok_ativo, grok_api_key, invertexto_token,
+      loja_cor_primaria, loja_hero_titulo, loja_hero_subtitulo, loja_rodape_texto,
+      loja_estilo_lista, loja_marca_dagua_ativa, loja_marca_dagua_url, loja_marca_dagua_opacidade
     } = req.body;
     const result = await pool.query(
       `UPDATE parametros
@@ -210,14 +217,19 @@ router.put('/parametros', authMiddleware, requireAdmin, async (req: Request, res
            telefone = $22, loja_ativa = $23, grok_ativo = $24,
            grok_api_key = COALESCE(NULLIF($25, ''), grok_api_key),
            invertexto_token = COALESCE(NULLIF($26, ''), invertexto_token),
+           loja_cor_primaria = $27, loja_hero_titulo = $28, loja_hero_subtitulo = $29, loja_rodape_texto = $30,
+           loja_estilo_lista = $31, loja_marca_dagua_ativa = $32, loja_marca_dagua_url = $33, loja_marca_dagua_opacidade = $34,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = 1
-       RETURNING id, empresa_nome, favicon_url, logo_url, background_url, cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id, renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo, smtp_host, smtp_port, smtp_user, smtp_from, telefone, loja_ativa, grok_ativo`,
+       RETURNING id, empresa_nome, favicon_url, logo_url, background_url, cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id, renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo, smtp_host, smtp_port, smtp_user, smtp_from, telefone, loja_ativa, grok_ativo,
+                 loja_cor_primaria, loja_hero_titulo, loja_hero_subtitulo, loja_rodape_texto, loja_estilo_lista, loja_marca_dagua_ativa, loja_marca_dagua_url, loja_marca_dagua_opacidade`,
       [empresa_nome, favicon_url, logo_url, background_url,
        cnpj || null, cep || null, logradouro || null, numero || null, complemento || null, bairro || null, pais_id || null, estado_id || null, municipio_id || null,
        renave_responsavel_nome || null, renave_responsavel_cpf || null, renave_certificado_senha || '',
        smtp_host || null, smtp_port || null, smtp_user || null, smtp_from || null, smtp_pass || '',
-       telefone || null, !!loja_ativa, !!grok_ativo, grok_api_key || '', invertexto_token || '']
+       telefone || null, !!loja_ativa, !!grok_ativo, grok_api_key || '', invertexto_token || '',
+       loja_cor_primaria || '#f5c400', loja_hero_titulo || null, loja_hero_subtitulo || null, loja_rodape_texto || null,
+       loja_estilo_lista || 'grid', !!loja_marca_dagua_ativa, loja_marca_dagua_url || null, loja_marca_dagua_opacidade ?? 30]
     );
     res.json(result.rows[0]);
   } catch (err) {

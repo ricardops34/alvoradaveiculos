@@ -1,0 +1,46 @@
+<div class="loja-page" [style.--primary]="parametros.loja_cor_primaria">
+  <header class="loja-header">
+    <div class="loja-header-inner">
+      <a routerLink="/" class="loja-logo-badge-link">
+        <div class="loja-logo-badge">
+          <img class="loja-logo" [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome">
+        </div>
+      </a>
+
+      <nav class="loja-nav">
+        <a routerLink="/" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }">Início</a>
+        <a routerLink="/noticias" routerLinkActive="ativo">Notícias</a>
+      </nav>
+
+      <div class="loja-header-acoes">
+        <a routerLink="/" class="loja-btn-ghost">← Voltar ao estoque</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="noticias-content">
+    <h1>Notícias em Destaque</h1>
+    <p class="noticias-subtitulo">Fique por dentro do mercado de veículos.</p>
+
+    <p *ngIf="carregando" class="loja-vazio">Carregando notícias...</p>
+    <p *ngIf="!carregando && !noticias.length" class="loja-vazio">Nenhuma notícia publicada no momento.</p>
+
+    <div class="noticias-grid" *ngIf="!carregando && noticias.length">
+      <a class="noticia-card" *ngFor="let n of noticias" [routerLink]="['/noticia', n.id]">
+        <div class="noticia-foto">
+          <img *ngIf="n.imagem_url" [src]="n.imagem_url" [alt]="n.titulo">
+          <span class="noticia-tag">Mercado</span>
+        </div>
+        <div class="noticia-body">
+          <span class="noticia-data">{{ n.publicado_em | date:'dd/MM/yyyy' }}</span>
+          <h3>{{ n.titulo }}</h3>
+          <p>{{ n.resumo }}</p>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer class="loja-footer">
+    <p>{{ parametros.loja_rodape_texto }}</p>
+  </footer>
+</div>

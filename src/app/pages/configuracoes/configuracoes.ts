@@ -72,8 +72,21 @@ export class ConfiguracoesComponent implements OnInit {
     grok_api_key: '',
     grok_api_key_definida: false,
     invertexto_token: '',
-    invertexto_token_definido: false
+    invertexto_token_definido: false,
+    loja_cor_primaria: '#f5c400',
+    loja_hero_titulo: '',
+    loja_hero_subtitulo: '',
+    loja_rodape_texto: '',
+    loja_estilo_lista: 'grid',
+    loja_marca_dagua_ativa: false,
+    loja_marca_dagua_url: '',
+    loja_marca_dagua_opacidade: 30
   };
+
+  estiloListaOptions: PoSelectOption[] = [
+    { label: 'Grade (cards)', value: 'grid' },
+    { label: 'Lista', value: 'lista' }
+  ];
 
   backupsAutomaticos: any[] = [];
 

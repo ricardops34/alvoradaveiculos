@@ -1,0 +1,43 @@
+<div class="loja-page" [style.--primary]="parametros.loja_cor_primaria">
+  <header class="loja-header">
+    <div class="loja-header-inner">
+      <a routerLink="/" class="loja-logo-badge-link">
+        <div class="loja-logo-badge">
+          <img class="loja-logo" [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome">
+        </div>
+      </a>
+
+      <nav class="loja-nav">
+        <a routerLink="/" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }">Início</a>
+        <a routerLink="/noticias" routerLinkActive="ativo">Notícias</a>
+      </nav>
+
+      <div class="loja-header-acoes">
+        <a routerLink="/noticias" class="loja-btn-ghost">← Todas as notícias</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="noticia-content" *ngIf="!carregando">
+    <p class="noticia-nao-encontrada" *ngIf="naoEncontrada">
+      Notícia não encontrada.
+      <a routerLink="/noticias">Ver todas as notícias</a>
+    </p>
+
+    <article *ngIf="noticia">
+      <span class="noticia-tag">Mercado</span>
+      <h1>{{ noticia.titulo }}</h1>
+      <span class="noticia-data">{{ noticia.publicado_em | date:'dd/MM/yyyy' }}</span>
+
+      <div class="noticia-foto" *ngIf="noticia.imagem_url">
+        <img [src]="noticia.imagem_url" [alt]="noticia.titulo">
+      </div>
+
+      <p class="noticia-conteudo">{{ noticia.conteudo || noticia.resumo }}</p>
+    </article>
+  </main>
+
+  <footer class="loja-footer">
+    <p>{{ parametros.loja_rodape_texto }}</p>
+  </footer>
+</div>

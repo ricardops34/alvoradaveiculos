@@ -13,8 +13,19 @@ import { AssistenteChatComponent } from '../assistente-chat/assistente-chat';
   styleUrl: './veiculo-detalhe.scss'
 })
 export class VeiculoDetalheComponent implements OnInit {
-  parametros: any = { empresa_nome: 'Alvorada Veículos', logo_url: 'logo-alvorada-horizontal.png', telefone: '' };
+  parametros: any = {
+    empresa_nome: 'Alvorada Veículos',
+    logo_url: 'logo-alvorada-horizontal.png',
+    telefone: '',
+    loja_cor_primaria: '#f5c400',
+    loja_rodape_texto: 'Sistema de Gestão Alvorada',
+    loja_marca_dagua_ativa: false,
+    loja_marca_dagua_url: null,
+    loja_marca_dagua_opacidade: 30
+  };
   veiculo: any = null;
+  estatisticas: any = null;
+  estatisticasEscopo: 'modelo' | 'marca' | null = null;
   carregando = true;
   naoEncontrado = false;
   fotoAtual = 0;
@@ -33,14 +44,40 @@ export class VeiculoDetalheComponent implements OnInit {
     ]);
     if (parametros) this.parametros = { ...this.parametros, ...parametros };
     this.assistenteAtivo = assistenteAtivo;
+    this.atualizarFavicon(this.parametros.favicon_url);
 
     if (!veiculo) {
       this.naoEncontrado = true;
     } else {
       this.veiculo = veiculo;
       await this.checarFavorito();
+      await this.carregarEstatisticas();
     }
     this.carregando = false;
+  }
+
+  private atualizarFavicon(url: string) {
+    if (!url) return;
+    const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+    if (link) link.href = url;
+  }
+
+  // Tabela de valores comparando este veículo com outros anúncios do mesmo modelo — e, se o
+  // modelo tiver poucos (ou nenhum) outro anúncio, com os da mesma marca, pra sempre ter uma
+  // comparação útil em vez de "comparado com 1 anúncio: o próprio".
+  private async carregarEstatisticas() {
+    if (this.veiculo.modelo_id) {
+      const porModelo = await this.loja.estatisticas({ modelo_id: this.veiculo.modelo_id });
+      if (porModelo?.total > 1) {
+        this.estatisticasEscopo = 'modelo';
+        this.estatisticas = porModelo;
+        return;
+      }
+    }
+    if (this.veiculo.marca_id) {
+      this.estatisticasEscopo = 'marca';
+      this.estatisticas = await this.loja.estatisticas({ marca_id: this.veiculo.marca_id });
+    }
   }
 
   get clienteLogado() {

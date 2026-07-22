@@ -397,6 +397,18 @@ async function seed() {
       -- Valor FIPE automaticamente por marca/modelo/ano em vez de digitar manualmente.
       ALTER TABLE parametros ADD COLUMN IF NOT EXISTS invertexto_token VARCHAR(255);
 
+      -- Personalização visual da loja pública (vitrine): cor de destaque, textos do
+      -- hero/rodapé, grid ou lista na listagem, e marca d'água sobre as fotos dos veículos
+      -- (aplicada só visualmente no site — não altera os arquivos/URLs de foto originais).
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_cor_primaria VARCHAR(7) DEFAULT '#f5c400';
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_hero_titulo VARCHAR(200) DEFAULT 'Encontre o veículo ideal na Alvorada Veículos';
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_hero_subtitulo VARCHAR(200) DEFAULT 'Estoque atualizado, direto da loja.';
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_rodape_texto VARCHAR(200) DEFAULT 'Alvorada Veículos — Sistema de Gestão Alvorada';
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_estilo_lista VARCHAR(10) DEFAULT 'grid';
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_marca_dagua_ativa BOOLEAN DEFAULT false;
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_marca_dagua_url VARCHAR(255);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_marca_dagua_opacidade INTEGER DEFAULT 30;
+
       CREATE INDEX IF NOT EXISTS idx_marcas_tipo ON marcas(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_tipo ON modelos(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_marca ON modelos(marca_id);
