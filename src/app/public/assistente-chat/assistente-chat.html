@@ -1,0 +1,29 @@
+<button class="assistente-fab" type="button" (click)="toggle()" [attr.aria-label]="aberto ? 'Fechar assistente' : 'Abrir assistente'">
+  <span *ngIf="!aberto">💬</span>
+  <span *ngIf="aberto">✕</span>
+</button>
+
+<div class="assistente-painel" *ngIf="aberto">
+  <header class="assistente-header">
+    <strong>Assistente {{ nomeEmpresa }}</strong>
+    <span class="assistente-subtitulo">Pergunte sobre o estoque</span>
+  </header>
+
+  <div class="assistente-mensagens">
+    <div class="assistente-msg" [class.assistente-msg-user]="msg.role === 'user'" *ngFor="let msg of mensagens">
+      {{ msg.content }}
+    </div>
+    <div class="assistente-msg assistente-msg-loading" *ngIf="enviando">Digitando...</div>
+  </div>
+
+  <form class="assistente-form" (ngSubmit)="enviar()">
+    <input
+      type="text"
+      name="pergunta"
+      [(ngModel)]="pergunta"
+      placeholder="Ex: tem algum SUV automático?"
+      [disabled]="enviando"
+      autocomplete="off">
+    <button type="submit" [disabled]="enviando || !pergunta.trim()">Enviar</button>
+  </form>
+</div>

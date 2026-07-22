@@ -1,0 +1,55 @@
+<po-page-list
+  p-title="Publicidade (Anúncios da Loja)"
+  [p-actions]="actions"
+  [p-filter]="filterSettings">
+
+  <po-table
+    class="po-mt-1 po-mb-5"
+    p-sort="true"
+    [p-columns]="columns"
+    [p-items]="anuncios"
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
+    (p-show-more)="showMore()">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #anuncioModal
+  [p-title]="anuncio.id ? 'Editar Anúncio' : 'Novo Anúncio'"
+  p-size="md"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: anuncioModal.close.bind(anuncioModal) }">
+
+  <form #anuncioForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-12" name="titulo" [(ngModel)]="anuncio.titulo" p-label="Título" p-required></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-input class="po-md-12" name="link_url" [(ngModel)]="anuncio.link_url" p-label="Link (ao clicar no anúncio)" p-placeholder="https://..."></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-upload
+        class="po-md-12"
+        name="imagem_file"
+        p-label="Imagem do Anúncio"
+        p-url="/api/config/upload"
+        [p-headers]="uploadHeaders"
+        (p-success)="onUploadSuccess($event)">
+      </po-upload>
+    </div>
+    <div class="po-row po-mt-1" *ngIf="anuncio.imagem_url">
+      <img [src]="anuncio.imagem_url" style="max-width: 220px; border-radius: 4px;">
+    </div>
+
+    <div class="po-row po-mt-2">
+      <po-select class="po-md-4" name="posicao" [(ngModel)]="anuncio.posicao" p-label="Posição" [p-options]="posicaoOptions"></po-select>
+      <po-number class="po-md-4" name="ordem" [(ngModel)]="anuncio.ordem" p-label="Ordem de Exibição"></po-number>
+      <po-switch class="po-md-4" name="ativo" [(ngModel)]="anuncio.ativo" p-label="Ativo" p-label-on="Sim" p-label-off="Não"></po-switch>
+    </div>
+  </form>
+</po-modal>

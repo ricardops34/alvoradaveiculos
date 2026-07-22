@@ -1,0 +1,96 @@
+<div class="loja-page">
+  <header class="loja-header">
+    <div class="loja-header-inner">
+      <a routerLink="/" class="loja-logo-link">
+        <img class="loja-logo" [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome">
+      </a>
+      <div class="loja-header-acoes">
+        <a routerLink="/" class="loja-btn-ghost">← Voltar ao estoque</a>
+        <a routerLink="/auth/login" class="loja-btn-entrar">🔒 Entrar</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="detalhe-content" *ngIf="!carregando">
+    <p class="detalhe-nao-encontrado" *ngIf="naoEncontrado">
+      Veículo não encontrado ou não está mais disponível.
+      <a routerLink="/">Voltar ao estoque</a>
+    </p>
+
+    <div class="detalhe-layout" *ngIf="veiculo">
+      <div class="detalhe-galeria">
+        <div class="detalhe-foto-principal">
+          <img *ngIf="veiculo.fotos?.length" [src]="veiculo.fotos[fotoAtual]" [alt]="veiculo.marca_nome + ' ' + veiculo.modelo_nome">
+          <div class="detalhe-sem-foto" *ngIf="!veiculo.fotos?.length">Sem foto disponível</div>
+        </div>
+        <div class="detalhe-miniaturas" *ngIf="veiculo.fotos?.length > 1">
+          <button
+            type="button"
+            *ngFor="let foto of veiculo.fotos; let i = index"
+            [class.ativa]="i === fotoAtual"
+            (click)="fotoAtual = i">
+            <img [src]="foto" alt="">
+          </button>
+        </div>
+      </div>
+
+      <div class="detalhe-info">
+        <span class="detalhe-tipo">{{ veiculo.tipo_veiculo }}</span>
+        <h1>{{ veiculo.marca_nome }} {{ veiculo.modelo_nome }}</h1>
+        <p class="detalhe-versao" *ngIf="veiculo.versao">{{ veiculo.versao }}</p>
+
+        <div class="detalhe-meta">
+          <span>{{ veiculo.ano_fabricacao }}/{{ veiculo.ano_modelo }}</span>
+          <span>{{ veiculo.cor }}</span>
+          <span>{{ veiculo.quilometragem | number }} km</span>
+        </div>
+
+        <div class="detalhe-preco-linha">
+          <span class="detalhe-preco" *ngIf="precoVeiculo">{{ precoVeiculo | currency:'BRL' }}</span>
+          <span class="detalhe-preco detalhe-preco-consulta" *ngIf="!precoVeiculo">Consulte o valor</span>
+          <button type="button" class="detalhe-favorito" [class.ativo]="favorito" (click)="alternarFavorito()">
+            {{ favorito ? '★ Favoritado' : '☆ Favoritar' }}
+          </button>
+        </div>
+
+        <a class="detalhe-whatsapp" [href]="linkWhatsapp" target="_blank" rel="noopener">
+          💬 Tenho interesse — falar no WhatsApp
+        </a>
+
+        <section class="detalhe-secao" *ngIf="veiculo.opcionais?.length">
+          <h2>Opcionais</h2>
+          <div class="detalhe-opcionais">
+            <span *ngFor="let op of veiculo.opcionais">{{ op }}</span>
+          </div>
+        </section>
+
+        <section class="detalhe-secao" *ngIf="temFichaTecnica">
+          <h2>Ficha Técnica</h2>
+          <div class="detalhe-ficha">
+            <div *ngIf="veiculo.motor"><span>Motor</span><strong>{{ veiculo.motor }}</strong></div>
+            <div *ngIf="veiculo.potencia"><span>Potência</span><strong>{{ veiculo.potencia }}</strong></div>
+            <div *ngIf="veiculo.torque"><span>Torque</span><strong>{{ veiculo.torque }}</strong></div>
+            <div *ngIf="veiculo.cambio"><span>Câmbio</span><strong>{{ veiculo.cambio }}</strong></div>
+            <div *ngIf="veiculo.tracao"><span>Tração</span><strong>{{ veiculo.tracao }}</strong></div>
+            <div *ngIf="veiculo.consumo_cidade"><span>Consumo Cidade</span><strong>{{ veiculo.consumo_cidade }}</strong></div>
+            <div *ngIf="veiculo.consumo_estrada"><span>Consumo Estrada</span><strong>{{ veiculo.consumo_estrada }}</strong></div>
+            <div *ngIf="veiculo.porta_malas"><span>Porta-malas</span><strong>{{ veiculo.porta_malas }}</strong></div>
+            <div *ngIf="veiculo.tanque"><span>Tanque</span><strong>{{ veiculo.tanque }}</strong></div>
+          </div>
+        </section>
+
+        <section class="detalhe-secao" *ngIf="veiculo.observacoes">
+          <h2>Descrição</h2>
+          <p class="detalhe-observacoes">{{ veiculo.observacoes }}</p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="loja-footer">
+    <p>{{ parametros.empresa_nome }} — Sistema de Gestão Alvorada</p>
+  </footer>
+</div>
+
+<app-cliente-auth *ngIf="mostrarAuth" (fechar)="mostrarAuth = false" (autenticado)="onAutenticado()"></app-cliente-auth>
+<app-assistente-chat *ngIf="assistenteAtivo" [nomeEmpresa]="parametros.empresa_nome"></app-assistente-chat>

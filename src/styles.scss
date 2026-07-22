@@ -122,6 +122,26 @@ body.po-theme-dark {
   .po-table-row:hover {
     color: var(--color-neutral-dark-90) !important;
   }
+
+  /* Avisos (po-notification/toaster): o fundo é sempre um tom claro fixo (sucesso/erro/aviso),
+     independente do tema, mas o texto usava --font-color — que no dark vira quase branco,
+     ficando ilegível sobre o fundo claro. Força um texto escuro fixo aqui. */
+  .po-toaster-message {
+    color: #1a1a1a !important;
+  }
+
+  /* Autofill do navegador (Chrome/Edge) força fundo claro nos campos preenchidos/sugeridos
+     (telefone, e-mail, senha etc.), por cima do tema escuro — só dá pra sobrescrever via
+     box-shadow inset (o navegador bloqueia troca direta de background-color). */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--color-neutral-light-00) inset !important;
+    -webkit-text-fill-color: var(--color-neutral-dark-90) !important;
+    caret-color: var(--color-neutral-dark-90);
+    transition: background-color 5000s ease-in-out 0s;
+  }
 }
 
 /* Botão de troca de tema posicionado na toolbar */

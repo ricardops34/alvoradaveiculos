@@ -1,0 +1,144 @@
+<div class="loja-page">
+  <header class="loja-header">
+    <div class="loja-header-inner">
+      <img class="loja-logo" [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome">
+
+      <div class="loja-header-acoes">
+        <ng-container *ngIf="!clienteLogado">
+          <button type="button" class="loja-btn-ghost" (click)="mostrarAuth = true">☆ Favoritos</button>
+        </ng-container>
+        <ng-container *ngIf="clienteLogado">
+          <button type="button" class="loja-btn-ghost" (click)="mostrarFavoritos = !mostrarFavoritos">
+            ★ Favoritos ({{ favoritosIds.size }})
+          </button>
+          <button type="button" class="loja-btn-ghost" (click)="sair()">Sair ({{ clienteLogado.nome }})</button>
+        </ng-container>
+        <a routerLink="/auth/login" class="loja-btn-entrar">🔒 Entrar</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="loja-hero">
+    <div class="loja-hero-inner">
+      <h1>Encontre o veículo ideal na <strong>{{ parametros.empresa_nome }}</strong></h1>
+      <p>Estoque atualizado, direto da loja.</p>
+
+      <form class="loja-search" (ngSubmit)="buscar()">
+        <select name="tipo" [(ngModel)]="filtro.tipo_veiculo" (change)="buscar()">
+          <option value="">Tipo</option>
+          <option *ngFor="let t of tiposVeiculo" [value]="t">{{ t }}</option>
+        </select>
+        <select name="marca" [(ngModel)]="filtro.marca_id" (change)="onMarcaChange()">
+          <option value="">Marca</option>
+          <option *ngFor="let m of marcas" [value]="m.id">{{ m.nome }}</option>
+        </select>
+        <select name="modelo" [(ngModel)]="filtro.modelo_id" [disabled]="!filtro.marca_id" (change)="buscar()">
+          <option value="">Modelo</option>
+          <option *ngFor="let m of modelos" [value]="m.id">{{ m.nome }}</option>
+        </select>
+        <input type="text" name="texto" [(ngModel)]="filtro.texto" placeholder="Buscar por versão...">
+        <button type="submit">Buscar</button>
+      </form>
+    </div>
+  </section>
+
+  <main class="loja-content">
+    <div class="loja-layout">
+      <div class="loja-principal">
+        <ng-container *ngIf="mostrarFavoritos; else listaGeral">
+          <h2>Meus Favoritos</h2>
+          <div class="loja-grid" *ngIf="favoritosIds.size > 0">
+            <a class="loja-card" *ngFor="let v of veiculos" [routerLink]="['/veiculo', v.id]" [hidden]="!favoritosIds.has(v.id)">
+              <ng-container *ngTemplateOutlet="cardConteudo; context: { v: v }"></ng-container>
+            </a>
+          </div>
+          <p *ngIf="favoritosIds.size === 0" class="loja-vazio">Você ainda não favoritou nenhum veículo.</p>
+        </ng-container>
+
+        <ng-template #listaGeral>
+          <h2>Veículos em Destaque</h2>
+          <div class="loja-grid" *ngIf="!carregando && veiculos.length">
+            <a class="loja-card" *ngFor="let v of veiculos" [routerLink]="['/veiculo', v.id]">
+              <ng-container *ngTemplateOutlet="cardConteudo; context: { v: v }"></ng-container>
+            </a>
+          </div>
+          <p *ngIf="carregando" class="loja-vazio">Carregando veículos...</p>
+          <p *ngIf="!carregando && !veiculos.length" class="loja-vazio">Nenhum veículo encontrado.</p>
+
+          <button *ngIf="hasNext" type="button" class="loja-btn-carregar-mais" (click)="carregarMais()" [disabled]="carregandoMais">
+            {{ carregandoMais ? 'Carregando...' : 'Carregar mais' }}
+          </button>
+        </ng-template>
+
+        <section class="loja-noticias" *ngIf="noticias.length">
+          <h2>Notícias em Destaque</h2>
+          <div class="loja-noticias-grid">
+            <article class="loja-noticia-card" *ngFor="let n of noticias">
+              <img *ngIf="n.imagem_url" [src]="n.imagem_url" [alt]="n.titulo">
+              <div class="loja-noticia-body">
+                <h3>{{ n.titulo }}</h3>
+                <p>{{ n.resumo }}</p>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <aside class="loja-sidebar">
+        <div class="loja-widget" *ngIf="estatisticas?.total > 0">
+          <h3>Tabela de Valores</h3>
+          <div class="loja-valor-linha">
+            <span>Maior valor anunciado</span>
+            <strong>{{ estatisticas.maior | currency:'BRL' }}</strong>
+          </div>
+          <div class="loja-valor-linha">
+            <span>Valor médio anunciado</span>
+            <strong>{{ estatisticas.media | currency:'BRL' }}</strong>
+          </div>
+          <div class="loja-valor-linha">
+            <span>Menor valor anunciado</span>
+            <strong>{{ estatisticas.menor | currency:'BRL' }}</strong>
+          </div>
+        </div>
+
+        <div class="loja-widget loja-anuncio" *ngFor="let anuncio of anuncios">
+          <a [href]="anuncio.link_url || null" target="_blank" rel="noopener">
+            <img *ngIf="anuncio.imagem_url" [src]="anuncio.imagem_url" [alt]="anuncio.titulo">
+            <span>{{ anuncio.titulo }}</span>
+          </a>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="loja-footer">
+    <p>{{ parametros.empresa_nome }} — Sistema de Gestão Alvorada</p>
+  </footer>
+</div>
+
+<app-cliente-auth *ngIf="mostrarAuth" (fechar)="mostrarAuth = false" (autenticado)="onAutenticado()"></app-cliente-auth>
+<app-assistente-chat *ngIf="assistenteAtivo" [nomeEmpresa]="parametros.empresa_nome"></app-assistente-chat>
+
+<ng-template #cardConteudo let-v="v">
+  <div class="loja-card-photo">
+    <img *ngIf="v.fotos?.length" [src]="v.fotos[0]" [alt]="v.marca_nome + ' ' + v.modelo_nome">
+    <div class="loja-card-sem-foto" *ngIf="!v.fotos?.length">Sem foto</div>
+    <button type="button" class="loja-card-favorito" [class.ativo]="favoritosIds.has(v.id)" (click)="alternarFavorito(v, $event)">
+      {{ favoritosIds.has(v.id) ? '★' : '☆' }}
+    </button>
+  </div>
+  <div class="loja-card-body">
+    <span class="loja-card-title">{{ v.marca_nome }} {{ v.modelo_nome }}</span>
+    <span class="loja-card-version" *ngIf="v.versao">{{ v.versao }}</span>
+    <div class="loja-card-meta">
+      <span>{{ v.ano_fabricacao }}/{{ v.ano_modelo }}</span>
+      <span>{{ v.quilometragem | number }} km</span>
+    </div>
+    <span class="loja-card-price" *ngIf="v.valor_avaliacao || v.valor_fipe">
+      {{ (v.valor_avaliacao || v.valor_fipe) | currency:'BRL' }}
+    </span>
+    <span class="loja-card-price loja-card-price-consulta" *ngIf="!v.valor_avaliacao && !v.valor_fipe">
+      Consulte o valor
+    </span>
+  </div>
+</ng-template>

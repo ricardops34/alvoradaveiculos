@@ -26,6 +26,10 @@ import cautelaresRoutes from './routes/cautelares';
 import backupRoutes from './routes/backup';
 import opcionaisRoutes from './routes/opcionais';
 import localizacaoRoutes from './routes/localizacao';
+import lojaRoutes from './routes/loja';
+import publicidadeRoutes from './routes/publicidade';
+import noticiasRoutes from './routes/noticias';
+import fichasTecnicasRoutes from './routes/fichas-tecnicas';
 
 dotenv.config();
 
@@ -65,6 +69,15 @@ app.use('/api/opcionais', authMiddleware, requireRotina('veiculos'), opcionaisRo
 // de Pessoas e Configurações independente do perfil); só a sincronização com o IBGE exige admin
 // (checado dentro da própria rota — ver localizacao.ts).
 app.use('/api/localizacao', authMiddleware, localizacaoRoutes);
+// Loja pública (vitrine de veículos publicados) — sem autenticação, protegida internamente por
+// só expor campos seguros e veículos marcados como publicado (ver loja.ts). Inclui login/cadastro
+// de Clientes (autenticação própria, separada da de usuários do CRM).
+app.use('/api/loja', lojaRoutes);
+// Conteúdo da loja pública gerenciado pela equipe (admin) — anúncios/banners, notícias e fichas
+// técnicas de modelo. Fichas técnicas usa a rotina de veículos (mesmo padrão de Marcas/Modelos).
+app.use('/api/publicidade', authMiddleware, requireAdmin, publicidadeRoutes);
+app.use('/api/noticias', authMiddleware, requireAdmin, noticiasRoutes);
+app.use('/api/fichas-tecnicas', authMiddleware, requireRotina('veiculos'), fichasTecnicasRoutes);
 // /api/config protege cada rota individualmente (GET /parametros fica público para a tela de login,
 // o resto exige perfil Administrador — ver config.ts)
 app.use('/api/config', configRoutes);

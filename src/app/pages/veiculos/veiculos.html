@@ -34,6 +34,27 @@
   </form>
 </po-modal>
 
+<!-- Modal de Busca na Tabela FIPE (Invertexto) -->
+<po-modal #fipeModal
+  p-title="Buscar Valor na Tabela FIPE"
+  p-size="md"
+  [p-primary-action]="{ label: 'Usar este valor', action: aplicarValorFipe.bind(this), disabled: !fipeSelecionado.preco }"
+  [p-secondary-action]="{ label: 'Cancelar', action: fipeModal.close.bind(fipeModal) }">
+
+  <div class="po-row">
+    <po-select class="po-md-12" name="fipe_marca" [(ngModel)]="fipeSelecionado.marca_id" p-label="Marca" [p-options]="fipeMarcasOptions" [p-loading]="fipeCarregando" (p-change)="onFipeMarcaChange()"></po-select>
+  </div>
+  <div class="po-row po-mt-2">
+    <po-select class="po-md-12" name="fipe_modelo" [(ngModel)]="fipeSelecionado.modelo_id" p-label="Modelo" [p-options]="fipeModelosOptions" [p-disabled]="!fipeSelecionado.marca_id" (p-change)="onFipeModeloChange()"></po-select>
+  </div>
+  <div class="po-row po-mt-2">
+    <po-select class="po-md-12" name="fipe_ano" [(ngModel)]="fipeSelecionado.ano_id" p-label="Ano" [p-options]="fipeAnosOptions" [p-disabled]="!fipeSelecionado.modelo_id" (p-change)="onFipeAnoChange()"></po-select>
+  </div>
+  <div class="po-row po-mt-2" *ngIf="fipeSelecionado.preco">
+    <po-info class="po-md-12" p-label="Valor Encontrado" [p-value]="fipeSelecionado.preco"></po-info>
+  </div>
+</po-modal>
+
 <!-- Modal de Busca Avançada -->
 <po-modal #advancedFilterModal 
   p-title="Busca Avançada"
@@ -197,7 +218,21 @@
     <div class="po-row">
       <po-info class="po-md-3" p-label="Status Atual" [p-value]="vehicle.status"></po-info>
       <po-decimal class="po-md-3" name="valor_avaliacao" [(ngModel)]="vehicle.valor_avaliacao" p-label="Valor de Avaliação" p-decimals="2"></po-decimal>
-      <po-decimal class="po-md-3" name="valor_fipe" [(ngModel)]="vehicle.valor_fipe" p-label="Valor FIPE" p-decimals="2"></po-decimal>
+      <div class="po-md-3" style="display: flex; gap: 8px;">
+        <po-decimal style="flex: 1" name="valor_fipe" [(ngModel)]="vehicle.valor_fipe" p-label="Valor FIPE" p-decimals="2"></po-decimal>
+        <div style="display: flex; align-items: flex-end; padding-bottom: 8px;">
+          <po-button p-kind="secondary" p-icon="an an-magnifying-glass" p-tooltip="Buscar na Tabela FIPE" (p-click)="abrirBuscaFipe()"></po-button>
+        </div>
+      </div>
+      <po-switch
+        class="po-md-3"
+        name="publicado"
+        [(ngModel)]="vehicle.publicado"
+        p-label="Publicar no Site"
+        p-label-on="Sim"
+        p-label-off="Não"
+        p-help="Exibe este veículo na loja pública (site), usando o Valor de Avaliação como preço.">
+      </po-switch>
     </div>
 
     <po-divider p-label="Fotos do Veículo"></po-divider>

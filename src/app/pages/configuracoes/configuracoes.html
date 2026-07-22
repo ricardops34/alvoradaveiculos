@@ -310,4 +310,69 @@
     </div>
   </div>
 
+  <div class="po-row po-mt-2">
+    <div class="po-md-12">
+      <po-widget p-title="Loja Pública (Vitrine de Veículos)">
+        <p class="po-font-text-smaller po-mb-2">
+          Quando ativa, a raiz do sistema ("/") abre a vitrine pública com os veículos marcados como
+          "Publicar no Site" (cadastro de Veículos). Quando desativada, a raiz vai direto para a tela
+          de login, como sempre foi.
+        </p>
+        <form #formLoja="ngForm">
+          <div class="po-row">
+            <po-switch class="po-md-4" name="loja_ativa" [(ngModel)]="parametros.loja_ativa" p-label="Loja Pública Ativa" p-label-on="Ativa" p-label-off="Desativada"></po-switch>
+            <po-input class="po-md-8" name="telefone_contato" [(ngModel)]="parametros.telefone" p-label="Telefone de Contato (WhatsApp)" p-mask="(99) 99999-9999" p-no-autocomplete p-help="Exibido no botão 'Falar no WhatsApp' da página do veículo."></po-input>
+          </div>
+          <div class="po-row po-mt-1">
+            <po-button class="po-md-12" p-label="Salvar" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="loading" (p-click)="salvarParametros()"></po-button>
+          </div>
+        </form>
+      </po-widget>
+    </div>
+  </div>
+
+  <div class="po-row po-mt-2">
+    <div class="po-md-12">
+      <po-widget p-title="Assistente de IA (Grok)">
+        <p class="po-font-text-smaller po-mb-2">
+          Ícone de assistente na loja pública, que responde perguntas dos visitantes com base no
+          estoque publicado. Usa a API da xAI (Grok) — precisa de uma chave própria da sua conta na
+          xAI. O ícone só aparece no site quando estiver ativo e com a chave configurada.
+        </p>
+        <form #formGrok="ngForm">
+          <div class="po-row">
+            <po-switch class="po-md-4" name="grok_ativo" [(ngModel)]="parametros.grok_ativo" p-label="Assistente Ativo" p-label-on="Sim" p-label-off="Não"></po-switch>
+            <po-password class="po-md-8" name="grok_api_key" [(ngModel)]="parametros.grok_api_key" p-label="Chave da API (xAI/Grok)"
+              [p-help]="parametros.grok_api_key_definida ? 'Já configurada. Deixe em branco para manter.' : 'Obtida em console.x.ai'">
+            </po-password>
+          </div>
+          <div class="po-row po-mt-1">
+            <po-button class="po-md-12" p-label="Salvar" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="loading" (p-click)="salvarParametros()"></po-button>
+          </div>
+        </form>
+      </po-widget>
+    </div>
+  </div>
+
+  <div class="po-row po-mt-2">
+    <div class="po-md-12">
+      <po-widget p-title="Tabela FIPE (Invertexto)">
+        <p class="po-font-text-smaller po-mb-2">
+          Token da API da Invertexto, usado no cadastro de Veículos para buscar o Valor FIPE por
+          marca/modelo/ano em vez de digitar manualmente.
+        </p>
+        <form #formFipe="ngForm">
+          <div class="po-row">
+            <po-password class="po-md-12" name="invertexto_token" [(ngModel)]="parametros.invertexto_token" p-label="Token da API"
+              [p-help]="parametros.invertexto_token_definido ? 'Já configurado. Deixe em branco para manter.' : 'Obtido em invertexto.com'">
+            </po-password>
+          </div>
+          <div class="po-row po-mt-1">
+            <po-button class="po-md-12" p-label="Salvar" p-kind="primary" p-icon="an an-floppy-disk" [p-loading]="loading" (p-click)="salvarParametros()"></po-button>
+          </div>
+        </form>
+      </po-widget>
+    </div>
+  </div>
+
 </po-page-default>

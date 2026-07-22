@@ -151,12 +151,13 @@ router.post('/importar-marcas-modelos', authMiddleware, requireAdmin, async (req
   }
 });
 
-// GET - Buscar parâmetros públicos (usado pela tela de login, sem autenticação — por isso só
-// expõe o estritamente necessário para montar a tela: nunca dados da empresa/RENAVE ou segredos).
+// GET - Buscar parâmetros públicos (usado pela tela de login e pela loja pública, sem
+// autenticação — por isso só expõe o estritamente necessário: nunca dados da empresa/RENAVE ou
+// segredos). `loja_ativa` decide se a raiz do sistema abre a vitrine pública ou o login direto.
 router.get('/parametros', async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT empresa_nome, favicon_url, logo_url, background_url FROM parametros WHERE id = 1'
+      'SELECT empresa_nome, favicon_url, logo_url, background_url, telefone, loja_ativa FROM parametros WHERE id = 1'
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -175,7 +176,10 @@ router.get('/parametros/completo', authMiddleware, requireAdmin, async (_req: Re
              renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo,
              (renave_certificado_senha IS NOT NULL AND renave_certificado_senha <> '') as renave_certificado_senha_definida,
              smtp_host, smtp_port, smtp_user, smtp_from,
-             (smtp_pass IS NOT NULL AND smtp_pass <> '') as smtp_pass_definida
+             (smtp_pass IS NOT NULL AND smtp_pass <> '') as smtp_pass_definida,
+             telefone, loja_ativa, grok_ativo,
+             (grok_api_key IS NOT NULL AND grok_api_key <> '') as grok_api_key_definida,
+             (invertexto_token IS NOT NULL AND invertexto_token <> '') as invertexto_token_definido
       FROM parametros WHERE id = 1
     `);
     res.json(result.rows[0]);
@@ -192,7 +196,8 @@ router.put('/parametros', authMiddleware, requireAdmin, async (req: Request, res
       empresa_nome, favicon_url, logo_url, background_url,
       cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id,
       renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_senha,
-      smtp_host, smtp_port, smtp_user, smtp_from, smtp_pass
+      smtp_host, smtp_port, smtp_user, smtp_from, smtp_pass,
+      telefone, loja_ativa, grok_ativo, grok_api_key, invertexto_token
     } = req.body;
     const result = await pool.query(
       `UPDATE parametros
@@ -202,13 +207,17 @@ router.put('/parametros', authMiddleware, requireAdmin, async (req: Request, res
            renave_certificado_senha = COALESCE(NULLIF($16, ''), renave_certificado_senha),
            smtp_host = $17, smtp_port = $18, smtp_user = $19, smtp_from = $20,
            smtp_pass = COALESCE(NULLIF($21, ''), smtp_pass),
+           telefone = $22, loja_ativa = $23, grok_ativo = $24,
+           grok_api_key = COALESCE(NULLIF($25, ''), grok_api_key),
+           invertexto_token = COALESCE(NULLIF($26, ''), invertexto_token),
            updated_at = CURRENT_TIMESTAMP
        WHERE id = 1
-       RETURNING id, empresa_nome, favicon_url, logo_url, background_url, cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id, renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo, smtp_host, smtp_port, smtp_user, smtp_from`,
+       RETURNING id, empresa_nome, favicon_url, logo_url, background_url, cnpj, cep, logradouro, numero, complemento, bairro, pais_id, estado_id, municipio_id, renave_responsavel_nome, renave_responsavel_cpf, renave_certificado_nome_arquivo, smtp_host, smtp_port, smtp_user, smtp_from, telefone, loja_ativa, grok_ativo`,
       [empresa_nome, favicon_url, logo_url, background_url,
        cnpj || null, cep || null, logradouro || null, numero || null, complemento || null, bairro || null, pais_id || null, estado_id || null, municipio_id || null,
        renave_responsavel_nome || null, renave_responsavel_cpf || null, renave_certificado_senha || '',
-       smtp_host || null, smtp_port || null, smtp_user || null, smtp_from || null, smtp_pass || '']
+       smtp_host || null, smtp_port || null, smtp_user || null, smtp_from || null, smtp_pass || '',
+       telefone || null, !!loja_ativa, !!grok_ativo, grok_api_key || '', invertexto_token || '']
     );
     res.json(result.rows[0]);
   } catch (err) {

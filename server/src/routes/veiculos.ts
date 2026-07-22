@@ -2,10 +2,56 @@ import { Router, Request, Response } from 'express';
 import pool from '../db';
 import { createUploadMiddleware, deleteUploadedFile } from '../uploads';
 import { solicitarEntradaEstoque, solicitarSaidaEstoque, renaveEstaConfigurado } from '../services/renave';
+import { buscarMarcasFipe, buscarModelosFipe, buscarAnosFipe, buscarPrecoFipe } from '../services/fipe';
 
 const router = Router();
 
 const uploadFoto = createUploadMiddleware('veiculos');
+
+// Tabela FIPE (Invertexto) — busca assistida por marca/modelo/ano pra preencher o Valor FIPE no
+// cadastro sem digitar manualmente. Ver ATENÇÃO em services/fipe.ts sobre o contrato não testado.
+router.get('/fipe/marcas', async (req: Request, res: Response) => {
+  try {
+    const dados = await buscarMarcasFipe(String(req.query.tipo_veiculo || 'Carro'));
+    res.json(dados);
+  } catch (err: any) {
+    console.error('Erro ao buscar marcas FIPE:', err);
+    res.status(500).json({ error: err?.message || 'Erro ao buscar marcas na tabela FIPE.' });
+  }
+});
+
+router.get('/fipe/modelos', async (req: Request, res: Response) => {
+  try {
+    const { tipo_veiculo, marca_fipe_id } = req.query;
+    const dados = await buscarModelosFipe(String(tipo_veiculo || 'Carro'), String(marca_fipe_id));
+    res.json(dados);
+  } catch (err: any) {
+    console.error('Erro ao buscar modelos FIPE:', err);
+    res.status(500).json({ error: err?.message || 'Erro ao buscar modelos na tabela FIPE.' });
+  }
+});
+
+router.get('/fipe/anos', async (req: Request, res: Response) => {
+  try {
+    const { tipo_veiculo, marca_fipe_id, modelo_fipe_id } = req.query;
+    const dados = await buscarAnosFipe(String(tipo_veiculo || 'Carro'), String(marca_fipe_id), String(modelo_fipe_id));
+    res.json(dados);
+  } catch (err: any) {
+    console.error('Erro ao buscar anos FIPE:', err);
+    res.status(500).json({ error: err?.message || 'Erro ao buscar anos na tabela FIPE.' });
+  }
+});
+
+router.get('/fipe/preco', async (req: Request, res: Response) => {
+  try {
+    const { tipo_veiculo, marca_fipe_id, modelo_fipe_id, ano_fipe_id } = req.query;
+    const dados = await buscarPrecoFipe(String(tipo_veiculo || 'Carro'), String(marca_fipe_id), String(modelo_fipe_id), String(ano_fipe_id));
+    res.json(dados);
+  } catch (err: any) {
+    console.error('Erro ao buscar preço FIPE:', err);
+    res.status(500).json({ error: err?.message || 'Erro ao buscar preço na tabela FIPE.' });
+  }
+});
 
 async function getPessoaRenave(pessoaId: number | null) {
   if (!pessoaId) return null;
@@ -262,14 +308,14 @@ router.post('/', async (req: Request, res: Response) => {
     await client.query('BEGIN');
     const {
       placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, centro_custo_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais,
-      tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave
+      tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave, publicado
     } = req.body;
 
     const result = await client.query(
-      `INSERT INTO veiculos (placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais, tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32) RETURNING *`,
+      `INSERT INTO veiculos (placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais, tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave, publicado)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33) RETURNING *`,
       [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], chassi||null, renavam||null, valor_fipe||null, observacoes||null, opcionais||[],
-       tipo_crv||null, numero_crv||null, codigo_seguranca_crv||null, data_medicao_hodometro||null, nota_fiscal_compra_chave||null, nota_fiscal_venda_chave||null]
+       tipo_crv||null, numero_crv||null, codigo_seguranca_crv||null, data_medicao_hodometro||null, nota_fiscal_compra_chave||null, nota_fiscal_venda_chave||null, !!publicado]
     );
 
     const vehicle = result.rows[0];
@@ -308,7 +354,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const {
       placa, marca, modelo, marca_id, modelo_id, tipo_veiculo, versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda, data_compra, status, forma_compra, banco_id, fornecedor_id, cliente_id, fotos, chassi, renavam, valor_fipe, observacoes, opcionais,
-      tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave
+      tipo_crv, numero_crv, codigo_seguranca_crv, data_medicao_hodometro, nota_fiscal_compra_chave, nota_fiscal_venda_chave, publicado
     } = req.body;
 
     const oldResult = await client.query('SELECT quilometragem FROM veiculos WHERE id = $1', [id]);
@@ -321,10 +367,10 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     const result = await client.query(
       `UPDATE veiculos SET placa=$1, marca=$2, modelo=$3, marca_id=$4, modelo_id=$5, tipo_veiculo=$6, versao=$7, ano_fabricacao=$8, ano_modelo=$9, cor=$10, quilometragem=$11, valor_compra=$12, valor_avaliacao=$13, valor_venda=$14, data_compra=$15, status=$16, forma_compra=$17, banco_id=$18, fornecedor_id=$19, cliente_id=$20, fotos=$21, chassi=$22, renavam=$23, valor_fipe=$24, observacoes=$25, opcionais=$26,
-       tipo_crv=$27, numero_crv=$28, codigo_seguranca_crv=$29, data_medicao_hodometro=$30, nota_fiscal_compra_chave=$31, nota_fiscal_venda_chave=$32
-       WHERE id=$33 RETURNING *`,
+       tipo_crv=$27, numero_crv=$28, codigo_seguranca_crv=$29, data_medicao_hodometro=$30, nota_fiscal_compra_chave=$31, nota_fiscal_venda_chave=$32, publicado=$33
+       WHERE id=$34 RETURNING *`,
       [placa, marca, modelo, marca_id||null, modelo_id||null, tipo_veiculo||'Carro', versao, ano_fabricacao, ano_modelo, cor, quilometragem, valor_compra, valor_avaliacao, valor_venda||null, data_compra, status||'Estoque', forma_compra||'Troca', banco_id||null, fornecedor_id||null, cliente_id||null, fotos||[], chassi||null, renavam||null, valor_fipe||null, observacoes||null, opcionais||[],
-       tipo_crv||null, numero_crv||null, codigo_seguranca_crv||null, data_medicao_hodometro||null, nota_fiscal_compra_chave||null, nota_fiscal_venda_chave||null, id]
+       tipo_crv||null, numero_crv||null, codigo_seguranca_crv||null, data_medicao_hodometro||null, nota_fiscal_compra_chave||null, nota_fiscal_venda_chave||null, !!publicado, id]
     );
 
     if (quilometragem !== undefined && quilometragem !== null && Number(quilometragem) !== Number(oldKm)) {

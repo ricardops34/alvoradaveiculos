@@ -41,4 +41,6 @@ export interface Vehicle {
   nota_fiscal_venda_chave?: string;
   renave_id_estoque?: string;
   renave_status?: string;
+  // Loja pública: exibe este veículo na vitrine pública (site) quando marcado
+  publicado?: boolean;
 }

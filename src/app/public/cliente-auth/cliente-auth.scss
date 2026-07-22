@@ -1,0 +1,123 @@
+:host {
+  --yellow: #f5c400;
+  --yellow-light: #ffdb3d;
+}
+
+.cliente-auth-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(5, 6, 8, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.cliente-auth-modal {
+  position: relative;
+  width: min(480px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+  border-radius: 16px;
+  background: #16171c;
+  border: 1px solid rgba(245, 196, 0, 0.25);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  color: #fff;
+}
+
+.cliente-auth-fechar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  background: #232530;
+  color: #aaa;
+  cursor: pointer;
+}
+
+h2 {
+  margin: 0 0 4px;
+}
+
+.cliente-auth-subtitulo {
+  margin: 0 0 20px;
+  color: #96989f;
+  font-size: 14px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #d9dae0;
+}
+
+input {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #3b3d44;
+  background: #1a1b20;
+  color: #fff;
+  font-size: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 2px rgba(245, 196, 0, 0.14);
+}
+
+.cliente-auth-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.cliente-auth-erro {
+  margin: -6px 0 14px;
+  color: #ff6b6b;
+  font-size: 13px;
+}
+
+.cliente-auth-btn-primario {
+  width: 100%;
+  padding: 13px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--yellow-light), var(--yellow));
+  color: #111;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.cliente-auth-btn-primario:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.cliente-auth-troca {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #96989f;
+}
+
+.cliente-auth-troca a {
+  color: var(--yellow-light);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .cliente-auth-linha {
+    grid-template-columns: 1fr;
+  }
+}

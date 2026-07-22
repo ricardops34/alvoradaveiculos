@@ -1,0 +1,54 @@
+<po-page-list
+  p-title="Fichas Técnicas"
+  [p-actions]="actions">
+
+  <po-table
+    class="po-mt-1 po-mb-5"
+    p-sort="true"
+    [p-columns]="columns"
+    [p-items]="fichas"
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
+    (p-show-more)="showMore()">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #fichaModal
+  [p-title]="ficha.id ? 'Editar Ficha Técnica' : 'Nova Ficha Técnica'"
+  p-size="lg"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: fichaModal.close.bind(fichaModal) }">
+
+  <form #fichaForm="ngForm">
+    <div class="po-row">
+      <po-select class="po-md-6" name="marca" [(ngModel)]="marcaSelecionada" p-label="Marca" [p-options]="marcasOptions" p-required (p-change)="updateModelosOptions()"></po-select>
+      <po-select class="po-md-6" name="modelo_id" [(ngModel)]="ficha.modelo_id" p-label="Modelo" [p-options]="modelosOptions" [p-disabled]="!marcaSelecionada" p-required></po-select>
+    </div>
+
+    <po-divider p-label="Motor e Desempenho"></po-divider>
+    <div class="po-row">
+      <po-input class="po-md-4" name="motor" [(ngModel)]="ficha.motor" p-label="Motor" p-placeholder="1.0 Turbo Flex"></po-input>
+      <po-input class="po-md-4" name="potencia" [(ngModel)]="ficha.potencia" p-label="Potência" p-placeholder="116 cv"></po-input>
+      <po-input class="po-md-4" name="torque" [(ngModel)]="ficha.torque" p-label="Torque" p-placeholder="16,8 kgfm"></po-input>
+    </div>
+    <div class="po-row">
+      <po-input class="po-md-4" name="cambio" [(ngModel)]="ficha.cambio" p-label="Câmbio" p-placeholder="Automático CVT"></po-input>
+      <po-input class="po-md-4" name="tracao" [(ngModel)]="ficha.tracao" p-label="Tração" p-placeholder="Dianteira"></po-input>
+      <po-input class="po-md-4" name="tanque" [(ngModel)]="ficha.tanque" p-label="Tanque" p-placeholder="52 litros"></po-input>
+    </div>
+
+    <po-divider p-label="Consumo e Capacidade"></po-divider>
+    <div class="po-row">
+      <po-input class="po-md-4" name="consumo_cidade" [(ngModel)]="ficha.consumo_cidade" p-label="Consumo Cidade" p-placeholder="10,5 km/l"></po-input>
+      <po-input class="po-md-4" name="consumo_estrada" [(ngModel)]="ficha.consumo_estrada" p-label="Consumo Estrada" p-placeholder="12,8 km/l"></po-input>
+      <po-input class="po-md-4" name="porta_malas" [(ngModel)]="ficha.porta_malas" p-label="Porta-malas" p-placeholder="303 litros"></po-input>
+    </div>
+
+    <div class="po-row">
+      <po-textarea class="po-md-12" name="observacoes" [(ngModel)]="ficha.observacoes" p-label="Observações"></po-textarea>
+    </div>
+  </form>
+</po-modal>

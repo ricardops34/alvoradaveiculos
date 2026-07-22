@@ -31,6 +31,7 @@ import { PessoasLookupService, BancosLookupService, CentrosCustoLookupService } 
 })
 export class VeiculosComponent implements OnInit {
   @ViewChild('vehicleModal', { static: true }) vehicleModal!: PoModalComponent;
+  @ViewChild('fipeModal', { static: true }) fipeModal!: PoModalComponent;
   @ViewChild('statementModal', { static: true }) statementModal!: PoModalComponent;
   @ViewChild('sellModal', { static: true }) sellModal!: PoModalComponent;
   @ViewChild('historicoModal', { static: true }) historicoModal!: PoModalComponent;
@@ -211,7 +212,11 @@ export class VeiculosComponent implements OnInit {
     { property: 'renave_status', label: 'RENAVE', type: 'label', labels: [
       { value: 'Enviado', color: 'color-10', label: 'Enviado' },
       { value: 'Aprovado', color: 'color-10', label: 'Aprovado' }
-    ] }
+    ] },
+    { property: 'publicado', label: 'No Site', type: 'label', labels: [
+      { value: true, color: 'color-10', label: 'Publicado' },
+      { value: false, color: 'color-08', label: 'Não' }
+    ] as any }
   ];
 
   public readonly statementColumns: PoTableColumn[] = [
@@ -587,7 +592,8 @@ export class VeiculosComponent implements OnInit {
       status: 'Estoque',
       valor_compra: 0,
       opcionais: [],
-      fotos: []
+      fotos: [],
+      publicado: false
     };
   }
 
@@ -622,6 +628,92 @@ export class VeiculosComponent implements OnInit {
         const modelos = response?.items || response || [];
         this.modelosOptions = modelos.map((m: any) => ({ label: m.nome, value: m.id }));
       });
+    }
+  }
+
+  // Busca assistida na Tabela FIPE (Invertexto) — ver ATENÇÃO em server/src/services/fipe.ts
+  // sobre o contrato ainda não validado contra um token real.
+  fipeMarcasOptions: PoSelectOption[] = [];
+  fipeModelosOptions: PoSelectOption[] = [];
+  fipeAnosOptions: PoSelectOption[] = [];
+  fipeCarregando = false;
+  fipeSelecionado: any = { marca_id: null, modelo_id: null, ano_id: null, preco: null };
+
+  private extrairOpcoesFipe(resposta: any): PoSelectOption[] {
+    const items = Array.isArray(resposta) ? resposta : (resposta?.data || resposta?.items || resposta?.result || []);
+    return (items || []).map((i: any) => ({
+      label: i.name || i.nome || i.modelo || i.label || String(i.id ?? i.codigo ?? i.value ?? ''),
+      value: i.id ?? i.codigo ?? i.value
+    }));
+  }
+
+  async abrirBuscaFipe() {
+    this.fipeSelecionado = { marca_id: null, modelo_id: null, ano_id: null, preco: null };
+    this.fipeModelosOptions = [];
+    this.fipeAnosOptions = [];
+    this.fipeCarregando = true;
+    try {
+      const resposta = await firstValueFrom(this.db.http.get(`${this.db.apiUrl}/veiculos/fipe/marcas`, { params: { tipo_veiculo: this.vehicle.tipo_veiculo || 'Carro' } }));
+      this.fipeMarcasOptions = this.extrairOpcoesFipe(resposta);
+      this.fipeModal.open();
+    } catch (e: any) {
+      this.poNotification.error(e?.error?.error || 'Erro ao consultar a tabela FIPE. Verifique se o token está configurado em Configurações.');
+    } finally {
+      this.fipeCarregando = false;
+    }
+  }
+
+  async onFipeMarcaChange() {
+    this.fipeSelecionado.modelo_id = null;
+    this.fipeSelecionado.ano_id = null;
+    this.fipeSelecionado.preco = null;
+    this.fipeModelosOptions = [];
+    this.fipeAnosOptions = [];
+    if (!this.fipeSelecionado.marca_id) return;
+
+    const resposta = await firstValueFrom(this.db.http.get(`${this.db.apiUrl}/veiculos/fipe/modelos`, {
+      params: { tipo_veiculo: this.vehicle.tipo_veiculo || 'Carro', marca_fipe_id: this.fipeSelecionado.marca_id }
+    })).catch(() => null);
+    this.fipeModelosOptions = this.extrairOpcoesFipe(resposta);
+  }
+
+  async onFipeModeloChange() {
+    this.fipeSelecionado.ano_id = null;
+    this.fipeSelecionado.preco = null;
+    this.fipeAnosOptions = [];
+    if (!this.fipeSelecionado.modelo_id) return;
+
+    const resposta = await firstValueFrom(this.db.http.get(`${this.db.apiUrl}/veiculos/fipe/anos`, {
+      params: { tipo_veiculo: this.vehicle.tipo_veiculo || 'Carro', marca_fipe_id: this.fipeSelecionado.marca_id, modelo_fipe_id: this.fipeSelecionado.modelo_id }
+    })).catch(() => null);
+    this.fipeAnosOptions = this.extrairOpcoesFipe(resposta);
+  }
+
+  async onFipeAnoChange() {
+    this.fipeSelecionado.preco = null;
+    if (!this.fipeSelecionado.ano_id) return;
+
+    const resposta: any = await firstValueFrom(this.db.http.get(`${this.db.apiUrl}/veiculos/fipe/preco`, {
+      params: {
+        tipo_veiculo: this.vehicle.tipo_veiculo || 'Carro',
+        marca_fipe_id: this.fipeSelecionado.marca_id,
+        modelo_fipe_id: this.fipeSelecionado.modelo_id,
+        ano_fipe_id: this.fipeSelecionado.ano_id
+      }
+    })).catch(() => null);
+
+    const bruto = resposta?.price ?? resposta?.valor ?? resposta?.data?.price ?? resposta?.data?.valor ?? null;
+    if (typeof bruto === 'string') {
+      this.fipeSelecionado.preco = Number(bruto.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || null;
+    } else {
+      this.fipeSelecionado.preco = bruto;
+    }
+  }
+
+  aplicarValorFipe() {
+    if (this.fipeSelecionado.preco) {
+      this.vehicle.valor_fipe = this.fipeSelecionado.preco;
+      this.fipeModal.close();
     }
   }
 

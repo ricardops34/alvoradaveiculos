@@ -1,0 +1,92 @@
+<div class="cliente-auth-backdrop" (click)="fechar.emit()">
+  <div class="cliente-auth-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="cliente-auth-fechar" (click)="fechar.emit()" aria-label="Fechar">✕</button>
+
+    <ng-container *ngIf="modo === 'login'">
+      <h2>Minha Conta</h2>
+      <p class="cliente-auth-subtitulo">Entre para favoritar veículos e conversar com o assistente.</p>
+
+      <form (ngSubmit)="fazerLogin()">
+        <label>CPF</label>
+        <input type="text" name="cpf" [(ngModel)]="login.cpf" placeholder="000.000.000-00" required>
+
+        <label>Senha</label>
+        <input type="password" name="senha" [(ngModel)]="login.senha" required>
+
+        <p class="cliente-auth-erro" *ngIf="erro">{{ erro }}</p>
+
+        <button type="submit" class="cliente-auth-btn-primario" [disabled]="carregando">
+          {{ carregando ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </form>
+
+      <p class="cliente-auth-troca">
+        Novo por aqui? <a (click)="modo = 'cadastro'; erro = ''">Crie uma conta</a>
+      </p>
+    </ng-container>
+
+    <ng-container *ngIf="modo === 'cadastro'">
+      <h2>Criar Conta</h2>
+      <p class="cliente-auth-subtitulo">Leva menos de um minuto.</p>
+
+      <form (ngSubmit)="fazerCadastro()">
+        <label>Nome completo</label>
+        <input type="text" name="nome" [(ngModel)]="cadastro.nome" required>
+
+        <div class="cliente-auth-linha">
+          <div>
+            <label>CPF</label>
+            <input type="text" name="cadCpf" [(ngModel)]="cadastro.cpf" placeholder="000.000.000-00" required>
+          </div>
+          <div>
+            <label>Data de nascimento</label>
+            <input type="date" name="dataNascimento" [(ngModel)]="cadastro.data_nascimento">
+          </div>
+        </div>
+
+        <div class="cliente-auth-linha">
+          <div>
+            <label>Telefone principal</label>
+            <input type="text" name="telefone" [(ngModel)]="cadastro.telefone" placeholder="(00) 00000-0000">
+          </div>
+          <div>
+            <label>Telefone secundário (opcional)</label>
+            <input type="text" name="telefoneSecundario" [(ngModel)]="cadastro.telefone_secundario" placeholder="(00) 00000-0000">
+          </div>
+        </div>
+
+        <div class="cliente-auth-linha">
+          <div>
+            <label>E-mail</label>
+            <input type="email" name="email" [(ngModel)]="cadastro.email" required>
+          </div>
+          <div>
+            <label>Confirmar e-mail</label>
+            <input type="email" name="emailConfirma" [(ngModel)]="cadastro.email_confirma" required>
+          </div>
+        </div>
+
+        <div class="cliente-auth-linha">
+          <div>
+            <label>Senha</label>
+            <input type="password" name="senhaCad" [(ngModel)]="cadastro.senha" required>
+          </div>
+          <div>
+            <label>Confirmar senha</label>
+            <input type="password" name="senhaConfirma" [(ngModel)]="cadastro.senha_confirma" required>
+          </div>
+        </div>
+
+        <p class="cliente-auth-erro" *ngIf="erro">{{ erro }}</p>
+
+        <button type="submit" class="cliente-auth-btn-primario" [disabled]="carregando">
+          {{ carregando ? 'Criando conta...' : 'Cadastrar' }}
+        </button>
+      </form>
+
+      <p class="cliente-auth-troca">
+        Já tem conta? <a (click)="modo = 'login'; erro = ''">Entrar</a>
+      </p>
+    </ng-container>
+  </div>
+</div>

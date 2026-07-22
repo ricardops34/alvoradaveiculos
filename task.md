@@ -98,6 +98,26 @@ Título em aberto (`status = Pendente`) que só vira lançamento de Banco/Caixa 
 - [x] Veículo recebido entra automaticamente no estoque (`status = Estoque`, `forma_compra = Troca`).
 - [x] Comissão do vendedor lançada mesmo em vendas por Troca (usa o Caixa como conta quando não há banco real envolvido).
 
+### 🏪 Loja Pública (site de vendas) — (21/07)
+Nova vitrine pública de veículos, inspirada em portais como ShopCar, mantendo a identidade visual (dark + amarelo) da tela de login. Não usa PO-UI (kit voltado pro CRM interno) — componentes Angular próprios, responsivos.
+- [x] **Veículos**: novo campo `publicado` (switch "Publicar no Site" no cadastro, ao lado de Valor de Avaliação) — só aparece na loja o veículo marcado, com status Estoque/Preparação.
+- [x] **API pública** (`server/src/routes/loja.ts`, sem autenticação): `GET /veiculos` (lista com filtro por tipo/marca/modelo/texto), `GET /veiculos/:id` (detalhe, com ficha técnica), `GET /veiculos/estatisticas` (maior/média/menor valor anunciado), `GET /marcas`/`GET /modelos`. Expõe só campos seguros — nunca custo de aquisição, placa, chassi/renavam, fornecedor/cliente ou dados do RENAVE.
+- [x] **Tela inicial** (`/`, `LandingComponent`): header com logo e botão "Entrar" (`/auth/login`) no canto, busca por Tipo/Marca/Modelo/texto, grid de veículos com foto/preço, sidebar com "Tabela de Valores" e espaço de Publicidade, seção de Notícias, botão de favoritar.
+- [x] **Página do veículo** (`/veiculo/:id`, `VeiculoDetalheComponent`): galeria de fotos, opcionais, ficha técnica (quando cadastrada), descrição, botão "Falar no WhatsApp" (usa o telefone cadastrado em Configurações) e favoritar.
+- [x] **Interruptor Loja Ativa** (Configurações): controla se a raiz do sistema ("/") abre a loja pública ou vai direto pro login — desligado por padrão, então instalações existentes continuam como sempre foram. Implementado via `lojaGuard` (`CanActivate`) consultando `GET /api/config/parametros` (agora também público quanto a isso).
+- [x] **Cadastro de Publicidade** (`/home/publicidade`, admin): anúncios/banners com imagem, link, posição (lateral/topo/rodapé) e ordem — exibidos na loja.
+- [x] **Cadastro de Notícias** (`/home/noticias`, admin): título, resumo, conteúdo, imagem — seção "Notícias em Destaque" na loja.
+- [x] **Fichas Técnicas** (`/home/fichas-tecnicas`, sub-item de Veículos): motor, potência, torque, câmbio, tração, consumo, porta-malas, tanque — vinculada ao Modelo (não ao veículo específico), reaproveitada por todos os veículos daquele modelo na página pública.
+- [x] **Cadastro de Cliente + Favoritos**: autenticação própria da loja (login por CPF, separada dos usuários do CRM) — `clientes`/`favoritos` no banco, JWT próprio (`auth-cliente.ts`), modal de login/cadastro no estilo do portal de referência (nome, CPF, nascimento, telefones, e-mail, senha). Cliente logado pode favoritar veículos na listagem e na página de detalhe.
+- [x] **Assistente de IA (Grok/xAI)**: ícone flutuante na loja pública, só aparece quando configurado (`grok_ativo` + chave da API preenchidos em Configurações). Responde com base no estoque publicado + ficha técnica (nunca inventa veículo fora do estoque). Chave da API é por instalação (write-only em `parametros`, mesmo padrão do certificado do RENAVE), não variável de ambiente global.
+- [x] **Busca de Valor FIPE assistida** (cadastro de Veículos): botão ao lado de "Valor FIPE" abre busca em cascata (Marca → Modelo → Ano) via API da Invertexto, preenchendo o campo automaticamente.
+  - ⚠️ **Importante**: assim como o RENAVE, os clientes do Grok (`services/grok.ts`) e da tabela FIPE/Invertexto (`services/fipe.ts`) foram implementados sem uma chave/token real para testar — a estrutura de chamada está pronta e documentada nos próprios arquivos, mas o formato exato de resposta de cada API só foi validado por documentação pública, nunca contra uma chamada real. Validar assim que houver credenciais.
+- [x] Validado de ponta a ponta contra um Postgres e servidor reais: migração de schema, publicar veículo → aparece na loja com ficha técnica, cadastro/login de Cliente por CPF, favoritar/listar favoritos, CRUD de Publicidade/Notícias e reflexo na loja, ativar Loja/Assistente via Configurações.
+
+### 🚧 Descoberto durante o trabalho acima (backlog, não implementado ainda)
+- [ ] **Comparador de anúncios**: tela lado a lado comparando 2+ veículos (foto, marca, modelo, valor, ano, cor, opcionais) — a API pública já permite montar isso (buscar vários `GET /veiculos/:id`), falta a tela.
+- [ ] Publicidade/Notícias/Fichas Técnicas ainda não têm upload de imagem testado end-to-end (usam o mesmo `po-upload` das demais telas, deve funcionar, mas não foi exercitado neste teste).
+
 ---
 
 ## 🚧 Em Andamento / Melhorias Imediatas

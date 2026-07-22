@@ -1,0 +1,58 @@
+<po-page-list
+  p-title="Notícias da Loja"
+  [p-actions]="actions"
+  [p-filter]="filterSettings">
+
+  <po-table
+    class="po-mt-1 po-mb-5"
+    p-sort="true"
+    [p-columns]="columns"
+    [p-items]="noticias"
+    [p-actions]="tableActions"
+    [p-show-more-disabled]="!hasNext"
+    [p-loading-show-more]="loadingShowMore"
+    [p-loading]="isLoading"
+    (p-show-more)="showMore()">
+  </po-table>
+
+</po-page-list>
+
+<po-modal #noticiaModal
+  [p-title]="noticia.id ? 'Editar Notícia' : 'Nova Notícia'"
+  p-size="lg"
+  [p-primary-action]="{ label: 'Salvar', action: save.bind(this), loading: isLoadingSave }"
+  [p-secondary-action]="{ label: 'Cancelar', action: noticiaModal.close.bind(noticiaModal) }">
+
+  <form #noticiaForm="ngForm">
+    <div class="po-row">
+      <po-input class="po-md-9" name="titulo" [(ngModel)]="noticia.titulo" p-label="Título" p-required></po-input>
+      <po-datepicker class="po-md-3" name="publicado_em" [(ngModel)]="noticia.publicado_em" p-label="Publicado em"></po-datepicker>
+    </div>
+
+    <div class="po-row">
+      <po-textarea class="po-md-12" name="resumo" [(ngModel)]="noticia.resumo" p-label="Resumo (exibido na loja)" p-rows="2"></po-textarea>
+    </div>
+
+    <div class="po-row">
+      <po-textarea class="po-md-12" name="conteudo" [(ngModel)]="noticia.conteudo" p-label="Conteúdo Completo" p-rows="6"></po-textarea>
+    </div>
+
+    <div class="po-row">
+      <po-upload
+        class="po-md-12"
+        name="imagem_file"
+        p-label="Imagem da Notícia"
+        p-url="/api/config/upload"
+        [p-headers]="uploadHeaders"
+        (p-success)="onUploadSuccess($event)">
+      </po-upload>
+    </div>
+    <div class="po-row po-mt-1" *ngIf="noticia.imagem_url">
+      <img [src]="noticia.imagem_url" style="max-width: 220px; border-radius: 4px;">
+    </div>
+
+    <div class="po-row po-mt-2">
+      <po-switch class="po-md-4" name="ativo" [(ngModel)]="noticia.ativo" p-label="Ativo" p-label-on="Sim" p-label-off="Não"></po-switch>
+    </div>
+  </form>
+</po-modal>

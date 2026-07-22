@@ -217,10 +217,78 @@ async function seed() {
         nome VARCHAR(100) NOT NULL UNIQUE
       );
 
+      -- Loja pública: anúncios/banners de publicidade exibidos na vitrine (ex: bloco lateral,
+      -- como em portais de veículos). 'posicao' permite ter mais de um slot no layout.
+      CREATE TABLE IF NOT EXISTS publicidade (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(150) NOT NULL,
+        imagem_url VARCHAR(255),
+        link_url VARCHAR(255),
+        posicao VARCHAR(30) NOT NULL DEFAULT 'lateral',
+        ativo BOOLEAN DEFAULT true,
+        ordem INTEGER DEFAULT 0
+      );
+
+      -- Loja pública: notícias/artigos exibidos na vitrine (ex: "Notícias em destaque")
+      CREATE TABLE IF NOT EXISTS noticias (
+        id SERIAL PRIMARY KEY,
+        titulo VARCHAR(200) NOT NULL,
+        resumo TEXT,
+        conteudo TEXT,
+        imagem_url VARCHAR(255),
+        ativo BOOLEAN DEFAULT true,
+        publicado_em DATE NOT NULL DEFAULT CURRENT_DATE
+      );
+
+      -- Ficha técnica: dados de fábrica do Modelo (motor, potência, câmbio, consumo etc.), distinto
+      -- do veículo específico em estoque — um Modelo (ex: "Onix LT") tem uma ficha só, reaproveitada
+      -- por todos os veículos daquele modelo. Exibida na página pública do veículo.
+      CREATE TABLE IF NOT EXISTS fichas_tecnicas (
+        id SERIAL PRIMARY KEY,
+        modelo_id INTEGER REFERENCES modelos(id) ON DELETE CASCADE UNIQUE,
+        motor VARCHAR(100),
+        potencia VARCHAR(50),
+        torque VARCHAR(50),
+        cambio VARCHAR(50),
+        tracao VARCHAR(50),
+        consumo_cidade VARCHAR(30),
+        consumo_estrada VARCHAR(30),
+        porta_malas VARCHAR(30),
+        tanque VARCHAR(30),
+        observacoes TEXT
+      );
+
+      -- Clientes: cadastro básico de quem acessa a loja pública (não é 'usuarios', que é da equipe
+      -- da loja) — usado para favoritar veículos e falar com o assistente. Login é por CPF (não
+      -- e-mail), autenticação própria e separada do CRM.
+      CREATE TABLE IF NOT EXISTS clientes (
+        id SERIAL PRIMARY KEY,
+        nome VARCHAR(200) NOT NULL,
+        cpf VARCHAR(14) NOT NULL UNIQUE,
+        data_nascimento DATE,
+        email VARCHAR(255) NOT NULL,
+        senha VARCHAR(255) NOT NULL,
+        telefone VARCHAR(20),
+        telefone_secundario VARCHAR(20),
+        estado_id INTEGER REFERENCES estados(id) ON DELETE SET NULL,
+        municipio_id INTEGER REFERENCES municipios(id) ON DELETE SET NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS favoritos (
+        id SERIAL PRIMARY KEY,
+        cliente_id INTEGER REFERENCES clientes(id) ON DELETE CASCADE,
+        veiculo_id INTEGER REFERENCES veiculos(id) ON DELETE CASCADE,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (cliente_id, veiculo_id)
+      );
+
       CREATE INDEX IF NOT EXISTS idx_estados_pais ON estados(pais_id);
       CREATE INDEX IF NOT EXISTS idx_municipios_estado ON municipios(estado_id);
       CREATE INDEX IF NOT EXISTS idx_km_historico_veiculo ON veiculo_km_historico(veiculo_id);
       CREATE INDEX IF NOT EXISTS idx_cautelares_veiculo ON cautelares(veiculo_id);
+      CREATE INDEX IF NOT EXISTS idx_publicidade_posicao ON publicidade(posicao);
+      CREATE INDEX IF NOT EXISTS idx_favoritos_cliente ON favoritos(cliente_id);
 
       INSERT INTO parametros (id, empresa_nome, favicon_url, logo_url, background_url)
       VALUES (1, 'Alvorada Veículos', 'favicon.ico', 'logo-alvorada-horizontal.png', 'fachada-alvorada-login-v2.png')
@@ -245,6 +313,10 @@ async function seed() {
       CREATE INDEX IF NOT EXISTS idx_veiculos_chassi ON veiculos(chassi);
       ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS renavam VARCHAR(20);
       ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS opcionais TEXT[] DEFAULT '{}';
+
+      -- Loja pública (vitrine): veículo só aparece no site público se marcado como publicado
+      -- (além de precisar estar com status Estoque/Preparação — ver server/src/routes/loja.ts).
+      ALTER TABLE veiculos ADD COLUMN IF NOT EXISTS publicado BOOLEAN DEFAULT false;
       ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS lead_status VARCHAR(30) DEFAULT 'Novo';
       ALTER TABLE pessoas ADD COLUMN IF NOT EXISTS comissao_percentual DECIMAL(5,2) DEFAULT 0;
 
@@ -306,6 +378,24 @@ async function seed() {
       ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_user VARCHAR(255);
       ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_pass VARCHAR(255);
       ALTER TABLE parametros ADD COLUMN IF NOT EXISTS smtp_from VARCHAR(255);
+
+      -- Loja pública (vitrine de veículos): telefone de contato (WhatsApp) exibido no site, e
+      -- interruptor que decide se a raiz do sistema ('/') abre a loja pública ou vai direto pro
+      -- login. Desligado por padrão — instalações existentes não ganham uma vitrine pública sem
+      -- o Administrador optar por isso.
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS telefone VARCHAR(20);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS loja_ativa BOOLEAN DEFAULT false;
+
+      -- Assistente de IA (Grok/xAI) da loja pública: chave por instalação (tenant), não variável
+      -- de ambiente global — cada loja usa sua própria conta/custo na xAI. Write-only como as
+      -- outras credenciais (certificado RENAVE, senha SMTP). O ícone de assistente só aparece no
+      -- site se 'grok_ativo' E a chave estiverem configurados.
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS grok_api_key VARCHAR(255);
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS grok_ativo BOOLEAN DEFAULT false;
+
+      -- Token da API Invertexto (tabela FIPE) — usado no cadastro de Veículos para buscar o
+      -- Valor FIPE automaticamente por marca/modelo/ano em vez de digitar manualmente.
+      ALTER TABLE parametros ADD COLUMN IF NOT EXISTS invertexto_token VARCHAR(255);
 
       CREATE INDEX IF NOT EXISTS idx_marcas_tipo ON marcas(tipo_veiculo);
       CREATE INDEX IF NOT EXISTS idx_modelos_tipo ON modelos(tipo_veiculo);

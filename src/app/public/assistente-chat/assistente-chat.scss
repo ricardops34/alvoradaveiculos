@@ -1,0 +1,136 @@
+:host {
+  --yellow: #f5c400;
+  --yellow-light: #ffdb3d;
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+}
+
+.assistente-fab {
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--yellow-light), var(--yellow));
+  color: #111;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(245, 196, 0, 0.35);
+  transition: transform 0.15s ease;
+}
+
+.assistente-fab:hover {
+  transform: scale(1.06);
+}
+
+.assistente-painel {
+  position: absolute;
+  right: 0;
+  bottom: 70px;
+  width: min(340px, calc(100vw - 40px));
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #111216;
+  border: 1px solid rgba(245, 196, 0, 0.28);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.assistente-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, var(--yellow-light), var(--yellow));
+  color: #111;
+}
+
+.assistente-subtitulo {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.assistente-mensagens {
+  flex: 1;
+  min-height: 160px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.assistente-msg {
+  align-self: flex-start;
+  max-width: 85%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #1e2027;
+  color: #e6e7ea;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.assistente-msg-user {
+  align-self: flex-end;
+  background: var(--yellow);
+  color: #111;
+}
+
+.assistente-msg-loading {
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.assistente-form {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.assistente-form input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #3b3d44;
+  background: #1a1b20;
+  color: #fff;
+  font-size: 13px;
+}
+
+.assistente-form input:focus {
+  outline: none;
+  border-color: var(--yellow);
+}
+
+.assistente-form button {
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--yellow);
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.assistente-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  :host {
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .assistente-painel {
+    width: calc(100vw - 24px);
+  }
+}

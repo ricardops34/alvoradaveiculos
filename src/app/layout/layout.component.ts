@@ -74,8 +74,20 @@ export class LayoutComponent implements OnInit {
       veiculoItems.push({ label: 'Gerenciar Veículos', link: '/home/veiculos', icon: 'an an-car' });
       veiculoItems.push({ label: 'Marcas e Modelos', link: '/home/marcas', icon: 'an an-tag' });
       veiculoItems.push({ label: 'Opcionais', link: '/home/opcionais', icon: 'an an-list-checks' });
+      veiculoItems.push({ label: 'Fichas Técnicas', link: '/home/fichas-tecnicas', icon: 'an an-file-text' });
 
       allMenus.push({ label: 'Veículos', icon: 'an an-car', shortLabel: 'Veículos', subItems: veiculoItems });
+    }
+
+    // Loja Pública (site de vendas) — administração de conteúdo, restrita ao Administrador
+    if (user.role === 'admin') {
+      allMenus.push({
+        label: 'Loja Pública', icon: 'an an-storefront', shortLabel: 'Loja',
+        subItems: [
+          { label: 'Publicidade', link: '/home/publicidade', icon: 'an an-megaphone' },
+          { label: 'Notícias', link: '/home/noticias', icon: 'an an-newspaper' }
+        ]
+      });
     }
 
     // Financeiro

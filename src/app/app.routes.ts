@@ -1,12 +1,18 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth-guard';
+import { lojaGuard } from './guards/loja-guard';
 import { LayoutComponent } from './layout/layout.component';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'home',
-    pathMatch: 'full'
+    canActivate: [lojaGuard],
+    loadComponent: () => import('./public/landing/landing').then(m => m.LandingComponent)
+  },
+  {
+    path: 'veiculo/:id',
+    canActivate: [lojaGuard],
+    loadComponent: () => import('./public/veiculo-detalhe/veiculo-detalhe').then(m => m.VeiculoDetalheComponent)
   },
   {
     path: 'auth',
@@ -50,6 +56,18 @@ export const routes: Routes = [
       {
         path: 'localizacao',
         loadComponent: () => import('./pages/localizacao/localizacao').then(m => m.LocalizacaoComponent)
+      },
+      {
+        path: 'fichas-tecnicas',
+        loadComponent: () => import('./pages/fichas-tecnicas/fichas-tecnicas').then(m => m.FichasTecnicasComponent)
+      },
+      {
+        path: 'publicidade',
+        loadComponent: () => import('./pages/publicidade/publicidade').then(m => m.PublicidadeComponent)
+      },
+      {
+        path: 'noticias',
+        loadComponent: () => import('./pages/noticias/noticias').then(m => m.NoticiasComponent)
       },
       {
         path: 'bancos',

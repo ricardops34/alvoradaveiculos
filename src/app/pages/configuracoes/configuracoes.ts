@@ -65,7 +65,14 @@ export class ConfiguracoesComponent implements OnInit {
     renave_responsavel_cpf: '',
     renave_certificado_nome_arquivo: '',
     renave_certificado_senha_definida: false,
-    renave_certificado_senha: ''
+    renave_certificado_senha: '',
+    telefone: '',
+    loja_ativa: false,
+    grok_ativo: false,
+    grok_api_key: '',
+    grok_api_key_definida: false,
+    invertexto_token: '',
+    invertexto_token_definido: false
   };
 
   backupsAutomaticos: any[] = [];
@@ -113,7 +120,7 @@ export class ConfiguracoesComponent implements OnInit {
   async carregarParametros() {
     try {
       const dados: any = await this.db.http.get('/api/config/parametros/completo').toPromise();
-      this.parametros = { ...this.parametros, ...dados, renave_certificado_senha: '', smtp_pass: '' };
+      this.parametros = { ...this.parametros, ...dados, renave_certificado_senha: '', smtp_pass: '', grok_api_key: '', invertexto_token: '' };
     } catch (e) {
       console.error('Erro ao carregar parâmetros', e);
     }
@@ -122,15 +129,23 @@ export class ConfiguracoesComponent implements OnInit {
   async salvarParametros() {
     const senhaFoiAlterada = !!this.parametros.renave_certificado_senha;
     const smtpSenhaFoiAlterada = !!this.parametros.smtp_pass;
+    const grokKeyFoiAlterada = !!this.parametros.grok_api_key;
+    const invertextoTokenFoiAlterado = !!this.parametros.invertexto_token;
     this.loading = true;
     try {
       const salvo: any = await this.db.http.put('/api/config/parametros', this.parametros).toPromise();
-      this.parametros = { ...this.parametros, ...salvo, renave_certificado_senha: '', smtp_pass: '' };
+      this.parametros = { ...this.parametros, ...salvo, renave_certificado_senha: '', smtp_pass: '', grok_api_key: '', invertexto_token: '' };
       if (senhaFoiAlterada) {
         this.parametros.renave_certificado_senha_definida = true;
       }
       if (smtpSenhaFoiAlterada) {
         this.parametros.smtp_pass_definida = true;
+      }
+      if (grokKeyFoiAlterada) {
+        this.parametros.grok_api_key_definida = true;
+      }
+      if (invertextoTokenFoiAlterado) {
+        this.parametros.invertexto_token_definido = true;
       }
       this.poNotification.success('Configurações salvas com sucesso!');
     } catch (e) {
