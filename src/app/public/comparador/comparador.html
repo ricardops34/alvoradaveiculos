@@ -1,0 +1,102 @@
+<div class="loja-page" [style.--primary]="parametros.loja_cor_primaria">
+  <header class="loja-header">
+    <div class="loja-header-inner">
+      <a routerLink="/" class="loja-logo-link">
+        <div class="loja-logo-badge">
+          <img class="loja-logo" [src]="parametros.logo_url || 'logo-alvorada-horizontal.png'" [alt]="parametros.empresa_nome">
+        </div>
+      </a>
+
+      <nav class="loja-nav">
+        <a routerLink="/" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }">Início</a>
+        <a routerLink="/noticias" routerLinkActive="ativo">Notícias</a>
+      </nav>
+
+      <div class="loja-header-acoes">
+        <a routerLink="/" class="loja-btn-ghost">← Voltar ao estoque</a>
+        <a routerLink="/auth/login" class="loja-btn-entrar">🔒 Entrar</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="comparador-content">
+    <h1>Comparador de Veículos</h1>
+
+    <p *ngIf="carregando" class="loja-vazio">Carregando comparação...</p>
+
+    <p *ngIf="!carregando && !veiculos.length" class="loja-vazio">
+      Nenhum veículo selecionado para comparar. <a routerLink="/">Volte ao estoque</a> e escolha até 4 veículos com o botão "⚖ Comparar".
+    </p>
+
+    <div class="comparador-tabela-wrap" *ngIf="!carregando && veiculos.length">
+      <table class="comparador-tabela">
+        <thead>
+          <tr>
+            <th class="comparador-coluna-label"></th>
+            <th *ngFor="let v of veiculos">
+              <button type="button" class="comparador-remover" (click)="remover(v.id)" title="Remover da comparação">✕</button>
+              <a [routerLink]="['/veiculo', v.id]" class="comparador-foto">
+                <img *ngIf="v.fotos?.length" [src]="v.fotos[0]" [alt]="v.marca_nome + ' ' + v.modelo_nome">
+                <div class="comparador-sem-foto" *ngIf="!v.fotos?.length">Sem foto</div>
+              </a>
+              <a [routerLink]="['/veiculo', v.id]" class="comparador-titulo">{{ v.marca_nome }} {{ v.modelo_nome }}</a>
+              <span class="comparador-versao" *ngIf="v.versao">{{ v.versao }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="comparador-coluna-label">Preço</td>
+            <td *ngFor="let v of veiculos">
+              <strong class="comparador-preco" *ngIf="precoVeiculo(v)">{{ precoVeiculo(v) | currency:'BRL' }}</strong>
+              <span *ngIf="!precoVeiculo(v)">Consulte o valor</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="comparador-coluna-label">Ano</td>
+            <td *ngFor="let v of veiculos">{{ v.ano_fabricacao }}/{{ v.ano_modelo }}</td>
+          </tr>
+          <tr>
+            <td class="comparador-coluna-label">Cor</td>
+            <td *ngFor="let v of veiculos">{{ v.cor || '—' }}</td>
+          </tr>
+          <tr>
+            <td class="comparador-coluna-label">Quilometragem</td>
+            <td *ngFor="let v of veiculos">{{ v.quilometragem ? (v.quilometragem | number) + ' km' : '—' }}</td>
+          </tr>
+          <tr>
+            <td class="comparador-coluna-label">Tipo</td>
+            <td *ngFor="let v of veiculos">{{ v.tipo_veiculo || '—' }}</td>
+          </tr>
+
+          <ng-container *ngIf="linhasFicha.length">
+            <tr class="comparador-secao">
+              <td [attr.colspan]="veiculos.length + 1">Ficha Técnica</td>
+            </tr>
+            <tr *ngFor="let linha of linhasFicha">
+              <td class="comparador-coluna-label">{{ linha.label }}</td>
+              <td *ngFor="let v of veiculos">{{ v[linha.chave] || '—' }}</td>
+            </tr>
+          </ng-container>
+
+          <ng-container *ngIf="opcionaisUniao.length">
+            <tr class="comparador-secao">
+              <td [attr.colspan]="veiculos.length + 1">Opcionais</td>
+            </tr>
+            <tr *ngFor="let op of opcionaisUniao">
+              <td class="comparador-coluna-label">{{ op }}</td>
+              <td *ngFor="let v of veiculos" class="comparador-check">
+                <span *ngIf="v.opcionais?.includes(op)" class="comparador-sim">✓</span>
+                <span *ngIf="!v.opcionais?.includes(op)" class="comparador-nao">—</span>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="loja-footer">
+    <p>{{ parametros.loja_rodape_texto }}</p>
+  </footer>
+</div>

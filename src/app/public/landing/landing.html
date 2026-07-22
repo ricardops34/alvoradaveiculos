@@ -172,6 +172,20 @@
 <app-cliente-auth *ngIf="mostrarAuth" (fechar)="mostrarAuth = false" (autenticado)="onAutenticado()"></app-cliente-auth>
 <app-assistente-chat *ngIf="assistenteAtivo" [nomeEmpresa]="parametros.empresa_nome"></app-assistente-chat>
 
+<div class="loja-comparar-barra" *ngIf="compararIds.size > 0">
+  <span>{{ compararIds.size }} veículo{{ compararIds.size > 1 ? 's' : '' }} selecionado{{ compararIds.size > 1 ? 's' : '' }} para comparar</span>
+  <div class="loja-comparar-barra-acoes">
+    <button type="button" class="loja-btn-ghost" (click)="limparComparar()">Limpar</button>
+    <a
+      class="loja-btn-entrar loja-comparar-ir"
+      [class.desativado]="compararIds.size < 2"
+      [routerLink]="['/comparador']"
+      [queryParams]="compararQueryParams">
+      Comparar agora
+    </a>
+  </div>
+</div>
+
 <ng-template #cardConteudo let-v="v">
   <div class="loja-card-photo">
     <img *ngIf="v.fotos?.length" [src]="v.fotos[0]" [alt]="v.marca_nome + ' ' + v.modelo_nome">
@@ -182,6 +196,15 @@
     <span class="loja-card-km" *ngIf="v.quilometragem">{{ v.quilometragem | number }} km</span>
     <button type="button" class="loja-card-favorito" [class.ativo]="favoritosIds.has(v.id)" (click)="alternarFavorito(v, $event)">
       {{ favoritosIds.has(v.id) ? '★' : '☆' }}
+    </button>
+    <button
+      type="button"
+      class="loja-card-comparar"
+      [class.ativo]="compararIds.has(v.id)"
+      [disabled]="!compararIds.has(v.id) && !podeAdicionarComparar"
+      [title]="compararIds.has(v.id) ? 'Remover da comparação' : 'Comparar'"
+      (click)="alternarComparar(v, $event)">
+      ⚖
     </button>
     <span class="loja-card-price-badge" *ngIf="v.valor_avaliacao || v.valor_fipe">
       {{ (v.valor_avaliacao || v.valor_fipe) | currency:'BRL' }}

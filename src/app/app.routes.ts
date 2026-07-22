@@ -15,6 +15,11 @@ export const routes: Routes = [
     loadComponent: () => import('./public/veiculo-detalhe/veiculo-detalhe').then(m => m.VeiculoDetalheComponent)
   },
   {
+    path: 'comparador',
+    canActivate: [lojaGuard],
+    loadComponent: () => import('./public/comparador/comparador').then(m => m.ComparadorComponent)
+  },
+  {
     path: 'noticias',
     canActivate: [lojaGuard],
     loadComponent: () => import('./public/noticias-publicas/noticias-publicas').then(m => m.NoticiasPublicasComponent)

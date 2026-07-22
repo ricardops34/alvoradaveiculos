@@ -36,6 +36,8 @@ export class LandingComponent implements OnInit {
   favoritosIds = new Set<number>();
   mostrarAuth = false;
   mostrarFavoritos = false;
+  compararIds = new Set<number>();
+  private readonly maxComparar = 4;
 
   page = 1;
   pageSize = 12;
@@ -70,6 +72,7 @@ export class LandingComponent implements OnInit {
     this.noticias = noticias;
     this.assistenteAtivo = assistenteAtivo;
     this.atualizarFavicon(this.parametros.favicon_url);
+    this.compararIds = new Set(this.loja.getCompararIds());
     await this.carregarFavoritos();
     await this.buscar();
   }
@@ -114,6 +117,26 @@ export class LandingComponent implements OnInit {
   onAutenticado() {
     this.mostrarAuth = false;
     this.carregarFavoritos();
+  }
+
+  get podeAdicionarComparar(): boolean {
+    return this.compararIds.size < this.maxComparar;
+  }
+
+  alternarComparar(veiculo: any, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!this.compararIds.has(veiculo.id) && !this.podeAdicionarComparar) return;
+    this.compararIds = new Set(this.loja.alternarComparar(veiculo.id, this.maxComparar));
+  }
+
+  limparComparar() {
+    this.loja.limparComparar();
+    this.compararIds = new Set();
+  }
+
+  get compararQueryParams() {
+    return { ids: Array.from(this.compararIds).join(',') };
   }
 
   sair() {

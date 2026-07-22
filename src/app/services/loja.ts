@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 const CLIENTE_TOKEN_KEY = 'cliente_token';
 const CLIENTE_DATA_KEY = 'cliente_dados';
+const COMPARAR_KEY = 'comparar_veiculos_ids';
 
 // Serviço da loja pública (vitrine de veículos) — chama os endpoints sem autenticação em
 // /api/loja/*, separados dos endpoints administrativos (que exigem token de usuário do CRM e
@@ -175,5 +176,45 @@ export class LojaService {
     } catch {
       return false;
     }
+  }
+
+  // --- Comparador de anúncios ---
+  // Seleção anônima (não depende de login de Cliente, ao contrário dos favoritos), guardada só
+  // no navegador. O comparador em si busca os dados de cada veículo por id (GET /veiculos/:id),
+  // não existe endpoint dedicado de comparação.
+
+  getCompararIds(): number[] {
+    try {
+      const raw = localStorage.getItem(COMPARAR_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private salvarCompararIds(ids: number[]) {
+    localStorage.setItem(COMPARAR_KEY, JSON.stringify(ids));
+  }
+
+  alternarComparar(veiculoId: number, max = 4): number[] {
+    const ids = this.getCompararIds();
+    const posicao = ids.indexOf(veiculoId);
+    if (posicao >= 0) {
+      ids.splice(posicao, 1);
+    } else if (ids.length < max) {
+      ids.push(veiculoId);
+    }
+    this.salvarCompararIds(ids);
+    return ids;
+  }
+
+  removerComparar(veiculoId: number): number[] {
+    const ids = this.getCompararIds().filter(id => id !== veiculoId);
+    this.salvarCompararIds(ids);
+    return ids;
+  }
+
+  limparComparar() {
+    localStorage.removeItem(COMPARAR_KEY);
   }
 }

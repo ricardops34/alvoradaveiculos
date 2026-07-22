@@ -1,0 +1,268 @@
+:host {
+  --primary: #f5c400;
+  --bg: #f6f6f8;
+  --card: #ffffff;
+  --border: rgba(15, 15, 20, 0.08);
+  --text: #1a1b20;
+  --text-muted: #62636b;
+  --text-soft: #8a8c94;
+  display: block;
+  font-family: inherit;
+}
+
+.loja-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Header/Footer (mesmo padrão de landing.scss / veiculo-detalhe.scss) */
+.loja-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.loja-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.loja-logo-badge {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: #0c0d10;
+}
+
+.loja-logo {
+  height: 32px;
+  object-fit: contain;
+  display: block;
+}
+
+.loja-logo-link {
+  display: flex;
+}
+
+.loja-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.loja-nav a {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.loja-nav a:hover,
+.loja-nav a.ativo {
+  color: var(--text);
+}
+
+.loja-header-acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loja-btn-ghost {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.loja-btn-ghost:hover {
+  border-color: var(--primary);
+  color: color-mix(in srgb, var(--primary) 65%, black);
+}
+
+.loja-btn-entrar {
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #17181c;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.loja-footer {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 12.5px;
+  border-top: 1px solid var(--border);
+}
+
+.loja-vazio {
+  color: var(--text-soft);
+  padding: 30px 0;
+}
+
+.loja-vazio a {
+  color: color-mix(in srgb, var(--primary) 65%, black);
+  font-weight: 650;
+}
+
+/* Comparador */
+.comparador-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.comparador-content h1 {
+  font-size: 24px;
+  margin: 0 0 20px;
+}
+
+.comparador-tabela-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.comparador-tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparador-tabela th,
+.comparador-tabela td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13.5px;
+}
+
+.comparador-tabela th {
+  min-width: 200px;
+  vertical-align: top;
+  position: relative;
+}
+
+.comparador-coluna-label {
+  text-align: left;
+  font-weight: 650;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 140px;
+}
+
+.comparador-remover {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.comparador-remover:hover {
+  border-color: var(--primary);
+  color: color-mix(in srgb, var(--primary) 65%, black);
+}
+
+.comparador-foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+  margin-top: 6px;
+}
+
+.comparador-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.comparador-sem-foto {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.comparador-titulo {
+  display: block;
+  margin-top: 10px;
+  font-weight: 750;
+  font-size: 14.5px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.comparador-titulo:hover {
+  color: color-mix(in srgb, var(--primary) 65%, black);
+}
+
+.comparador-versao {
+  display: block;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.comparador-preco {
+  color: color-mix(in srgb, var(--primary) 55%, black);
+  font-size: 15px;
+}
+
+.comparador-secao td {
+  background: var(--bg);
+  text-align: left;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.comparador-sim {
+  color: #1b8a3d;
+  font-weight: 750;
+}
+
+.comparador-nao {
+  color: var(--text-soft);
+}
+
+@media (max-width: 720px) {
+  .comparador-content {
+    padding: 24px 16px 40px;
+  }
+
+  .comparador-tabela th,
+  .comparador-tabela td {
+    padding: 10px 12px;
+  }
+}

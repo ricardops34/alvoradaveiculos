@@ -382,6 +382,75 @@
   color: color-mix(in srgb, var(--primary) 70%, black);
 }
 
+.loja-card-comparar {
+  position: absolute;
+  top: 50px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.85);
+  color: #17181c;
+  font-size: 15px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.loja-card-comparar.ativo {
+  background: var(--primary);
+}
+
+.loja-card-comparar:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.loja-comparar-barra {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: rgba(12, 13, 16, 0.94);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.loja-comparar-barra .loja-btn-ghost {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.loja-comparar-barra-acoes {
+  display: flex;
+  gap: 10px;
+}
+
+.loja-comparar-ir.desativado {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .loja-comparar-barra {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    transform: none;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
 .loja-card-price-badge {
   position: absolute;
   left: 10px;
